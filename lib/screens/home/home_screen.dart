@@ -1,12 +1,20 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
 
+import '../../controllers/home_controller.dart';
+import '../../models/space_article.dart';
 import '../../theme/app_colors.dart';
+import '../stories/story_feed_screen.dart';
+import '../explore/explore_screen.dart';
+import 'apod_detail_screen.dart';
 
 // ═════════════════════════════════════════════
 // TAB SCAFFOLD
@@ -24,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final _tabs = const <Widget>[
     _HomeTab(),
-    _PlaceholderTab(icon: Icons.explore, label: 'Explore'),
+    ExploreScreen(),
     _PlaceholderTab(icon: Icons.rocket_launch, label: 'Launches'),
     _PlaceholderTab(icon: Icons.school, label: 'Learn'),
     _PlaceholderTab(icon: Icons.person, label: 'Profile'),
@@ -50,26 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
           currentIndex: _currentTab,
           onTap: (i) => setState(() => _currentTab = i),
           items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore_rounded),
-              label: 'Explore',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.rocket_launch_rounded),
-              label: 'Launches',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.school_rounded),
-              label: 'Learn',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'Profile',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Explore'),
+            BottomNavigationBarItem(icon: Icon(Icons.rocket_launch_rounded), label: 'Launches'),
+            BottomNavigationBarItem(icon: Icon(Icons.school_rounded), label: 'Learn'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
           ],
         ),
       ),
@@ -84,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
 class _PlaceholderTab extends StatelessWidget {
   final IconData icon;
   final String label;
-
   const _PlaceholderTab({required this.icon, required this.label});
 
   @override
@@ -102,22 +94,9 @@ class _PlaceholderTab extends StatelessWidget {
               child: Icon(icon, size: 48, color: Colors.white),
             ),
             const SizedBox(height: 16),
-            Text(
-              label,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
+            Text(label, style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
             const SizedBox(height: 4),
-            Text(
-              'Coming soon',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppColors.textSecondaryDark,
-              ),
-            ),
+            Text('Coming soon', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondaryDark)),
           ],
         ),
       ),
@@ -126,12 +105,11 @@ class _PlaceholderTab extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════
-// HOME TAB — main content
+// HOME TAB
 // ═════════════════════════════════════════════
 
 class _HomeTab extends StatefulWidget {
   const _HomeTab();
-
   @override
   State<_HomeTab> createState() => _HomeTabState();
 }
@@ -148,321 +126,260 @@ class _HomeTabState extends State<_HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = Get.find<HomeController>();
+
     return Stack(
       children: [
-        // Starfield background
         const _Starfield(),
+        Obx(() {
+          if (ctrl.hasError.value && ctrl.stories.isEmpty) {
+            return _ErrorState(onRetry: ctrl.refreshData);
+          }
 
-        // Content
-        CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Top bar
-            SliverToBoxAdapter(
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Cosmic Facts',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+          return RefreshIndicator(
+            onRefresh: ctrl.refreshData,
+            color: AppColors.accentPurple,
+            backgroundColor: AppColors.surfaceDark,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                // Offline banner
+                if (ctrl.isOffline.value)
+                  SliverToBoxAdapter(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentOrange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(CupertinoIcons.wifi_slash, size: 16,
+                                color: AppColors.accentOrange.withValues(alpha: 0.8)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text('Showing offline data',
+                                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.accentOrange)),
+                            ),
+                            GestureDetector(
+                              onTap: ctrl.dismissOfflineBanner,
+                              child: Icon(CupertinoIcons.xmark, size: 14,
+                                  color: AppColors.accentOrange.withValues(alpha: 0.6)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Top bar
+                SliverToBoxAdapter(
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text('Cosmic Facts',
+                                style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+                          ),
+                          CupertinoButton(
+                            padding: const EdgeInsets.all(6),
+                            onPressed: () {},
+                            child: const Icon(CupertinoIcons.bell, size: 22, color: AppColors.textSecondaryDark),
+                          ),
+                          CupertinoButton(
+                            padding: const EdgeInsets.all(6),
+                            onPressed: () {},
+                            child: const Icon(CupertinoIcons.search, size: 22, color: AppColors.textSecondaryDark),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ── APOD ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: _buildApodCard(ctrl),
+                  ).animate().fadeIn(duration: 500.ms).scale(
+                        begin: const Offset(0.97, 0.97),
+                        end: const Offset(1, 1),
+                        duration: 500.ms,
+                        curve: Curves.easeOut,
+                      ),
+                ),
+
+                // ── Quick Actions ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: const _QuickActions(),
+                  ).animate().fadeIn(duration: 500.ms, delay: 100.ms)
+                      .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 100.ms),
+                ),
+
+                // ── Stories header ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text('Space Stories',
+                              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                        ),
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => Navigator.of(context).push(
+                            CupertinoPageRoute(builder: (_) => const StoryFeedScreen()),
+                          ),
+                          child: Text('See All',
+                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.accentPurple)),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(duration: 500.ms, delay: 200.ms)
+                      .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 200.ms),
+                ),
+
+                // ── Stories PageView ──
+                SliverToBoxAdapter(
+                  child: ctrl.isLoading.value
+                      ? _shimmerRect(300, margin: const EdgeInsets.symmetric(horizontal: 20))
+                      : SizedBox(
+                          height: 300,
+                          child: PageView.builder(
+                            controller: _storyController,
+                            physics: const BouncingScrollPhysics(),
+                            onPageChanged: (i) => setState(() => _currentStory = i),
+                            itemCount: ctrl.stories.length.clamp(0, 5),
+                            itemBuilder: (context, index) {
+                              final article = ctrl.stories[index];
+                              return AnimatedBuilder(
+                                animation: _storyController,
+                                builder: (context, child) {
+                                  double v = 1.0;
+                                  if (_storyController.position.haveDimensions) {
+                                    v = (_storyController.page ?? 0) - index;
+                                    v = (1 - v.abs() * 0.05).clamp(0.95, 1.0);
+                                  }
+                                  return Transform.scale(scale: v, child: child);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.of(context).push(
+                                      CupertinoPageRoute(
+                                        builder: (_) => StoryFeedScreen(initialIndex: index),
+                                      ),
+                                    ),
+                                    child: _LiveStoryCard(article: article),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      ),
-                      CupertinoButton(
-                        padding: const EdgeInsets.all(6),
-                        onPressed: () {},
-                        child: const Icon(CupertinoIcons.bell,
-                            size: 22, color: AppColors.textSecondaryDark),
-                      ),
-                      CupertinoButton(
-                        padding: const EdgeInsets.all(6),
-                        onPressed: () {},
-                        child: const Icon(CupertinoIcons.search,
-                            size: 22, color: AppColors.textSecondaryDark),
-                      ),
-                    ],
-                  ),
                 ),
-              ),
-            ),
 
-            // ── NASA APOD Card ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: const _ApodCard(),
-              )
-                  .animate()
-                  .fadeIn(duration: 500.ms)
-                  .scale(
-                    begin: const Offset(0.97, 0.97),
-                    end: const Offset(1, 1),
-                    duration: 500.ms,
-                    curve: Curves.easeOut,
-                  ),
-            ),
-
-            // ── Quick Actions ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: const _QuickActions(),
-              )
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 100.ms)
-                  .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 100.ms),
-            ),
-
-            // ── Space Stories header ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Space Stories',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
+                // Story dots
+                if (!ctrl.isLoading.value && ctrl.stories.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(ctrl.stories.length.clamp(0, 5), (i) {
+                          final active = i == _currentStory;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: active ? 20 : 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(3),
+                              gradient: active ? AppColors.primaryGradient : null,
+                              color: active ? null : Colors.white.withValues(alpha: 0.12),
+                            ),
+                          );
+                        }),
                       ),
                     ),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: () {},
-                      child: Text(
-                        'See All',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.accentPurple,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 200.ms)
-                  .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 200.ms),
-            ),
-
-            // ── Space Stories PageView ──
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 300,
-                child: PageView.builder(
-                  controller: _storyController,
-                  physics: const BouncingScrollPhysics(),
-                  onPageChanged: (i) => setState(() => _currentStory = i),
-                  itemCount: _storyCards.length,
-                  itemBuilder: (context, index) {
-                    final story = _storyCards[index];
-                    return AnimatedBuilder(
-                      animation: _storyController,
-                      builder: (context, child) {
-                        double value = 1.0;
-                        if (_storyController.position.haveDimensions) {
-                          value = (_storyController.page ?? 0) - index;
-                          value = (1 - value.abs() * 0.05).clamp(0.95, 1.0);
-                        }
-                        return Transform.scale(scale: value, child: child);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: _StoryCard(story: story),
-                      ),
-                    );
-                  },
-                ),
-              )
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 300.ms),
-            ),
-
-            // Story dots
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_storyCards.length, (i) {
-                    final active = i == _currentStory;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: active ? 20 : 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(3),
-                        gradient: active ? AppColors.primaryGradient : null,
-                        color:
-                            active ? null : Colors.white.withValues(alpha: 0.12),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ),
-
-            // ── Trending Facts header ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Trending Facts 🔥',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const Icon(CupertinoIcons.forward,
-                        size: 18, color: AppColors.textSecondaryDark),
-                  ],
-                ),
-              )
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 400.ms)
-                  .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 400.ms),
-            ),
-
-            // ── Trending Facts row ──
-            SliverToBoxAdapter(
-              child: const _TrendingFactsRow()
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 500.ms),
-            ),
-
-            // ── This Day in Space header ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Text(
-                  'This Day in Space 📅',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
                   ),
+
+                // ── Trending Facts ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text('Trending Facts 🔥',
+                              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                        ),
+                        const Icon(CupertinoIcons.forward, size: 18, color: AppColors.textSecondaryDark),
+                      ],
+                    ),
+                  ).animate().fadeIn(duration: 500.ms, delay: 400.ms)
+                      .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 400.ms),
                 ),
-              )
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 600.ms)
-                  .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 600.ms),
-            ),
+                SliverToBoxAdapter(
+                  child: const _TrendingFactsRow()
+                      .animate()
+                      .fadeIn(duration: 500.ms, delay: 500.ms),
+                ),
 
-            // ── This Day in Space card ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: const _TodayInSpaceCard(),
-              )
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 700.ms)
-                  .slideY(
-                      begin: 0.15,
-                      end: 0,
-                      duration: 500.ms,
-                      delay: 700.ms),
-            ),
+                // ── This Day in Space ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Text('This Day in Space 📅',
+                        style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ).animate().fadeIn(duration: 500.ms, delay: 600.ms)
+                      .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 600.ms),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    child: const _TodayInSpaceCard(),
+                  ).animate().fadeIn(duration: 500.ms, delay: 700.ms)
+                      .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 700.ms),
+                ),
 
-            // Bottom padding — room above bottom nav
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 100),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
             ),
-          ],
-        ),
+          );
+        }),
       ],
     );
   }
-}
 
-// ═════════════════════════════════════════════
-// STARFIELD (reused from onboarding)
-// ═════════════════════════════════════════════
-
-class _Starfield extends StatelessWidget {
-  const _Starfield();
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final rng = Random(77);
-
-    return Stack(
-      children: List.generate(35, (i) {
-        final x = rng.nextDouble() * size.width;
-        final y = rng.nextDouble() * size.height;
-        final starSize = 1.0 + rng.nextDouble() * 1.5;
-        final delay = Duration(milliseconds: rng.nextInt(2000));
-        final duration = Duration(milliseconds: 400 + rng.nextInt(1600));
-
-        return Positioned(
-          left: x,
-          top: y,
-          child: Container(
-            width: starSize,
-            height: starSize,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.6 + rng.nextDouble() * 0.4),
-              shape: BoxShape.circle,
-            ),
-          )
-              .animate(
-                onPlay: (c) => c.repeat(reverse: true),
-                delay: delay,
-              )
-              .fadeIn(duration: duration)
-              .then()
-              .fadeOut(duration: duration),
-        );
-      }),
-    );
-  }
-}
-
-// ═════════════════════════════════════════════
-// NASA APOD CARD
-// ═════════════════════════════════════════════
-
-class _ApodCard extends StatelessWidget {
-  const _ApodCard();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildApodCard(HomeController ctrl) {
+    final apod = ctrl.todayApod.value;
+    if (ctrl.isLoading.value || apod == null) {
+      return _shimmerRect(160);
+    }
     return GestureDetector(
-      onTap: () {},
+      onTap: () => Navigator.of(context).push(
+        CupertinoPageRoute(builder: (_) => ApodDetailScreen(apod: apod)),
+      ),
       child: Container(
         height: 160,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.accentPurple.withValues(alpha: 0.2),
-              AppColors.accentCyan.withValues(alpha: 0.12),
-              AppColors.surfaceDark,
-            ],
-          ),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
               color: AppColors.accentPurple.withValues(alpha: 0.15),
@@ -471,72 +388,88 @@ class _ApodCard extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            // NASA APOD badge
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'NASA APOD',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+            if (apod.mediaType == 'image')
+              CachedNetworkImage(
+                imageUrl: apod.imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (_, _) => Container(color: AppColors.cardDark),
+                errorWidget: (_, _, _) => Container(
+                  color: AppColors.cardDark,
+                  child: const Icon(CupertinoIcons.photo, color: AppColors.textSecondaryDark, size: 36),
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Astronomy Picture of the Day',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tap to explore today\'s cosmic wonder',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.67),
-                        ),
-                      ),
+              )
+            else
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.accentPurple.withValues(alpha: 0.2),
+                      AppColors.accentCyan.withValues(alpha: 0.12),
+                      AppColors.surfaceDark,
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.15),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.arrow_right,
-                    size: 16,
-                    color: Colors.white,
-                  ),
+              ),
+            // Dark overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.75)],
+                  stops: const [0.2, 1.0],
                 ),
-              ],
+              ),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('NASA APOD',
+                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(apod.title,
+                                style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                            const SizedBox(height: 4),
+                            Text('Tap to explore today\'s cosmic wonder',
+                                style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withValues(alpha: 0.67))),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        child: const Icon(CupertinoIcons.arrow_right, size: 16, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -546,7 +479,212 @@ class _ApodCard extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════
-// QUICK ACTIONS
+// SHIMMER PLACEHOLDER
+// ═════════════════════════════════════════════
+
+Widget _shimmerRect(double height, {EdgeInsets margin = EdgeInsets.zero}) {
+  return Padding(
+    padding: margin,
+    child: Shimmer.fromColors(
+      baseColor: AppColors.cardDark,
+      highlightColor: const Color(0xFF1E1E4A),
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.cardDark,
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+    ),
+  );
+}
+
+// ═════════════════════════════════════════════
+// ERROR STATE
+// ═════════════════════════════════════════════
+
+class _ErrorState extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _ErrorState({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(CupertinoIcons.wifi_slash, size: 48, color: AppColors.textSecondaryDark),
+          const SizedBox(height: 16),
+          Text('No internet connection',
+              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+          const SizedBox(height: 8),
+          Text('Check your connection and try again',
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondaryDark)),
+          const SizedBox(height: 24),
+          CupertinoButton(
+            color: AppColors.accentPurple,
+            borderRadius: BorderRadius.circular(12),
+            onPressed: onRetry,
+            child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// LIVE STORY CARD (uses SpaceArticle)
+// ═════════════════════════════════════════════
+
+class _LiveStoryCard extends StatelessWidget {
+  final SpaceArticle article;
+  const _LiveStoryCard({required this.article});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentPurple.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Article image
+          CachedNetworkImage(
+            imageUrl: article.imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (_, _) => Container(color: AppColors.cardDark),
+            errorWidget: (_, _, _) => Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.accentPurple.withValues(alpha: 0.15),
+                    AppColors.backgroundDark,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Dark gradient overlay
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.85),
+                ],
+                stops: const [0.25, 1.0],
+              ),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Source badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    article.newsSite,
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Headline
+                Text(
+                  article.title,
+                  style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white, height: 1.25),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: Text(
+                    article.summary,
+                    style: GoogleFonts.inter(fontSize: 14, color: Colors.white.withValues(alpha: 0.73), height: 1.5),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // Bottom row
+                Row(
+                  children: [
+                    Icon(CupertinoIcons.time, size: 14, color: Colors.white.withValues(alpha: 0.5)),
+                    const SizedBox(width: 5),
+                    Text(
+                      _timeAgo(article.publishedAt),
+                      style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withValues(alpha: 0.5)),
+                    ),
+                    const Spacer(),
+                    Text(article.newsSite,
+                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondaryDark)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// STARFIELD
+// ═════════════════════════════════════════════
+
+class _Starfield extends StatelessWidget {
+  const _Starfield();
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final rng = Random(77);
+    return Stack(
+      children: List.generate(35, (i) {
+        final x = rng.nextDouble() * size.width;
+        final y = rng.nextDouble() * size.height;
+        final starSize = 1.0 + rng.nextDouble() * 1.5;
+        final delay = Duration(milliseconds: rng.nextInt(2000));
+        final duration = Duration(milliseconds: 400 + rng.nextInt(1600));
+        return Positioned(
+          left: x, top: y,
+          child: Container(
+            width: starSize, height: starSize,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.6 + rng.nextDouble() * 0.4),
+              shape: BoxShape.circle,
+            ),
+          ).animate(onPlay: (c) => c.repeat(reverse: true), delay: delay)
+              .fadeIn(duration: duration).then().fadeOut(duration: duration),
+        );
+      }),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// QUICK ACTIONS (unchanged)
 // ═════════════════════════════════════════════
 
 class _QuickActionItem {
@@ -554,7 +692,6 @@ class _QuickActionItem {
   final String label;
   final Color color1;
   final Color color2;
-
   const _QuickActionItem(this.emoji, this.label, this.color1, this.color2);
 }
 
@@ -567,7 +704,6 @@ const _quickActions = [
 
 class _QuickActions extends StatelessWidget {
   const _QuickActions();
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -581,47 +717,40 @@ class _QuickActions extends StatelessWidget {
         itemBuilder: (context, index) {
           final action = _quickActions[index];
           return GestureDetector(
-            onTap: () {},
+            onTap: () => showCupertinoDialog(
+              context: context,
+              builder: (_) => CupertinoAlertDialog(
+                title: const Text('Coming Soon 🚀'),
+                content: const Text('This feature is being built. Stay tuned!'),
+                actions: [
+                  CupertinoDialogAction(
+                    isDefaultAction: true,
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            ),
             child: SizedBox(
               width: 64,
               child: Column(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 60, height: 60,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          action.color1.withValues(alpha: 0.25),
-                          action.color2.withValues(alpha: 0.15),
-                        ],
+                        begin: Alignment.topLeft, end: Alignment.bottomRight,
+                        colors: [action.color1.withValues(alpha: 0.25), action.color2.withValues(alpha: 0.15)],
                       ),
-                      border: Border.all(
-                        color: action.color1.withValues(alpha: 0.2),
-                      ),
+                      border: Border.all(color: action.color1.withValues(alpha: 0.2)),
                     ),
-                    child: Center(
-                      child: Text(
-                        action.emoji,
-                        style: const TextStyle(fontSize: 26),
-                      ),
-                    ),
+                    child: Center(child: Text(action.emoji, style: const TextStyle(fontSize: 26))),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    action.label,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(action.label,
+                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white),
+                      textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -633,257 +762,12 @@ class _QuickActions extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════
-// STORY CARDS DATA
-// ═════════════════════════════════════════════
-
-class _StoryData {
-  final String source;
-  final String headline;
-  final String summary;
-  final Color badgeColor;
-  final Color gradientStart;
-  final Color gradientEnd;
-  final int likes;
-  final String readTime;
-
-  const _StoryData({
-    required this.source,
-    required this.headline,
-    required this.summary,
-    required this.badgeColor,
-    required this.gradientStart,
-    required this.gradientEnd,
-    required this.likes,
-    required this.readTime,
-  });
-}
-
-const _storyCards = [
-  _StoryData(
-    source: 'NASA',
-    headline: 'The James Webb Telescope\nCaptures New Galaxy',
-    summary:
-        'A previously unseen galaxy dating back 13.2 billion years has been revealed in stunning infrared detail.',
-    badgeColor: AppColors.accentPurple,
-    gradientStart: AppColors.accentPurple,
-    gradientEnd: Color(0xFF3D1F99),
-    likes: 2841,
-    readTime: '2 min read',
-  ),
-  _StoryData(
-    source: 'ISRO',
-    headline: 'ISRO\'s Gaganyaan\nMission Update',
-    summary:
-        'India\'s first crewed spaceflight mission enters final testing phase ahead of its historic launch window.',
-    badgeColor: Color(0xFFFF9933),
-    gradientStart: Color(0xFFFF9933),
-    gradientEnd: Color(0xFFFF6F00),
-    likes: 3104,
-    readTime: '3 min read',
-  ),
-  _StoryData(
-    source: 'SpaceX',
-    headline: 'SpaceX Starship\nSuccessfully Lands on Mars',
-    summary:
-        'The largest rocket ever built completes its first unmanned Mars landing, opening a new chapter in exploration.',
-    badgeColor: AppColors.accentCyan,
-    gradientStart: AppColors.accentCyan,
-    gradientEnd: Color(0xFF0097A7),
-    likes: 5720,
-    readTime: '4 min read',
-  ),
-  _StoryData(
-    source: 'Fun Fact',
-    headline: 'What Happens Inside\na Black Hole?',
-    summary:
-        'Beyond the event horizon, the known laws of physics break down. Here\'s what scientists theorize awaits.',
-    badgeColor: Color(0xFF7B1FA2),
-    gradientStart: Color(0xFF7B1FA2),
-    gradientEnd: Color(0xFF4A148C),
-    likes: 4215,
-    readTime: '3 min read',
-  ),
-  _StoryData(
-    source: 'NASA',
-    headline: 'Asteroid 2024 XK4\nPasses Close to Earth',
-    summary:
-        'A 180-meter asteroid safely passes within 2 million km of Earth, the closest encounter this decade.',
-    badgeColor: AppColors.accentOrange,
-    gradientStart: AppColors.accentOrange,
-    gradientEnd: Color(0xFFD84315),
-    likes: 1896,
-    readTime: '2 min read',
-  ),
-];
-
-// ═════════════════════════════════════════════
-// STORY CARD WIDGET
-// ═════════════════════════════════════════════
-
-class _StoryCard extends StatelessWidget {
-  final _StoryData story;
-
-  const _StoryCard({required this.story});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            story.gradientStart.withValues(alpha: 0.15),
-            story.gradientEnd.withValues(alpha: 0.08),
-            AppColors.backgroundDark,
-          ],
-          stops: const [0.0, 0.4, 1.0],
-        ),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: story.gradientStart.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background subtle glow
-          Positioned(
-            top: -40,
-            right: -40,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    story.gradientStart.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(22),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Source badge
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: story.badgeColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: story.badgeColor.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Text(
-                    story.source,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: story.badgeColor,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Headline
-                Text(
-                  story.headline,
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    height: 1.25,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 10),
-
-                // Summary — fills remaining space
-                Expanded(
-                  child: Text(
-                    story.summary,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white.withValues(alpha: 0.73),
-                      height: 1.5,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-
-                // Bottom row
-                Row(
-                  children: [
-                    Icon(CupertinoIcons.heart,
-                        size: 18,
-                        color: Colors.white.withValues(alpha: 0.5)),
-                    const SizedBox(width: 5),
-                    Text(
-                      _formatCount(story.likes),
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(CupertinoIcons.bookmark,
-                        size: 18,
-                        color: Colors.white.withValues(alpha: 0.5)),
-                    const Spacer(),
-                    Icon(CupertinoIcons.share,
-                        size: 17,
-                        color: Colors.white.withValues(alpha: 0.5)),
-                    const SizedBox(width: 12),
-                    Text(
-                      story.readTime,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppColors.textSecondaryDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String _formatCount(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
-    return n.toString();
-  }
-}
-
-// ═════════════════════════════════════════════
-// TRENDING FACTS ROW
+// TRENDING FACTS (unchanged, still hardcoded)
 // ═════════════════════════════════════════════
 
 class _TrendingFact {
   final String emoji;
   final String text;
-
   const _TrendingFact(this.emoji, this.text);
 }
 
@@ -898,7 +782,6 @@ const _trendingFacts = [
 
 class _TrendingFactsRow extends StatelessWidget {
   const _TrendingFactsRow();
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -921,9 +804,7 @@ class _TrendingFactsRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.10),
-                  ),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -931,17 +812,9 @@ class _TrendingFactsRow extends StatelessWidget {
                     Text(fact.emoji, style: const TextStyle(fontSize: 22)),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: Text(
-                        fact.text,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                          height: 1.35,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(fact.text,
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white, height: 1.35),
+                          maxLines: 3, overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),
@@ -955,22 +828,17 @@ class _TrendingFactsRow extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════
-// THIS DAY IN SPACE
+// THIS DAY IN SPACE (unchanged)
 // ═════════════════════════════════════════════
 
 class _TodayInSpaceCard extends StatelessWidget {
   const _TodayInSpaceCard();
-
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final months = [
-      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
-    ];
+    final months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
     final month = months[now.month - 1];
     final day = now.day.toString().padLeft(2, '0');
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
@@ -980,64 +848,27 @@ class _TodayInSpaceCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.10),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
           child: Row(
             children: [
-              // Date
               ShaderMask(
-                shaderCallback: (bounds) =>
-                    AppColors.primaryGradientVertical.createShader(
-                  Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                ),
+                shaderCallback: (bounds) => AppColors.primaryGradientVertical
+                    .createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
                 blendMode: BlendMode.srcIn,
                 child: Column(
                   children: [
-                    Text(
-                      month,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      day,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
-                    ),
+                    Text(month, style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                    Text(day, style: GoogleFonts.spaceGrotesk(fontSize: 32, fontWeight: FontWeight.w700, color: Colors.white, height: 1.1)),
                   ],
                 ),
               ),
-
               const SizedBox(width: 20),
-
-              // Divider
-              Container(
-                width: 1,
-                height: 50,
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
-
+              Container(width: 1, height: 50, color: Colors.white.withValues(alpha: 0.1)),
               const SizedBox(width: 20),
-
-              // Event text
               Expanded(
-                child: Text(
-                  '1958 — Vanguard 1 satellite launched, still orbiting today!',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white,
-                    height: 1.45,
-                  ),
-                ),
+                child: Text('1958 — Vanguard 1 satellite launched, still orbiting today!',
+                    style: GoogleFonts.inter(fontSize: 14, color: Colors.white, height: 1.45)),
               ),
             ],
           ),
@@ -1045,4 +876,16 @@ class _TodayInSpaceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// ═════════════════════════════════════════════
+// HELPERS
+// ═════════════════════════════════════════════
+
+String _timeAgo(DateTime date) {
+  final diff = DateTime.now().difference(date);
+  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+  if (diff.inHours < 24) return '${diff.inHours}h ago';
+  if (diff.inDays < 7) return '${diff.inDays}d ago';
+  return '${(diff.inDays / 7).floor()}w ago';
 }
