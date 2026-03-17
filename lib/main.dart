@@ -9,6 +9,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'controllers/explore_controller.dart';
 import 'controllers/home_controller.dart';
+import 'controllers/launches_controller.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -22,6 +23,7 @@ void main() async {
   // Initialize global controllers
   Get.put(HomeController());
   Get.put(ExploreController());
+  Get.put(LaunchesController());
 
   // Prefer edge-to-edge, immersive status bar
   SystemChrome.setSystemUIOverlayStyle(
