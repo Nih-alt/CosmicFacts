@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../theme/app_colors.dart';
-import '../home_screen.dart';
+import '../home/home_screen.dart';
 
 // ═════════════════════════════════════════════
 // CARD COLOR THEME
@@ -521,11 +521,12 @@ class _StepDiscover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
       child: Column(
         children: [
-          const Spacer(flex: 2),
+          const SizedBox(height: 16),
 
           // Nebula + orbit + icon stack
           Stack(
@@ -558,10 +559,10 @@ class _StepDiscover extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           const _FloatingParticles(),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Title
           Text(
@@ -579,14 +580,14 @@ class _StepDiscover extends StatelessWidget {
               .slideY(begin: 0.3, end: 0, duration: 550.ms, delay: 200.ms)
               .fadeIn(duration: 550.ms, delay: 200.ms),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Subtitle
           Text(
             'Daily space facts, news, and stunning images\nfrom across the universe',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w400,
               color: AppColors.textSecondaryDark,
               height: 1.55,
@@ -596,7 +597,7 @@ class _StepDiscover extends StatelessWidget {
               .slideY(begin: 0.25, end: 0, duration: 500.ms, delay: 350.ms)
               .fadeIn(duration: 500.ms, delay: 350.ms),
 
-          const Spacer(flex: 3),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -652,11 +653,12 @@ class _StepUpdated extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
       child: Column(
         children: [
-          const Spacer(flex: 2),
+          const SizedBox(height: 16),
 
           Stack(
             alignment: Alignment.center,
@@ -695,10 +697,10 @@ class _StepUpdated extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           const _FloatingParticles(),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           Text(
             'Stay Updated',
@@ -715,13 +717,13 @@ class _StepUpdated extends StatelessWidget {
               .slideY(begin: 0.3, end: 0, duration: 550.ms, delay: 200.ms)
               .fadeIn(duration: 550.ms, delay: 200.ms),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           Text(
             'Track rocket launches, ISS location, asteroids,\nand breaking space news in real-time',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w400,
               color: AppColors.textSecondaryDark,
               height: 1.55,
@@ -731,7 +733,7 @@ class _StepUpdated extends StatelessWidget {
               .slideY(begin: 0.25, end: 0, duration: 500.ms, delay: 350.ms)
               .fadeIn(duration: 500.ms, delay: 350.ms),
 
-          const Spacer(flex: 3),
+          const SizedBox(height: 16),
         ],
       ),
     );
