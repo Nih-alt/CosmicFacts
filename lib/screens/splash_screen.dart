@@ -2,9 +2,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../theme/app_colors.dart';
+import 'home_screen.dart';
+import 'onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -44,6 +48,21 @@ class _SplashScreenState extends State<SplashScreen>
         delay: Duration(milliseconds: 400 + _random.nextInt(600)),
       );
     });
+
+    // Navigate after splash duration
+    Future.delayed(const Duration(milliseconds: 2500), _navigate);
+  }
+
+  void _navigate() {
+    final box = Hive.box('settings');
+    final onboardingDone = box.get('onboarding_complete', defaultValue: false);
+
+    if (onboardingDone == true) {
+      Get.offAll(() => const HomeScreen(), transition: Transition.cupertino);
+    } else {
+      Get.offAll(() => const OnboardingScreen(),
+          transition: Transition.cupertino);
+    }
   }
 
   @override

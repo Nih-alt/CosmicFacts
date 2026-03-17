@@ -1,12 +1,21 @@
+// Cosmic Facts UI Philosophy: Cupertino-first for premium iOS-like feel on both Android & iOS
+// Use CupertinoButton, CupertinoSwitch, CupertinoAlertDialog, CupertinoActivityIndicator,
+// CupertinoActionSheet, CupertinoPageRoute, CupertinoTabBar, CupertinoSliverNavigationBar.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+  await Hive.openBox('settings');
 
   // Prefer edge-to-edge, immersive status bar
   SystemChrome.setSystemUIOverlayStyle(
