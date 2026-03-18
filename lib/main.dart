@@ -10,6 +10,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'controllers/explore_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/launches_controller.dart';
+import 'controllers/theme_controller.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -22,6 +23,7 @@ void main() async {
   await Hive.openBox('learn_progress');
 
   // Initialize global controllers
+  Get.put(ThemeController());
   Get.put(HomeController());
   Get.put(ExploreController());
   Get.put(LaunchesController());
@@ -43,17 +45,18 @@ class CosmicFactsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Cosmic Facts',
-      debugShowCheckedModeBanner: false,
+    final themeCtrl = Get.find<ThemeController>();
+    return Obx(() => GetMaterialApp(
+          title: 'Cosmic Facts',
+          debugShowCheckedModeBanner: false,
 
-      // Theme
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+          // Theme
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeCtrl.themeMode.value,
 
-      // Entry point
-      home: const SplashScreen(),
-    );
+          // Entry point
+          home: const SplashScreen(),
+        ));
   }
 }

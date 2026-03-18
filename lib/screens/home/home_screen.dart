@@ -16,6 +16,7 @@ import '../stories/story_feed_screen.dart';
 import '../explore/explore_screen.dart';
 import '../launches/launches_screen.dart';
 import '../learn/learn_screen.dart';
+import '../profile/profile_screen.dart';
 import 'apod_detail_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -37,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ExploreScreen(),
     LaunchesScreen(),
     LearnScreen(),
-    _PlaceholderTab(icon: Icons.person, label: 'Profile'),
+    ProfileScreen(),
   ];
 
   @override
@@ -74,38 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ═════════════════════════════════════════════
 // PLACEHOLDER TABS
-// ═════════════════════════════════════════════
-
-class _PlaceholderTab extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _PlaceholderTab({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.backgroundDark,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ShaderMask(
-              shaderCallback: (b) => AppColors.primaryGradient
-                  .createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
-              blendMode: BlendMode.srcIn,
-              child: Icon(icon, size: 48, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            Text(label, style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white)),
-            const SizedBox(height: 4),
-            Text('Coming soon', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondaryDark)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ═════════════════════════════════════════════
 // HOME TAB
 // ═════════════════════════════════════════════
