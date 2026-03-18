@@ -27,7 +27,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.backgroundDark,
+      color: AppColors.background(context),
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -44,12 +44,12 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                   ),
-                  const Icon(CupertinoIcons.slider_horizontal_3,
-                      size: 22, color: AppColors.textSecondaryDark),
+                  Icon(CupertinoIcons.slider_horizontal_3,
+                      size: 22, color: AppColors.textSecondary(context)),
                 ],
               ),
             ),
@@ -64,7 +64,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                   width: double.infinity,
                   child: CupertinoSlidingSegmentedControl<int>(
                     groupValue: _ctrl.selectedTab.value,
-                    backgroundColor: AppColors.cardDark,
+                    backgroundColor: AppColors.card(context),
                     thumbColor: AppColors.accentPurple,
                     onValueChanged: (v) {
                       if (v != null) _ctrl.selectedTab.value = v;
@@ -80,7 +80,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                             fontWeight: FontWeight.w600,
                             color: _ctrl.selectedTab.value == 0
                                 ? Colors.white
-                                : AppColors.textSecondaryDark,
+                                : AppColors.textSecondary(context),
                           ),
                         ),
                       ),
@@ -94,7 +94,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                             fontWeight: FontWeight.w600,
                             color: _ctrl.selectedTab.value == 1
                                 ? Colors.white
-                                : AppColors.textSecondaryDark,
+                                : AppColors.textSecondary(context),
                           ),
                         ),
                       ),
@@ -124,7 +124,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
       if (_ctrl.isLoading.value &&
           _ctrl.upcomingLaunches.isEmpty &&
           _ctrl.pastLaunches.isEmpty) {
-        return const _ShimmerList();
+        return _ShimmerList();
       }
 
       final isUpcoming = _ctrl.selectedTab.value == 0;
@@ -138,7 +138,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
       return RefreshIndicator(
         onRefresh: _ctrl.loadLaunches,
         color: AppColors.accentPurple,
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: AppColors.surface(context),
         child: ListView.builder(
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
@@ -187,14 +187,14 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(CupertinoIcons.wifi_slash,
-              size: 48, color: AppColors.textSecondaryDark),
+          Icon(CupertinoIcons.wifi_slash,
+              size: 48, color: AppColors.textSecondary(context)),
           const SizedBox(height: 16),
           Text("Couldn't load launches",
               style: GoogleFonts.spaceGrotesk(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white)),
+                  color: AppColors.textPrimary(context))),
           const SizedBox(height: 24),
           CupertinoButton(
             color: AppColors.accentPurple,
@@ -221,12 +221,12 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
             style: GoogleFonts.spaceGrotesk(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white),
+                color: AppColors.textPrimary(context)),
           ),
           const SizedBox(height: 4),
           Text('Check back soon!',
               style: GoogleFonts.inter(
-                  fontSize: 14, color: AppColors.textSecondaryDark)),
+                  fontSize: 14, color: AppColors.textSecondary(context))),
         ],
       ),
     );
@@ -316,7 +316,7 @@ class _HeroLaunchCardState extends State<_HeroLaunchCard> {
                 imageUrl: launch.imageUrl,
                 fit: BoxFit.cover,
                 placeholder: (_, _) =>
-                    Container(color: AppColors.cardDark),
+                    Container(color: AppColors.card(context)),
                 errorWidget: (_, _, _) =>
                     _gradientFallback(),
               )
@@ -553,10 +553,11 @@ class _LaunchCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: AppColors.glass(context),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08)),
+                    color: AppColors.glassBorder(context)),
+                boxShadow: AppColors.cardShadow(context),
               ),
               child: Row(
                 children: [
@@ -579,7 +580,7 @@ class _LaunchCard extends StatelessWidget {
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: AppColors.textPrimary(context),
                             height: 1.1,
                           ),
                         ),
@@ -593,7 +594,7 @@ class _LaunchCard extends StatelessWidget {
                   Container(
                     width: 1,
                     height: 40,
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: AppColors.divider(context),
                   ),
 
                   const SizedBox(width: 14),
@@ -609,7 +610,7 @@ class _LaunchCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: AppColors.textPrimary(context),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -620,7 +621,7 @@ class _LaunchCard extends StatelessWidget {
                             launch.missionName,
                             style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: AppColors.textSecondaryDark,
+                              color: AppColors.textSecondary(context),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -631,7 +632,7 @@ class _LaunchCard extends StatelessWidget {
                           '${launch.provider}${launch.padLocation.isNotEmpty ? ' \u2022 ${launch.padLocation}' : ''}',
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            color: AppColors.textSecondaryDark,
+                            color: AppColors.textSecondary(context),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -781,12 +782,12 @@ class _ShimmerList extends StatelessWidget {
       children: [
         // Hero shimmer
         Shimmer.fromColors(
-          baseColor: AppColors.cardDark,
-          highlightColor: const Color(0xFF1E1E4A),
+          baseColor: AppColors.shimmerBase(context),
+          highlightColor: AppColors.shimmerHighlight(context),
           child: Container(
             height: 200,
             decoration: BoxDecoration(
-              color: AppColors.cardDark,
+              color: AppColors.shimmerBase(context),
               borderRadius: BorderRadius.circular(20),
             ),
           ),
@@ -797,12 +798,12 @@ class _ShimmerList extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Shimmer.fromColors(
-              baseColor: AppColors.cardDark,
-              highlightColor: const Color(0xFF1E1E4A),
+              baseColor: AppColors.shimmerBase(context),
+              highlightColor: AppColors.shimmerHighlight(context),
               child: Container(
                 height: 90,
                 decoration: BoxDecoration(
-                  color: AppColors.cardDark,
+                  color: AppColors.shimmerBase(context),
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),

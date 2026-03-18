@@ -63,7 +63,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     final screenWidth = MediaQuery.sizeOf(context).width;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background(context),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -108,7 +108,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
           colors: [
             _topicColor.withValues(alpha: 0.4),
             _topicColor.withValues(alpha: 0.1),
-            AppColors.backgroundDark,
+            AppColors.background(context),
           ],
         ),
       ),
@@ -209,9 +209,10 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.glass(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: AppColors.glassBorder(context)),
+          boxShadow: AppColors.cardShadow(context),
         ),
         child: Row(
           children: [
@@ -254,7 +255,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: AppColors.textPrimary(context),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -267,14 +268,14 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
               '${lesson.readingMinutes} min',
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: AppColors.textSecondaryDark,
+                color: AppColors.textSecondary(context),
               ),
             ),
             const SizedBox(width: 4),
             Icon(
               CupertinoIcons.chevron_right,
               size: 14,
-              color: AppColors.textSecondaryDark,
+              color: AppColors.textSecondary(context),
             ),
           ],
         ),

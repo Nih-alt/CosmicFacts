@@ -89,7 +89,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
               SnackBar(
                 content: Text('Could not open link',
                     style: GoogleFonts.inter(color: Colors.white)),
-                backgroundColor: AppColors.surfaceDark,
+                backgroundColor: AppColors.surface(context),
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -104,7 +104,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           SnackBar(
             content: Text('Could not open link',
                 style: GoogleFonts.inter(color: Colors.white)),
-            backgroundColor: AppColors.surfaceDark,
+            backgroundColor: AppColors.surface(context),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
@@ -134,7 +134,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg, style: GoogleFonts.inter(color: Colors.white)),
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: AppColors.surface(context),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),
@@ -147,7 +147,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     final readTime = _estimateReadTime(article.summary);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background(context),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -156,7 +156,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             expandedHeight: 300,
             pinned: true,
             stretch: true,
-            backgroundColor: AppColors.backgroundDark,
+            backgroundColor: AppColors.background(context),
             leading: CupertinoButton(
               padding: const EdgeInsets.all(8),
               onPressed: () => Navigator.of(context).pop(),
@@ -221,9 +221,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                       imageUrl: article.imageUrl,
                       fit: BoxFit.cover,
                       placeholder: (_, _) => Shimmer.fromColors(
-                        baseColor: AppColors.cardDark,
-                        highlightColor: const Color(0xFF1E1E4A),
-                        child: Container(color: AppColors.cardDark),
+                        baseColor: AppColors.shimmerBase(context),
+                        highlightColor: AppColors.shimmerHighlight(context),
+                        child: Container(color: AppColors.shimmerBase(context)),
                       ),
                       errorWidget: (_, _, _) => Container(
                         decoration: BoxDecoration(
@@ -296,14 +296,14 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                         _formatDate(article.publishedAt),
                         style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: AppColors.textSecondaryDark),
+                            color: AppColors.textSecondary(context)),
                       ),
                       const SizedBox(width: 12),
                       Text(
                         '$readTime min read',
                         style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: AppColors.textSecondaryDark),
+                            color: AppColors.textSecondary(context)),
                       ),
                     ],
                   ),
@@ -316,7 +316,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary(context),
                       height: 1.25,
                     ),
                   ),
@@ -328,7 +328,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                     article.summary,
                     style: GoogleFonts.inter(
                       fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: AppColors.textPrimary(context).withValues(alpha: 0.9),
                       height: 1.8,
                     ),
                   ),
@@ -338,7 +338,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                   // Divider
                   Container(
                     height: 1,
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: AppColors.divider(context),
                   ),
 
                   const SizedBox(height: 24),
@@ -349,7 +349,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondaryDark,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
 
@@ -364,10 +364,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
+                          color: AppColors.glass(context),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.10)),
+                              color: AppColors.glassBorder(context)),
+                          boxShadow: AppColors.cardShadow(context),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,14 +378,14 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                               style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white),
+                                  color: AppColors.textPrimary(context)),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               _sourceDescription(article.newsSite),
                               style: GoogleFonts.inter(
                                 fontSize: 14,
-                                color: Colors.white.withValues(alpha: 0.7),
+                                color: AppColors.textSecondary(context),
                                 height: 1.5,
                               ),
                             ),

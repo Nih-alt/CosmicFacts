@@ -14,7 +14,7 @@ class ApodDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background(context),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -36,7 +36,7 @@ class ApodDetailScreen extends StatelessWidget {
                           fit: BoxFit.cover,
                           placeholder: (_, _) => Container(
                             height: 350,
-                            color: AppColors.cardDark,
+                            color: AppColors.card(context),
                             child: const Center(
                               child: CupertinoActivityIndicator(
                                 color: AppColors.accentPurple,
@@ -45,22 +45,22 @@ class ApodDetailScreen extends StatelessWidget {
                           ),
                           errorWidget: (_, _, _) => Container(
                             height: 350,
-                            color: AppColors.cardDark,
-                            child: const Icon(
+                            color: AppColors.card(context),
+                            child: Icon(
                               CupertinoIcons.photo,
                               size: 48,
-                              color: AppColors.textSecondaryDark,
+                              color: AppColors.textSecondary(context),
                             ),
                           ),
                         )
                       : Container(
                           height: 350,
-                          color: AppColors.cardDark,
+                          color: AppColors.card(context),
                           child: Center(
                             child: Text(
                               'Video content',
                               style: GoogleFonts.inter(
-                                color: AppColors.textSecondaryDark,
+                                color: AppColors.textSecondary(context),
                               ),
                             ),
                           ),
@@ -140,7 +140,7 @@ class ApodDetailScreen extends StatelessWidget {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary(context),
                       height: 1.25,
                     ),
                   ),
@@ -151,7 +151,7 @@ class ApodDetailScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: AppColors.textPrimary(context).withValues(alpha: 0.85),
                       height: 1.65,
                     ),
                   ),

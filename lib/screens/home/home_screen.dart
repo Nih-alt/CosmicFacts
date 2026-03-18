@@ -44,20 +44,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background(context),
       body: IndexedStack(index: _currentTab, children: _tabs),
       bottomNavigationBar: Theme(
         data: ThemeData(splashColor: Colors.transparent),
         child: CupertinoTabBar(
-          backgroundColor: AppColors.surfaceDark,
+          backgroundColor: AppColors.navBar(context),
           border: Border(
             top: BorderSide(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: AppColors.divider(context),
               width: 0.5,
             ),
           ),
           activeColor: AppColors.accentPurple,
-          inactiveColor: AppColors.textSecondaryDark,
+          inactiveColor: AppColors.textSecondary(context),
           currentIndex: _currentTab,
           onTap: (i) => setState(() => _currentTab = i),
           items: const [
@@ -110,7 +110,7 @@ class _HomeTabState extends State<_HomeTab> {
           return RefreshIndicator(
             onRefresh: ctrl.refreshData,
             color: AppColors.accentPurple,
-            backgroundColor: AppColors.surfaceDark,
+            backgroundColor: AppColors.surface(context),
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
@@ -159,17 +159,17 @@ class _HomeTabState extends State<_HomeTab> {
                         children: [
                           Expanded(
                             child: Text('Cosmic Facts',
-                                style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+                                style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
                           ),
                           CupertinoButton(
                             padding: const EdgeInsets.all(6),
                             onPressed: () {},
-                            child: const Icon(CupertinoIcons.bell, size: 22, color: AppColors.textSecondaryDark),
+                            child: Icon(CupertinoIcons.bell, size: 22, color: AppColors.textSecondary(context)),
                           ),
                           CupertinoButton(
                             padding: const EdgeInsets.all(6),
                             onPressed: () {},
-                            child: const Icon(CupertinoIcons.search, size: 22, color: AppColors.textSecondaryDark),
+                            child: Icon(CupertinoIcons.search, size: 22, color: AppColors.textSecondary(context)),
                           ),
                         ],
                       ),
@@ -207,7 +207,7 @@ class _HomeTabState extends State<_HomeTab> {
                       children: [
                         Expanded(
                           child: Text('Space Stories',
-                              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
                         ),
                         CupertinoButton(
                           padding: EdgeInsets.zero,
@@ -226,7 +226,7 @@ class _HomeTabState extends State<_HomeTab> {
                 // ── Stories PageView ──
                 SliverToBoxAdapter(
                   child: ctrl.isLoading.value
-                      ? _shimmerRect(300, margin: const EdgeInsets.symmetric(horizontal: 20))
+                      ? _shimmerRect(300, margin: const EdgeInsets.symmetric(horizontal: 20), context: context)
                       : SizedBox(
                           height: 300,
                           child: PageView.builder(
@@ -296,9 +296,9 @@ class _HomeTabState extends State<_HomeTab> {
                       children: [
                         Expanded(
                           child: Text('Trending Facts 🔥',
-                              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
                         ),
-                        const Icon(CupertinoIcons.forward, size: 18, color: AppColors.textSecondaryDark),
+                        Icon(CupertinoIcons.forward, size: 18, color: AppColors.textSecondary(context)),
                       ],
                     ),
                   ).animate().fadeIn(duration: 500.ms, delay: 400.ms)
@@ -315,7 +315,7 @@ class _HomeTabState extends State<_HomeTab> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
                     child: Text('This Day in Space 📅',
-                        style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                        style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
                   ).animate().fadeIn(duration: 500.ms, delay: 600.ms)
                       .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 600.ms),
                 ),
@@ -339,7 +339,7 @@ class _HomeTabState extends State<_HomeTab> {
   Widget _buildApodCard(HomeController ctrl) {
     final apod = ctrl.todayApod.value;
     if (ctrl.isLoading.value || apod == null) {
-      return _shimmerRect(160);
+      return _shimmerRect(160, context: context);
     }
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -453,16 +453,18 @@ class _HomeTabState extends State<_HomeTab> {
 // SHIMMER PLACEHOLDER
 // ═════════════════════════════════════════════
 
-Widget _shimmerRect(double height, {EdgeInsets margin = EdgeInsets.zero}) {
+Widget _shimmerRect(double height, {EdgeInsets margin = EdgeInsets.zero, BuildContext? context}) {
+  final base = context != null ? AppColors.shimmerBase(context) : AppColors.cardDark;
+  final highlight = context != null ? AppColors.shimmerHighlight(context) : const Color(0xFF1E1E4A);
   return Padding(
     padding: margin,
     child: Shimmer.fromColors(
-      baseColor: AppColors.cardDark,
-      highlightColor: const Color(0xFF1E1E4A),
+      baseColor: base,
+      highlightColor: highlight,
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: AppColors.cardDark,
+          color: base,
           borderRadius: BorderRadius.circular(20),
         ),
       ),
@@ -484,13 +486,13 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(CupertinoIcons.wifi_slash, size: 48, color: AppColors.textSecondaryDark),
+          Icon(CupertinoIcons.wifi_slash, size: 48, color: AppColors.textSecondary(context)),
           const SizedBox(height: 16),
           Text('No internet connection',
-              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
           const SizedBox(height: 8),
           Text('Check your connection and try again',
-              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondaryDark)),
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
           const SizedBox(height: 24),
           CupertinoButton(
             color: AppColors.accentPurple,
@@ -715,12 +717,13 @@ class _QuickActions extends StatelessWidget {
                         colors: [action.color1.withValues(alpha: 0.25), action.color2.withValues(alpha: 0.15)],
                       ),
                       border: Border.all(color: action.color1.withValues(alpha: 0.2)),
+                      boxShadow: AppColors.cardShadow(context),
                     ),
                     child: Center(child: Text(action.emoji, style: const TextStyle(fontSize: 26))),
                   ),
                   const SizedBox(height: 8),
                   Text(action.label,
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white),
+                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary(context)),
                       textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
                 ],
               ),
@@ -773,9 +776,10 @@ class _TrendingFactsRow extends StatelessWidget {
                 width: 160,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.glass(context),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                  border: Border.all(color: AppColors.glassBorder(context)),
+                  boxShadow: AppColors.cardShadow(context),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -784,7 +788,7 @@ class _TrendingFactsRow extends StatelessWidget {
                     const SizedBox(height: 8),
                     Expanded(
                       child: Text(fact.text,
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white, height: 1.35),
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textPrimary(context), height: 1.35),
                           maxLines: 3, overflow: TextOverflow.ellipsis),
                     ),
                   ],
@@ -817,9 +821,10 @@ class _TodayInSpaceCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppColors.glass(context),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+            border: Border.all(color: AppColors.glassBorder(context)),
+            boxShadow: AppColors.cardShadow(context),
           ),
           child: Row(
             children: [
@@ -829,17 +834,17 @@ class _TodayInSpaceCard extends StatelessWidget {
                 blendMode: BlendMode.srcIn,
                 child: Column(
                   children: [
-                    Text(month, style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                    Text(day, style: GoogleFonts.spaceGrotesk(fontSize: 32, fontWeight: FontWeight.w700, color: Colors.white, height: 1.1)),
+                    Text(month, style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                    Text(day, style: GoogleFonts.spaceGrotesk(fontSize: 32, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context), height: 1.1)),
                   ],
                 ),
               ),
               const SizedBox(width: 20),
-              Container(width: 1, height: 50, color: Colors.white.withValues(alpha: 0.1)),
+              Container(width: 1, height: 50, color: AppColors.divider(context)),
               const SizedBox(width: 20),
               Expanded(
                 child: Text('1958 — Vanguard 1 satellite launched, still orbiting today!',
-                    style: GoogleFonts.inter(fontSize: 14, color: Colors.white, height: 1.45)),
+                    style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary(context), height: 1.45)),
               ),
             ],
           ),

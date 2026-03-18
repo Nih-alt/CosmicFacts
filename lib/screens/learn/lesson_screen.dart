@@ -60,7 +60,7 @@ class _LessonScreenState extends State<LessonScreen> {
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background(context),
       body: Column(
         children: [
           // ── Top bar ──
@@ -71,7 +71,7 @@ class _LessonScreenState extends State<LessonScreen> {
               right: 20,
               bottom: 12,
             ),
-            color: AppColors.backgroundDark,
+            color: AppColors.background(context),
             child: Row(
               children: [
                 GestureDetector(
@@ -80,11 +80,12 @@ class _LessonScreenState extends State<LessonScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: AppColors.glass(context),
                       shape: BoxShape.circle,
+                      boxShadow: AppColors.cardShadow(context),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new,
-                        color: Colors.white, size: 18),
+                    child: Icon(Icons.arrow_back_ios_new,
+                        color: AppColors.textPrimary(context), size: 18),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -96,14 +97,14 @@ class _LessonScreenState extends State<LessonScreen> {
                         topic.name,
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: AppColors.textSecondaryDark,
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                       Text(
                         'Lesson ${widget.lessonIndex + 1} of ${topic.lessons.length}',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: AppColors.textSecondaryDark,
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ],
@@ -131,7 +132,7 @@ class _LessonScreenState extends State<LessonScreen> {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary(context),
                       height: 1.2,
                     ),
                   ).animate().fadeIn(duration: 400.ms),
@@ -140,7 +141,7 @@ class _LessonScreenState extends State<LessonScreen> {
                     '${lesson.readingMinutes} min read',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.textSecondaryDark,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -163,7 +164,7 @@ class _LessonScreenState extends State<LessonScreen> {
                         block.text,
                         style: GoogleFonts.inter(
                           fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: AppColors.textPrimary(context).withValues(alpha: 0.85),
                           height: 1.8,
                         ),
                       ),
@@ -196,6 +197,7 @@ class _LessonScreenState extends State<LessonScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: AppColors.accentPurple.withValues(alpha: 0.2)),
+        boxShadow: AppColors.cardShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,7 +215,7 @@ class _LessonScreenState extends State<LessonScreen> {
             text,
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: Colors.white.withValues(alpha: 0.85),
+              color: AppColors.textPrimary(context).withValues(alpha: 0.85),
               height: 1.7,
             ),
           ),

@@ -56,7 +56,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.backgroundDark,
+      color: AppColors.background(context),
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -73,7 +73,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                   ),
@@ -94,28 +94,29 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 },
                 placeholder: 'Search galaxies, nebulae, planets...',
                 placeholderStyle: GoogleFonts.inter(
-                    fontSize: 14, color: AppColors.textSecondaryDark),
-                style: GoogleFonts.inter(fontSize: 14, color: Colors.white),
+                    fontSize: 14, color: AppColors.textSecondary(context)),
+                style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary(context)),
                 cursorColor: AppColors.accentPurple,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.cardDark,
+                  color: AppColors.searchBar(context),
                   borderRadius: BorderRadius.circular(14),
+                  boxShadow: AppColors.cardShadow(context),
                 ),
-                prefix: const Padding(
-                  padding: EdgeInsets.only(left: 12),
+                prefix: Padding(
+                  padding: const EdgeInsets.only(left: 12),
                   child: Icon(CupertinoIcons.search,
-                      size: 18, color: AppColors.textSecondaryDark),
+                      size: 18, color: AppColors.textSecondary(context)),
                 ),
                 suffix: Obx(() {
                   if (!_ctrl.isSearching.value) return const SizedBox.shrink();
                   return GestureDetector(
                     onTap: _ctrl.clearSearch,
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12),
                       child: Icon(CupertinoIcons.xmark_circle_fill,
-                          size: 18, color: AppColors.textSecondaryDark),
+                          size: 18, color: AppColors.textSecondary(context)),
                     ),
                   );
                 }),
@@ -146,8 +147,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         decoration: BoxDecoration(
                           gradient:
                               selected ? AppColors.primaryGradient : null,
-                          color: selected ? null : AppColors.cardDark,
+                          color: selected ? null : AppColors.card(context),
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: selected ? null : AppColors.cardShadow(context),
                         ),
                         child: Text(
                           cat,
@@ -156,7 +158,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             fontWeight: FontWeight.w600,
                             color: selected
                                 ? Colors.white
-                                : AppColors.textSecondaryDark,
+                                : AppColors.textPrimary(context),
                           ),
                         ),
                       ),
@@ -184,7 +186,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         return _buildError();
       }
       if (_ctrl.isLoading.value && _ctrl.images.isEmpty) {
-        return const _ShimmerGrid();
+        return _ShimmerGrid();
       }
       if (_ctrl.images.isEmpty) {
         return _buildEmpty();
@@ -227,7 +229,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          color: AppColors.cardDark,
+          color: AppColors.card(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -238,19 +240,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   fit: BoxFit.cover,
                   width: double.infinity,
                   placeholder: (_, _) => Container(
-                    color: AppColors.cardDark,
-                    child: const Center(
+                    color: AppColors.card(context),
+                    child: Center(
                       child: CupertinoActivityIndicator(
                         radius: 8,
-                        color: AppColors.textSecondaryDark,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ),
                   errorWidget: (_, _, _) => Container(
-                    color: AppColors.cardDark,
-                    child: const Center(
+                    color: AppColors.card(context),
+                    child: Center(
                       child: Icon(CupertinoIcons.star,
-                          size: 20, color: AppColors.textSecondaryDark),
+                          size: 20, color: AppColors.textSecondary(context)),
                     ),
                   ),
                 ),
@@ -260,13 +262,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 width: double.infinity,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                color: AppColors.surfaceDark,
+                color: AppColors.surface(context),
                 child: Text(
                   image.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: AppColors.textPrimary(context).withValues(alpha: 0.85),
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                     height: 1.3,
@@ -284,9 +286,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Shimmer.fromColors(
-        baseColor: AppColors.cardDark,
-        highlightColor: const Color(0xFF1E1E4A),
-        child: Container(color: AppColors.cardDark),
+        baseColor: AppColors.shimmerBase(context),
+        highlightColor: AppColors.shimmerHighlight(context),
+        child: Container(color: AppColors.shimmerBase(context)),
       ),
     );
   }
@@ -296,14 +298,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(CupertinoIcons.wifi_slash,
-              size: 48, color: AppColors.textSecondaryDark),
+          Icon(CupertinoIcons.wifi_slash,
+              size: 48, color: AppColors.textSecondary(context)),
           const SizedBox(height: 16),
           Text("Couldn't load images",
               style: GoogleFonts.spaceGrotesk(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white)),
+                  color: AppColors.textPrimary(context))),
           const SizedBox(height: 24),
           CupertinoButton(
             color: AppColors.accentPurple,
@@ -322,18 +324,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(CupertinoIcons.search,
-              size: 48, color: AppColors.textSecondaryDark),
+          Icon(CupertinoIcons.search,
+              size: 48, color: AppColors.textSecondary(context)),
           const SizedBox(height: 12),
           Text('No images found',
               style: GoogleFonts.spaceGrotesk(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white)),
+                  color: AppColors.textPrimary(context))),
           const SizedBox(height: 4),
           Text('Try a different search term',
               style: GoogleFonts.inter(
-                  fontSize: 14, color: AppColors.textSecondaryDark)),
+                  fontSize: 14, color: AppColors.textSecondary(context))),
         ],
       ),
     );
@@ -362,9 +364,9 @@ class _ShimmerGrid extends StatelessWidget {
       itemBuilder: (_, _) => ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Shimmer.fromColors(
-          baseColor: AppColors.cardDark,
-          highlightColor: const Color(0xFF1E1E4A),
-          child: Container(color: AppColors.cardDark),
+          baseColor: AppColors.shimmerBase(context),
+          highlightColor: AppColors.shimmerHighlight(context),
+          child: Container(color: AppColors.shimmerBase(context)),
         ),
       ),
     );

@@ -51,7 +51,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background(context),
       body: PageView.builder(
         controller: _pageController,
         onPageChanged: (i) => setState(() => _currentIndex = i),
@@ -114,7 +114,7 @@ class _DetailPageState extends State<_DetailPage> {
                 fit: BoxFit.cover,
                 placeholder: (_, _) => Container(
                   height: imageHeight,
-                  color: AppColors.cardDark,
+                  color: AppColors.card(context),
                   child: const Center(
                     child: CupertinoActivityIndicator(
                         color: AppColors.accentPurple),
@@ -122,10 +122,10 @@ class _DetailPageState extends State<_DetailPage> {
                 ),
                 errorWidget: (_, _, _) => Container(
                   height: imageHeight,
-                  color: AppColors.cardDark,
-                  child: const Center(
+                  color: AppColors.card(context),
+                  child: Center(
                     child: Icon(CupertinoIcons.photo,
-                        size: 48, color: AppColors.textSecondaryDark),
+                        size: 48, color: AppColors.textSecondary(context)),
                   ),
                 ),
               ),
@@ -151,7 +151,7 @@ class _DetailPageState extends State<_DetailPage> {
                           widget.formatDate(img.dateCreated),
                           style: GoogleFonts.inter(
                               fontSize: 13,
-                              color: AppColors.textSecondaryDark),
+                              color: AppColors.textSecondary(context)),
                         ),
                       ],
                     ),
@@ -164,7 +164,7 @@ class _DetailPageState extends State<_DetailPage> {
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.textPrimary(context),
                         height: 1.25,
                       ),
                     ),
@@ -179,7 +179,7 @@ class _DetailPageState extends State<_DetailPage> {
                           img.description,
                           style: GoogleFonts.inter(
                             fontSize: 15,
-                            color: Colors.white.withValues(alpha: 0.85),
+                            color: AppColors.textPrimary(context).withValues(alpha: 0.85),
                             height: 1.7,
                           ),
                           maxLines: _expanded ? 100 : 5,
@@ -214,18 +214,16 @@ class _DetailPageState extends State<_DetailPage> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color:
-                                  Colors.white.withValues(alpha: 0.06),
+                              color: AppColors.glass(context),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color: Colors.white
-                                      .withValues(alpha: 0.1)),
+                                  color: AppColors.glassBorder(context)),
                             ),
                             child: Text(
                               k,
                               style: GoogleFonts.inter(
                                   fontSize: 12,
-                                  color: AppColors.textSecondaryDark),
+                                  color: AppColors.textSecondary(context)),
                             ),
                           );
                         }).toList(),

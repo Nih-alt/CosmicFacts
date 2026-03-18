@@ -65,7 +65,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background(context),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -85,7 +85,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary(context),
                       height: 1.2,
                     ),
                   ).animate().fadeIn(duration: 400.ms),
@@ -95,7 +95,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
                       launch.missionName,
                       style: GoogleFonts.inter(
                         fontSize: 16,
-                        color: AppColors.textSecondaryDark,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ],
@@ -116,7 +116,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
                   const SizedBox(height: 24),
                   Container(
                     height: 1,
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: AppColors.divider(context),
                   ),
                   const SizedBox(height: 20),
                   _buildInfoRow(Icons.rocket_launch, 'Provider', launch.provider)
@@ -531,7 +531,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondaryDark,
+                  color: AppColors.textSecondary(context),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -570,9 +570,10 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppColors.glass(context),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.glassBorder(context)),
+        boxShadow: AppColors.cardShadow(context),
       ),
       child: Row(
         children: [
@@ -582,7 +583,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
             label,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppColors.textSecondaryDark,
+              color: AppColors.textSecondary(context),
             ),
           ),
           const Spacer(),
@@ -593,7 +594,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: valueColor ?? Colors.white,
+                color: valueColor ?? AppColors.textPrimary(context),
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

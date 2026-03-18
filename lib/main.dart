@@ -17,13 +17,19 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive
+  // Initialize Hive — open all boxes before app renders
   await Hive.initFlutter();
   await Hive.openBox('settings');
   await Hive.openBox('learn_progress');
+  await Hive.openBox('news_cache');
+  await Hive.openBox('apod_cache');
+  await Hive.openBox('launches_cache');
+
+  // Read saved theme synchronously before anything renders
+  final initialTheme = ThemeController.initialFromHive();
 
   // Initialize global controllers
-  Get.put(ThemeController());
+  Get.put(ThemeController(initialTheme));
   Get.put(HomeController());
   Get.put(ExploreController());
   Get.put(LaunchesController());

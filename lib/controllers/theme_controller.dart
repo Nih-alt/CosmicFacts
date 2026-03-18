@@ -3,26 +3,28 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class ThemeController extends GetxController {
-  final themeMode = ThemeMode.dark.obs;
+  final Rx<ThemeMode> themeMode;
 
-  @override
-  void onInit() {
-    super.onInit();
-    _loadTheme();
-  }
-
-  void _loadTheme() {
-    final box = Hive.box('settings');
-    final saved = box.get('theme_mode', defaultValue: 'dark') as String;
-    themeMode.value = _modeFromString(saved);
-    Get.changeThemeMode(themeMode.value);
-  }
+  ThemeController(ThemeMode initial) : themeMode = Rx<ThemeMode>(initial);
 
   void setTheme(String mode) {
+    final newMode = _modeFromString(mode);
+    themeMode.value = newMode;
+    Get.changeThemeMode(newMode);
+
     final box = Hive.box('settings');
     box.put('theme_mode', mode);
-    themeMode.value = _modeFromString(mode);
-    Get.changeThemeMode(themeMode.value);
+  }
+
+  String get currentModeString {
+    switch (themeMode.value) {
+      case ThemeMode.light:
+        return 'light';
+      case ThemeMode.system:
+        return 'system';
+      case ThemeMode.dark:
+        return 'dark';
+    }
   }
 
   static ThemeMode _modeFromString(String mode) {
@@ -36,14 +38,9 @@ class ThemeController extends GetxController {
     }
   }
 
-  String get currentModeString {
-    switch (themeMode.value) {
-      case ThemeMode.light:
-        return 'light';
-      case ThemeMode.system:
-        return 'system';
-      case ThemeMode.dark:
-        return 'dark';
-    }
+  static ThemeMode initialFromHive() {
+    final box = Hive.box('settings');
+    final saved = box.get('theme_mode', defaultValue: 'dark') as String;
+    return _modeFromString(saved);
   }
 }

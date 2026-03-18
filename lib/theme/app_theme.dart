@@ -129,7 +129,7 @@ abstract final class AppTheme {
   }
 
   // ──────────────────────────────────────────────
-  // LIGHT THEME
+  // LIGHT THEME — Premium Apple-style
   // ──────────────────────────────────────────────
   static ThemeData get light {
     return ThemeData(
@@ -171,7 +171,7 @@ abstract final class AppTheme {
 
       // AppBar
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
@@ -181,13 +181,12 @@ abstract final class AppTheme {
         iconTheme: const IconThemeData(color: AppColors.textPrimaryLight),
       ),
 
-      // Card
+      // Card — white with purple shadow
       cardTheme: CardThemeData(
-        color: AppColors.cardLight,
+        color: Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.cardBorderLight),
+          borderRadius: BorderRadius.circular(20),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -208,13 +207,13 @@ abstract final class AppTheme {
         ),
       ),
 
-      // Bottom Navigation
+      // Bottom Navigation — white with subtle shadow
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surfaceLight,
+        backgroundColor: Colors.white,
         selectedItemColor: AppColors.accentPurple,
-        unselectedItemColor: AppColors.textSecondaryLight,
+        unselectedItemColor: Color(0xFFB0B0C0),
         type: BottomNavigationBarType.fixed,
-        elevation: 0,
+        elevation: 12,
       ),
 
       // Cupertino overrides
@@ -222,21 +221,21 @@ abstract final class AppTheme {
         primaryColor: AppColors.accentPurple,
         brightness: Brightness.light,
         scaffoldBackgroundColor: AppColors.backgroundLight,
-        barBackgroundColor: AppColors.surfaceLight,
+        barBackgroundColor: Colors.white,
       ),
 
       // Divider
-      dividerTheme: DividerThemeData(
-        color: Colors.black.withValues(alpha: 0.06),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFFEEECF5),
         thickness: 1,
       ),
 
       // Input
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.cardLight,
+        fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.symmetric(
