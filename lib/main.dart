@@ -19,6 +19,7 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
   await Hive.openBox('settings');
+  await Hive.openBox('learn_progress');
 
   // Initialize global controllers
   Get.put(HomeController());

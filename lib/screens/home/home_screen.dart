@@ -15,6 +15,7 @@ import '../../theme/app_colors.dart';
 import '../stories/story_feed_screen.dart';
 import '../explore/explore_screen.dart';
 import '../launches/launches_screen.dart';
+import '../learn/learn_screen.dart';
 import 'apod_detail_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -35,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _HomeTab(),
     ExploreScreen(),
     LaunchesScreen(),
-    _PlaceholderTab(icon: Icons.school, label: 'Learn'),
+    LearnScreen(),
     _PlaceholderTab(icon: Icons.person, label: 'Profile'),
   ];
 
