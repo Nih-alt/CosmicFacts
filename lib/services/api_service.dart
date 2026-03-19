@@ -293,6 +293,36 @@ class ApiService {
     ];
   }
 
+  /// Fetch current ISS location.
+  static Future<Map<String, dynamic>?> getISSLocation() async {
+    final response =
+        await _getWithRetry('http://api.open-notify.org/iss-now.json');
+    if (response == null) return null;
+    return jsonDecode(response.body);
+  }
+
+  /// Fetch astronauts currently in space.
+  static Future<Map<String, dynamic>?> getAstronautsInSpace() async {
+    final response =
+        await _getWithRetry('http://api.open-notify.org/astros.json');
+    if (response == null) return null;
+    return jsonDecode(response.body);
+  }
+
+  /// Fetch near-Earth asteroids for today from NASA NEO API.
+  static Future<List<Map<String, dynamic>>> getNearEarthAsteroids() async {
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    final url =
+        '$_nasaBaseUrl/neo/rest/v1/feed?start_date=$today&end_date=$today&api_key=DEMO_KEY';
+    final response = await _getWithRetry(url);
+    if (response == null) return [];
+    final data = jsonDecode(response.body);
+    final dateKey = data['near_earth_objects']?.keys?.first;
+    if (dateKey == null) return [];
+    return List<Map<String, dynamic>>.from(
+        data['near_earth_objects'][dateKey] ?? []);
+  }
+
   /// Get trending/curated NASA images.
   static Future<List<NasaImage>> getTrendingImages({int page = 1}) async {
     const queries = [

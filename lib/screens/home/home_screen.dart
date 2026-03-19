@@ -17,6 +17,10 @@ import '../explore/explore_screen.dart';
 import '../launches/launches_screen.dart';
 import '../learn/learn_screen.dart';
 import '../profile/profile_screen.dart';
+import '../quick_actions/iss_tracker_screen.dart';
+import '../quick_actions/asteroids_screen.dart';
+import '../quick_actions/moon_phase_screen.dart';
+import '../quick_actions/events_screen.dart';
 import 'apod_detail_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -677,6 +681,14 @@ const _quickActions = [
 
 class _QuickActions extends StatelessWidget {
   const _QuickActions();
+
+  static const _screens = <int, Widget>{
+    0: ISSTrackerScreen(),
+    1: AsteroidsScreen(),
+    2: MoonPhaseScreen(),
+    3: EventsScreen(),
+  };
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -690,20 +702,14 @@ class _QuickActions extends StatelessWidget {
         itemBuilder: (context, index) {
           final action = _quickActions[index];
           return GestureDetector(
-            onTap: () => showCupertinoDialog(
-              context: context,
-              builder: (_) => CupertinoAlertDialog(
-                title: const Text('Coming Soon 🚀'),
-                content: const Text('This feature is being built. Stay tuned!'),
-                actions: [
-                  CupertinoDialogAction(
-                    isDefaultAction: true,
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
-            ),
+            onTap: () {
+              final screen = _screens[index];
+              if (screen != null) {
+                Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (_) => screen),
+                );
+              }
+            },
             child: SizedBox(
               width: 64,
               child: Column(
