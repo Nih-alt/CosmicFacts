@@ -1,5 +1,6 @@
-// Get free NASA API key from: https://api.nasa.gov
-// Replace DEMO_KEY with your personal key for higher rate limits.
+// Get free unlimited API key from: https://api.nasa.gov
+// DEMO_KEY has a 30 requests/hour limit — get your own key for
+// production use (instant signup, no approval needed).
 abstract final class ApiKeys {
-  static const String nasaApiKey = 'DEMO_KEY';
+  static const String nasaApiKey = 'Rt66LkP42amY7tKOmDZNJL1PdvZSDSz0AWYHLnyp';
 }

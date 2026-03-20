@@ -37,14 +37,14 @@ class CacheService {
     await box.put('cached_at', DateTime.now().millisecondsSinceEpoch);
   }
 
-  /// Returns cached APOD if valid (within 6 hours).
+  /// Returns cached APOD if valid (within 12 hours).
   static Future<Map<String, dynamic>?> getCachedApod() async {
     final box = await Hive.openBox(_apodBoxName);
     final cachedAt = box.get('cached_at') as int?;
     if (cachedAt == null) return null;
 
     final age = DateTime.now().millisecondsSinceEpoch - cachedAt;
-    if (age > 6 * 60 * 60 * 1000) return null; // expired
+    if (age > 12 * 60 * 60 * 1000) return null; // expired after 12h
 
     final data = box.get('apod');
     if (data == null) return null;

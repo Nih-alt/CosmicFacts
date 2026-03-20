@@ -21,7 +21,7 @@ import '../quick_actions/iss_tracker_screen.dart';
 import '../quick_actions/asteroids_screen.dart';
 import '../quick_actions/moon_phase_screen.dart';
 import '../quick_actions/events_screen.dart';
-import 'apod_detail_screen.dart';
+import 'apod_archive_screen.dart';
 
 // ═════════════════════════════════════════════
 // TAB SCAFFOLD
@@ -347,7 +347,7 @@ class _HomeTabState extends State<_HomeTab> {
     }
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        CupertinoPageRoute(builder: (_) => ApodDetailScreen(apod: apod)),
+        CupertinoPageRoute(builder: (_) => ApodArchiveScreen(initialDate: apod.date)),
       ),
       child: Container(
         height: 160,

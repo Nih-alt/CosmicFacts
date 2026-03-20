@@ -9,6 +9,7 @@ import '../../controllers/explore_controller.dart';
 import '../../models/nasa_image.dart';
 import '../../theme/app_colors.dart';
 import 'image_detail_screen.dart';
+import 'wallpapers_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -82,6 +83,59 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
 
             const SizedBox(height: 4),
+
+            // ── Wallpapers banner ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (_) => const WallpapersScreen()),
+                ),
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(
+                      colors: [AppColors.accentPurple, AppColors.accentCyan],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentPurple.withValues(alpha: 0.25),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(CupertinoIcons.photo_on_rectangle,
+                          color: Colors.white, size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Space Wallpapers',
+                                style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white)),
+                            Text('HD cosmic wallpapers for your phone',
+                                style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: Colors.white.withValues(alpha: 0.8))),
+                          ],
+                        ),
+                      ),
+                      Icon(CupertinoIcons.chevron_right,
+                          color: Colors.white.withValues(alpha: 0.7), size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
             // ── Search bar ──
             Padding(

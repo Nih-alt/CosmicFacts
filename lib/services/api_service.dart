@@ -313,7 +313,7 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> getNearEarthAsteroids() async {
     final today = DateTime.now().toIso8601String().split('T')[0];
     final url =
-        '$_nasaBaseUrl/neo/rest/v1/feed?start_date=$today&end_date=$today&api_key=DEMO_KEY';
+        '$_nasaBaseUrl/neo/rest/v1/feed?start_date=$today&end_date=$today&api_key=${ApiKeys.nasaApiKey}';
     final response = await _getWithRetry(url);
     if (response == null) return [];
     final data = jsonDecode(response.body);
