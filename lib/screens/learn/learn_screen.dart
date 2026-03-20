@@ -9,7 +9,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/learn_content.dart';
 import '../../theme/app_colors.dart';
 import '../quiz/quiz_hub_screen.dart';
+import 'planet_comparator_screen.dart';
+import 'space_calculator_screen.dart';
+import 'space_glossary_screen.dart';
 import 'topic_detail_screen.dart';
+import 'universe_timeline_screen.dart';
 
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
@@ -125,6 +129,30 @@ class _LearnScreenState extends State<LearnScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: _buildQuizBanner(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: _buildCalculatorBanner(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: _buildComparatorBanner(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: _buildGlossaryBanner(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: _buildTimelineBanner(),
               ),
             ),
             SliverToBoxAdapter(
@@ -266,6 +294,202 @@ class _LearnScreenState extends State<LearnScreen> {
         ),
       ),
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  // ═══════════════════════════════════════
+  // CALCULATOR BANNER
+  // ═══════════════════════════════════════
+
+  Widget _buildCalculatorBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(builder: (_) => const SpaceCalculatorScreen()),
+        );
+      },
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: AppColors.glass(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.2)),
+          boxShadow: AppColors.cardShadow(context),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            const Text('\u{1F9EE}', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Space Calculator',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context))),
+                  Text('8 tools for space math',
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context))),
+                ],
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right,
+                color: AppColors.textSecondary(context), size: 16),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  // ═══════════════════════════════════════
+  // COMPARATOR BANNER
+  // ═══════════════════════════════════════
+
+  Widget _buildComparatorBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(builder: (_) => const PlanetComparatorScreen()),
+        );
+      },
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: AppColors.glass(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.2)),
+          boxShadow: AppColors.cardShadow(context),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            const Text('\u{1F4CA}', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Planet Comparator',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context))),
+                  Text('Compare any 2 planets',
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context))),
+                ],
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right,
+                color: AppColors.textSecondary(context), size: 16),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  // ═══════════════════════════════════════
+  // GLOSSARY BANNER
+  // ═══════════════════════════════════════
+
+  Widget _buildGlossaryBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(builder: (_) => const SpaceGlossaryScreen()),
+        );
+      },
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: AppColors.glass(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.starGold.withValues(alpha: 0.2)),
+          boxShadow: AppColors.cardShadow(context),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            const Text('\u{1F4D6}', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Space Glossary',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context))),
+                  Text('200+ space terms explained',
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context))),
+                ],
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right,
+                color: AppColors.textSecondary(context), size: 16),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  // ═══════════════════════════════════════
+  // TIMELINE BANNER
+  // ═══════════════════════════════════════
+
+  Widget _buildTimelineBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(builder: (_) => const UniverseTimelineScreen()),
+        );
+      },
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: AppColors.glass(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.2)),
+          boxShadow: AppColors.cardShadow(context),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            const Text('\u231B', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Universe Timeline',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context))),
+                  Text('Big Bang to present day',
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context))),
+                ],
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right,
+                color: AppColors.textSecondary(context), size: 16),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 250.ms).slideY(begin: 0.1, end: 0);
   }
 
   // ═══════════════════════════════════════
