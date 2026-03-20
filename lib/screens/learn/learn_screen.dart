@@ -133,28 +133,15 @@ class _LearnScreenState extends State<LearnScreen> {
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _buildCalculatorBanner(),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Text('Tools & Discovery',
+                    style: GoogleFonts.spaceGrotesk(
+                        fontSize: 18, fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary(context))),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _buildComparatorBanner(),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: _buildGlossaryBanner(),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: _buildTimelineBanner(),
-              ),
-            ),
+            SliverToBoxAdapter(child: _buildToolsRow()),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -297,199 +284,81 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 
   // ═══════════════════════════════════════
-  // CALCULATOR BANNER
+  // TOOLS ROW (horizontal scroll)
   // ═══════════════════════════════════════
 
-  Widget _buildCalculatorBanner() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(builder: (_) => const SpaceCalculatorScreen()),
-        );
-      },
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: AppColors.glass(context),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.2)),
-          boxShadow: AppColors.cardShadow(context),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            const Text('\u{1F9EE}', style: TextStyle(fontSize: 28)),
-            const SizedBox(width: 12),
-            Expanded(
+  static const _toolData = <_ToolInfo>[
+    _ToolInfo(Icons.calculate_rounded, 'Calculator', '8 calculators', [Color(0xFF7B5BFF), Color(0xFF00D4FF)]),
+    _ToolInfo(Icons.compare_arrows_rounded, 'Comparator', 'Compare worlds', [Color(0xFF00D4FF), Color(0xFF4A90D9)]),
+    _ToolInfo(Icons.menu_book_rounded, 'Glossary', '200+ terms', [Color(0xFFDAA520), Color(0xFFFFD700)]),
+    _ToolInfo(Icons.timeline_rounded, 'Timeline', '13.8B years', [Color(0xFFFF6B35), Color(0xFFFF4D6A)]),
+  ];
+
+  Widget _buildToolsRow() {
+    final screens = [
+      const SpaceCalculatorScreen(),
+      const PlanetComparatorScreen(),
+      const SpaceGlossaryScreen(),
+      const UniverseTimelineScreen(),
+    ];
+    return SizedBox(
+      height: 108,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: _toolData.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (context, i) {
+          final t = _toolData[i];
+          return GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              CupertinoPageRoute(builder: (_) => screens[i]),
+            ),
+            child: Container(
+              width: 140,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: _isDark ? null : AppColors.cardLight,
+                gradient: _isDark ? LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [AppColors.surfaceDark, t.colors[0].withValues(alpha: 0.08)],
+                ) : null,
+                border: Border.all(color: t.colors[0].withValues(alpha: _isDark ? 0.15 : 0.1)),
+                boxShadow: _isDark
+                  ? [BoxShadow(color: t.colors[0].withValues(alpha: 0.06), blurRadius: 16)]
+                  : [BoxShadow(color: t.colors[0].withValues(alpha: 0.12), blurRadius: 14, offset: const Offset(0, 4)),
+                     BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2))],
+              ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Space Calculator',
+                  Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(colors: t.colors),
+                      boxShadow: [BoxShadow(color: t.colors[0].withValues(alpha: 0.25), blurRadius: 8)],
+                    ),
+                    child: Icon(t.icon, color: Colors.white, size: 18),
+                  ),
+                  const Spacer(),
+                  Text(t.name,
                       style: GoogleFonts.spaceGrotesk(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 14, fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary(context))),
-                  Text('8 tools for space math',
+                  Text(t.sub,
                       style: GoogleFonts.inter(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: AppColors.textSecondary(context))),
                 ],
               ),
             ),
-            Icon(CupertinoIcons.chevron_right,
-                color: AppColors.textSecondary(context), size: 16),
-          ],
-        ),
+          ).animate().fadeIn(duration: 350.ms, delay: Duration(milliseconds: 60 * i));
+        },
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  // ═══════════════════════════════════════
-  // COMPARATOR BANNER
-  // ═══════════════════════════════════════
-
-  Widget _buildComparatorBanner() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(builder: (_) => const PlanetComparatorScreen()),
-        );
-      },
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: AppColors.glass(context),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.accentCyan.withValues(alpha: 0.2)),
-          boxShadow: AppColors.cardShadow(context),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            const Text('\u{1F4CA}', style: TextStyle(fontSize: 28)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Planet Comparator',
-                      style: GoogleFonts.spaceGrotesk(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary(context))),
-                  Text('Compare any 2 planets',
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary(context))),
-                ],
-              ),
-            ),
-            Icon(CupertinoIcons.chevron_right,
-                color: AppColors.textSecondary(context), size: 16),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms, delay: 150.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  // ═══════════════════════════════════════
-  // GLOSSARY BANNER
-  // ═══════════════════════════════════════
-
-  Widget _buildGlossaryBanner() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(builder: (_) => const SpaceGlossaryScreen()),
-        );
-      },
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: AppColors.glass(context),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.starGold.withValues(alpha: 0.2)),
-          boxShadow: AppColors.cardShadow(context),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            const Text('\u{1F4D6}', style: TextStyle(fontSize: 28)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Space Glossary',
-                      style: GoogleFonts.spaceGrotesk(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary(context))),
-                  Text('200+ space terms explained',
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary(context))),
-                ],
-              ),
-            ),
-            Icon(CupertinoIcons.chevron_right,
-                color: AppColors.textSecondary(context), size: 16),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  // ═══════════════════════════════════════
-  // TIMELINE BANNER
-  // ═══════════════════════════════════════
-
-  Widget _buildTimelineBanner() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(builder: (_) => const UniverseTimelineScreen()),
-        );
-      },
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: AppColors.glass(context),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.2)),
-          boxShadow: AppColors.cardShadow(context),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            const Text('\u231B', style: TextStyle(fontSize: 28)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Universe Timeline',
-                      style: GoogleFonts.spaceGrotesk(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary(context))),
-                  Text('Big Bang to present day',
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary(context))),
-                ],
-              ),
-            ),
-            Icon(CupertinoIcons.chevron_right,
-                color: AppColors.textSecondary(context), size: 16),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms, delay: 250.ms).slideY(begin: 0.1, end: 0);
+    );
   }
 
   // ═══════════════════════════════════════
@@ -855,4 +724,11 @@ class _LearnScreenState extends State<LearnScreen> {
       if (mounted) setState(() {});
     });
   }
+}
+
+class _ToolInfo {
+  final IconData icon;
+  final String name, sub;
+  final List<Color> colors;
+  const _ToolInfo(this.icon, this.name, this.sub, this.colors);
 }
