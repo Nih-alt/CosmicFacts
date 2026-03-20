@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../data/learn_content.dart';
 import '../../theme/app_colors.dart';
+import '../quiz/quiz_hub_screen.dart';
 import 'topic_detail_screen.dart';
 
 class LearnScreen extends StatefulWidget {
@@ -122,7 +123,13 @@ class _LearnScreenState extends State<LearnScreen> {
             SliverToBoxAdapter(child: _buildTopBar()),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                child: _buildQuizBanner(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: _buildFeaturedCard(),
               ),
             ),
@@ -182,6 +189,83 @@ class _LearnScreenState extends State<LearnScreen> {
         ),
       ),
     );
+  }
+
+  // ═══════════════════════════════════════
+  // QUIZ BANNER
+  // ═══════════════════════════════════════
+
+  int get _quizStreak {
+    if (!_boxReady) return 0;
+    final quizBox = Hive.box('quiz_stats');
+    return quizBox.get('currentStreak', defaultValue: 0) as int;
+  }
+
+  Widget _buildQuizBanner() {
+    final streak = _quizStreak;
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(builder: (_) => const QuizHubScreen()),
+        );
+      },
+      child: Container(
+        height: 80,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFDAA520), Color(0xFFFF8C00)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFDAA520).withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        child: Row(
+          children: [
+            const Text('\u{1F9E0}', style: TextStyle(fontSize: 36)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Space Quiz',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                  Text('Test your knowledge',
+                      style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.9))),
+                ],
+              ),
+            ),
+            if (streak > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text('\u{1F525} $streak',
+                    style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+              ),
+            const SizedBox(width: 8),
+            Icon(CupertinoIcons.chevron_right,
+                color: Colors.white.withValues(alpha: 0.7), size: 18),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
   // ═══════════════════════════════════════

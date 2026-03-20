@@ -24,6 +24,7 @@ void main() async {
   await Hive.openBox('news_cache');
   await Hive.openBox('apod_cache');
   await Hive.openBox('launches_cache');
+  await Hive.openBox('quiz_stats');
 
   // Read saved theme synchronously before anything renders
   final initialTheme = ThemeController.initialFromHive();
