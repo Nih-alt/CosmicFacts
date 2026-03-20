@@ -12,7 +12,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:get/get.dart';
+
 import '../../constants/api_keys.dart';
+import '../../controllers/bookmark_controller.dart';
+import '../../models/bookmark_model.dart';
 import '../../theme/app_colors.dart';
 
 class ApodArchiveScreen extends StatefulWidget {
@@ -504,25 +508,45 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
               ),
               const SizedBox(width: 12),
               Container(
-                height: 48,
-                width: 48,
+                height: 48, width: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   color: AppColors.glass(context),
-                  border:
-                      Border.all(color: AppColors.glassBorder(context)),
+                  border: Border.all(color: AppColors.glassBorder(context)),
                 ),
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: () => SharePlus.instance.share(ShareParams(
-                    text:
-                        '$title\n\nNASA Astronomy Picture of the Day ($date)\n$imageUrl\n\nvia Cosmic Facts',
+                    text: '$title\n\nNASA Astronomy Picture of the Day ($date)\n$imageUrl\n\nvia Cosmic Facts',
                   )),
-                  child: Icon(CupertinoIcons.share,
-                      size: 20,
-                      color: AppColors.textPrimary(context)),
+                  child: Icon(CupertinoIcons.share, size: 20, color: AppColors.textPrimary(context)),
                 ),
               ),
+              const SizedBox(width: 8),
+              // Bookmark
+              Obx(() {
+                final bmCtrl = Get.find<BookmarkController>();
+                final bmId = 'apod_$date';
+                final saved = bmCtrl.isBookmarked(bmId);
+                return Container(
+                  height: 48, width: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    color: AppColors.glass(context),
+                    border: Border.all(color: AppColors.glassBorder(context)),
+                  ),
+                  child: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => bmCtrl.toggleBookmark(BookmarkModel(
+                      id: bmId, type: 'apod', title: title,
+                      subtitle: date, imageUrl: imageUrl,
+                      data: jsonEncode(_apod), savedAt: DateTime.now(),
+                    )),
+                    child: Icon(saved ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                      size: 20, color: saved ? AppColors.error : AppColors.textPrimary(context)),
+                  ),
+                );
+              }),
             ],
           ),
         ],

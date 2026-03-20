@@ -12,6 +12,7 @@ import '../quiz/quiz_hub_screen.dart';
 import 'planet_comparator_screen.dart';
 import 'space_calculator_screen.dart';
 import 'space_glossary_screen.dart';
+import 'space_sounds_screen.dart';
 import 'topic_detail_screen.dart';
 import 'universe_timeline_screen.dart';
 
@@ -292,6 +293,7 @@ class _LearnScreenState extends State<LearnScreen> {
     _ToolInfo(Icons.compare_arrows_rounded, 'Comparator', 'Compare worlds', [Color(0xFF00D4FF), Color(0xFF4A90D9)]),
     _ToolInfo(Icons.menu_book_rounded, 'Glossary', '200+ terms', [Color(0xFFDAA520), Color(0xFFFFD700)]),
     _ToolInfo(Icons.timeline_rounded, 'Timeline', '13.8B years', [Color(0xFFFF6B35), Color(0xFFFF4D6A)]),
+    _ToolInfo(Icons.volume_up_rounded, 'Sounds', 'Hear cosmos', [Color(0xFF00BFA5), Color(0xFF00E096)]),
   ];
 
   Widget _buildToolsRow() {
@@ -300,6 +302,7 @@ class _LearnScreenState extends State<LearnScreen> {
       const PlanetComparatorScreen(),
       const SpaceGlossaryScreen(),
       const UniverseTimelineScreen(),
+      const SpaceSoundsScreen(),
     ];
     return SizedBox(
       height: 108,

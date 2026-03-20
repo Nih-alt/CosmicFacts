@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'controllers/bookmark_controller.dart';
 import 'controllers/explore_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/launches_controller.dart';
@@ -25,6 +26,7 @@ void main() async {
   await Hive.openBox('apod_cache');
   await Hive.openBox('launches_cache');
   await Hive.openBox('quiz_stats');
+  await Hive.openBox('bookmarks');
 
   // Read saved theme synchronously before anything renders
   final initialTheme = ThemeController.initialFromHive();
@@ -34,6 +36,7 @@ void main() async {
   Get.put(HomeController());
   Get.put(ExploreController());
   Get.put(LaunchesController());
+  Get.put(BookmarkController());
 
   // Prefer edge-to-edge, immersive status bar
   SystemChrome.setSystemUIOverlayStyle(
