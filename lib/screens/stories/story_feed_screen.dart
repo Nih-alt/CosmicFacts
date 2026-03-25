@@ -6,10 +6,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../controllers/home_controller.dart';
 import '../../models/space_article.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
 import 'article_detail_screen.dart';
+
+// ═════════════════════════════════════════════
+// CATEGORY DATA
+// ═════════════════════════════════════════════
+
+class _CategoryItem {
+  final String label;
+  final String emoji;
+  const _CategoryItem(this.label, this.emoji);
+}
+
+const _allCategories = [
+  _CategoryItem('All', ''),
+  _CategoryItem('NASA', '\u{1F534}'),
+  _CategoryItem('ISRO', '\u{1F1EE}\u{1F1F3}'),
+  _CategoryItem('SpaceX', '\u{1F680}'),
+  _CategoryItem('ESA', '\u{1F30D}'),
+  _CategoryItem('Roscosmos', '\u{1F1F7}\u{1F1FA}'),
+  _CategoryItem('Blue Origin', '\u{1F499}'),
+  _CategoryItem('Rocket Lab', '\u{26A1}'),
+  _CategoryItem('Missions', '\u{1F6F0}\u{FE0F}'),
+  _CategoryItem('Science', '\u{1F52C}'),
+];
 
 // ═════════════════════════════════════════════
 // BADGE GRADIENT PER SOURCE
@@ -41,11 +66,64 @@ class _FeedController extends GetxController {
   final liked = <int, bool>{}.obs;
   final bookmarked = <int, bool>{}.obs;
   final showSwipeHint = true.obs;
+  final selectedCategory = 'All'.obs;
+  final categoryArticles = <SpaceArticle>[].obs;
+  final isCategoryLoading = false.obs;
+  final categoryHasError = false.obs;
+  int _categoryOffset = 0;
+  final isCategoryLoadingMore = false.obs;
 
   void toggleLike(int id) => liked[id] = !(liked[id] ?? false);
   void toggleBookmark(int id) => bookmarked[id] = !(bookmarked[id] ?? false);
   bool isLiked(int id) => liked[id] ?? false;
   bool isBookmarked(int id) => bookmarked[id] ?? false;
+
+  Future<void> selectCategory(String category) async {
+    if (selectedCategory.value == category) return;
+    selectedCategory.value = category;
+    _categoryOffset = 0;
+    categoryArticles.clear();
+    categoryHasError.value = false;
+
+    if (category == 'All') return; // Use home controller stories
+
+    isCategoryLoading.value = true;
+    final articles = await ApiService.getNewsByCategory(category);
+    if (articles != null) {
+      categoryArticles.assignAll(articles);
+      _categoryOffset = articles.length;
+    } else {
+      categoryHasError.value = true;
+    }
+    isCategoryLoading.value = false;
+  }
+
+  Future<void> loadMoreCategoryArticles() async {
+    if (isCategoryLoadingMore.value || selectedCategory.value == 'All') return;
+    isCategoryLoadingMore.value = true;
+    final articles = await ApiService.getNewsByCategory(
+      selectedCategory.value,
+      offset: _categoryOffset,
+    );
+    if (articles != null && articles.isNotEmpty) {
+      categoryArticles.addAll(articles);
+      _categoryOffset += articles.length;
+    }
+    isCategoryLoadingMore.value = false;
+  }
+
+  Future<void> retryCategory() async {
+    categoryHasError.value = false;
+    isCategoryLoading.value = true;
+    final articles = await ApiService.getNewsByCategory(selectedCategory.value);
+    if (articles != null) {
+      categoryArticles.assignAll(articles);
+      _categoryOffset = articles.length;
+    } else {
+      categoryHasError.value = true;
+    }
+    isCategoryLoading.value = false;
+  }
 }
 
 // ═════════════════════════════════════════════
@@ -54,7 +132,8 @@ class _FeedController extends GetxController {
 
 class StoryFeedScreen extends StatefulWidget {
   final int initialIndex;
-  const StoryFeedScreen({super.key, this.initialIndex = 0});
+  final String initialCategory;
+  const StoryFeedScreen({super.key, this.initialIndex = 0, this.initialCategory = 'All'});
 
   @override
   State<StoryFeedScreen> createState() => _StoryFeedScreenState();
@@ -65,12 +144,18 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
   late final _FeedController _feed;
   final _homeCtrl = Get.find<HomeController>();
 
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: widget.initialIndex);
     _feed = Get.put(_FeedController());
     _feed.currentPage.value = widget.initialIndex;
+
+    if (widget.initialCategory != 'All') {
+      _feed.selectCategory(widget.initialCategory);
+    }
 
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) _feed.showSwipeHint.value = false;
@@ -80,80 +165,266 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
   @override
   void dispose() {
     _pageController.dispose();
-    Get.delete<_FeedController>();
+    // Defer deletion so Obx listeners in child widgets aren't
+    // triggered on a disposed controller during the pop animation.
+    Future.microtask(() => Get.delete<_FeedController>(force: true));
     super.dispose();
   }
 
   void _onPageChanged(int index) {
     _feed.currentPage.value = index;
-    // Infinite scroll: prefetch when 5 from end
-    if (index >= _homeCtrl.stories.length - 5) {
-      _homeCtrl.loadMoreStories();
+    final isAll = _feed.selectedCategory.value == 'All';
+    final stories = isAll ? _homeCtrl.stories : _feed.categoryArticles;
+    if (index >= stories.length - 5) {
+      if (isAll) {
+        _homeCtrl.loadMoreStories();
+      } else {
+        _feed.loadMoreCategoryArticles();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      body: Obx(() {
-        final stories = _homeCtrl.stories;
+      backgroundColor: _isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: Column(
+        children: [
+          // Safe area + category pills
+          SafeArea(
+            bottom: false,
+            child: _buildCategoryPills(),
+          ),
+          // Stories
+          Expanded(
+            child: Obx(() {
+              final isAll = _feed.selectedCategory.value == 'All';
+              final stories = isAll ? _homeCtrl.stories : _feed.categoryArticles;
+              final isLoading = isAll ? _homeCtrl.isLoading.value : _feed.isCategoryLoading.value;
+              final hasError = !isAll && _feed.categoryHasError.value;
 
-        if (stories.isEmpty && _homeCtrl.isLoading.value) {
-          return const Center(
-            child: CupertinoActivityIndicator(color: AppColors.accentPurple, radius: 14),
-          );
-        }
+              if (stories.isEmpty && isLoading) {
+                return _buildShimmerLoading();
+              }
 
-        if (stories.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+              if (hasError) {
+                return _buildCategoryError();
+              }
+
+              if (stories.isEmpty) {
+                return _buildEmptyState();
+              }
+
+              return Stack(
+                children: [
+                  PageView.builder(
+                    controller: _pageController,
+                    scrollDirection: Axis.vertical,
+                    physics: const BouncingScrollPhysics(),
+                    onPageChanged: _onPageChanged,
+                    itemCount: stories.length,
+                    itemBuilder: (context, index) {
+                      return _StoryPage(
+                        article: stories[index],
+                        index: index,
+                        totalCount: stories.length,
+                        isDark: _isDark,
+                        feed: _feed,
+                      );
+                    },
+                  ),
+                  if ((isAll && _homeCtrl.isLoadingMore.value) ||
+                      (!isAll && _feed.isCategoryLoadingMore.value))
+                    const Positioned(
+                      bottom: 40,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: CupertinoActivityIndicator(color: AppColors.accentPurple),
+                      ),
+                    ),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryPills() {
+    return Container(
+      padding: const EdgeInsets.only(top: 8, bottom: 12),
+      decoration: BoxDecoration(
+        color: _isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.divider(context),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
               children: [
-                const Icon(CupertinoIcons.doc_text, size: 48, color: AppColors.textSecondaryDark),
-                const SizedBox(height: 16),
-                Text('No stories available',
-                    style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
-                const SizedBox(height: 24),
-                CupertinoButton(
-                  color: AppColors.accentPurple,
-                  borderRadius: BorderRadius.circular(12),
-                  onPressed: _homeCtrl.refreshData,
-                  child: Text('Refresh', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Icon(CupertinoIcons.back, size: 24,
+                      color: AppColors.textPrimary(context)),
                 ),
+                const SizedBox(width: 12),
+                Text('Space Stories',
+                    style: GoogleFonts.spaceGrotesk(fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary(context))),
               ],
             ),
-          );
-        }
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 38,
+            child: Obx(() {
+              // Read observable eagerly so Obx can track it
+              // (itemBuilder is a lazy callback invisible to Obx).
+              final selectedCat = _feed.selectedCategory.value;
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _allCategories.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final cat = _allCategories[index];
+                  final isSelected = selectedCat == cat.label;
+                  return GestureDetector(
+                    onTap: () {
+                      _feed.selectCategory(cat.label);
+                      if (_pageController.hasClients) {
+                        _pageController.jumpToPage(0);
+                      }
+                      _feed.currentPage.value = 0;
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: isSelected ? AppColors.primaryGradient : null,
+                        color: isSelected ? null : (_isDark ? const Color(0xFF141438) : Colors.white),
+                        borderRadius: BorderRadius.circular(20),
+                        border: isSelected ? null : Border.all(
+                          color: _isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : const Color(0xFFEEECF5),
+                        ),
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.3), blurRadius: 8)]
+                            : AppColors.cardShadow(context),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (cat.emoji.isNotEmpty) ...[
+                            Text(cat.emoji, style: const TextStyle(fontSize: 14)),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            cat.label,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (_isDark ? Colors.white : const Color(0xFF1A1A2E)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
 
-        return Stack(
-          children: [
-            PageView.builder(
-              controller: _pageController,
-              scrollDirection: Axis.vertical,
-              physics: const BouncingScrollPhysics(),
-              onPageChanged: _onPageChanged,
-              itemCount: stories.length,
-              itemBuilder: (context, index) {
-                return _StoryPage(
-                  article: stories[index],
-                  index: index,
-                );
-              },
-            ),
-            // Loading more indicator
-            if (_homeCtrl.isLoadingMore.value)
-              const Positioned(
-                bottom: 40,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: CupertinoActivityIndicator(color: AppColors.accentPurple),
-                ),
+  Widget _buildShimmerLoading() {
+    final base = AppColors.shimmerBase(context);
+    final highlight = AppColors.shimmerHighlight(context);
+    return Shimmer.fromColors(
+      baseColor: base,
+      highlightColor: highlight,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: List.generate(3, (i) => Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: base,
+                borderRadius: BorderRadius.circular(20),
               ),
-          ],
-        );
-      }),
+            ),
+          )),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryError() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(CupertinoIcons.exclamationmark_triangle, size: 48,
+              color: AppColors.textSecondary(context)),
+          const SizedBox(height: 16),
+          Obx(() => Text(
+            'No stories found for ${_feed.selectedCategory.value}',
+            style: GoogleFonts.spaceGrotesk(fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(context)),
+          )),
+          const SizedBox(height: 24),
+          CupertinoButton(
+            color: AppColors.accentPurple,
+            borderRadius: BorderRadius.circular(12),
+            onPressed: _feed.retryCategory,
+            child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(CupertinoIcons.doc_text, size: 48,
+              color: AppColors.textSecondary(context)),
+          const SizedBox(height: 16),
+          Text('No stories available',
+              style: GoogleFonts.spaceGrotesk(fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary(context))),
+          const SizedBox(height: 24),
+          CupertinoButton(
+            color: AppColors.accentPurple,
+            borderRadius: BorderRadius.circular(12),
+            onPressed: _homeCtrl.refreshData,
+            child: Text('Refresh', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -165,25 +436,32 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
 class _StoryPage extends StatelessWidget {
   final SpaceArticle article;
   final int index;
+  final int totalCount;
+  final bool isDark;
+  final _FeedController feed;
 
-  const _StoryPage({required this.article, required this.index});
+  const _StoryPage({
+    required this.article,
+    required this.index,
+    required this.totalCount,
+    required this.isDark,
+    required this.feed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final feed = Get.find<_FeedController>();
-    final homeCtrl = Get.find<HomeController>();
-
     return Stack(
       children: [
-        // LAYER 0: Base dark color + starfield (always visible)
+        // LAYER 0: Base color + starfield
         Positioned.fill(
-          child: Container(color: AppColors.backgroundDark),
+          child: Container(
+            color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+          ),
         ),
-        const Positioned.fill(child: _Starfield()),
-        // Nebula glow
-        const _NebulaGlow(),
+        if (isDark) const Positioned.fill(child: _Starfield()),
+        if (isDark) const _NebulaGlow(),
 
-        // LAYER 1: Article image on top of stars (if available)
+        // LAYER 1: Article image
         if (article.imageUrl.isNotEmpty)
           Positioned.fill(
             child: CachedNetworkImage(
@@ -196,19 +474,26 @@ class _StoryPage extends StatelessWidget {
             ),
           ),
 
-        // LAYER 2: Dark gradient overlay for text readability
+        // LAYER 2: Gradient overlay
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.3),
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.85),
-                  Colors.black.withValues(alpha: 0.95),
-                ],
+                colors: isDark
+                    ? [
+                        Colors.black.withValues(alpha: 0.3),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.85),
+                        Colors.black.withValues(alpha: 0.95),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 0.4),
+                        Colors.transparent,
+                        Colors.white.withValues(alpha: 0.85),
+                        Colors.white.withValues(alpha: 0.97),
+                      ],
                 stops: const [0.0, 0.3, 0.55, 1.0],
               ),
             ),
@@ -217,81 +502,64 @@ class _StoryPage extends StatelessWidget {
 
         // LAYER 3: Content
         SafeArea(
+          top: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Top row: badge + time + close ──
+              // Top row: badge + time
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
                         gradient: _badgeGradient(article.newsSite),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         article.newsSite,
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white),
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       _timeAgo(article.publishedAt),
                       style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.6)),
-                    ),
-                    const Spacer(),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black.withValues(alpha: 0.3),
-                        ),
-                        child: const Icon(CupertinoIcons.xmark,
-                            size: 16, color: Colors.white),
+                        fontSize: 12,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : Colors.black.withValues(alpha: 0.5),
                       ),
                     ),
+                    const Spacer(),
                   ],
                 ),
               ),
 
-              // Push everything to bottom
               const Spacer(),
 
-              // ── Bottom content — overlaid on dark gradient ──
+              // Bottom content
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Source icon
-                    Icon(Icons.public,
-                            size: 24,
-                            color: Colors.white.withValues(alpha: 0.7))
+                    Icon(Icons.public, size: 24,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : Colors.black.withValues(alpha: 0.5))
                         .animate()
                         .fadeIn(duration: 400.ms, delay: 100.ms),
 
                     const SizedBox(height: 10),
 
-                    // Headline
                     Text(
                       article.title,
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
                         height: 1.2,
                       ),
                       maxLines: 3,
@@ -299,20 +567,17 @@ class _StoryPage extends StatelessWidget {
                     )
                         .animate()
                         .fadeIn(duration: 500.ms, delay: 150.ms)
-                        .slideY(
-                            begin: 0.1,
-                            end: 0,
-                            duration: 500.ms,
-                            delay: 150.ms),
+                        .slideY(begin: 0.1, end: 0, duration: 500.ms, delay: 150.ms),
 
                     const SizedBox(height: 12),
 
-                    // Summary
                     Text(
                       article.summary,
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.85)
+                            : Colors.black.withValues(alpha: 0.7),
                         height: 1.55,
                       ),
                       maxLines: 4,
@@ -320,39 +585,31 @@ class _StoryPage extends StatelessWidget {
                     )
                         .animate()
                         .fadeIn(duration: 500.ms, delay: 250.ms)
-                        .slideY(
-                            begin: 0.1,
-                            end: 0,
-                            duration: 500.ms,
-                            delay: 250.ms),
+                        .slideY(begin: 0.1, end: 0, duration: 500.ms, delay: 250.ms),
 
                     const SizedBox(height: 16),
 
-                    // Read Full Article button
                     GestureDetector(
                       onTap: () => Navigator.of(context).push(
                         CupertinoPageRoute(
-                          builder: (_) =>
-                              ArticleDetailScreen(article: article),
+                          builder: (_) => ArticleDetailScreen(article: article),
                         ),
                       ),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
                           gradient: AppColors.primaryGradient,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  AppColors.accentPurple.withValues(alpha: 0.3),
+                              color: AppColors.accentPurple.withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         child: Text(
-                          'Read Full Article →',
+                          'Read Full Article \u2192',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -364,7 +621,6 @@ class _StoryPage extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // Bottom action row
                     Obx(() {
                       final liked = feed.isLiked(article.id);
                       final bookmarked = feed.isBookmarked(article.id);
@@ -372,36 +628,39 @@ class _StoryPage extends StatelessWidget {
                       return Row(
                         children: [
                           _ActionButton(
-                            icon: liked
-                                ? CupertinoIcons.heart_fill
-                                : CupertinoIcons.heart,
+                            icon: liked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
                             color: liked
                                 ? const Color(0xFFFF4D6A)
-                                : Colors.white.withValues(alpha: 0.6),
+                                : (isDark
+                                    ? Colors.white.withValues(alpha: 0.6)
+                                    : Colors.black.withValues(alpha: 0.4)),
                             onTap: () => feed.toggleLike(article.id),
                           ),
                           const SizedBox(width: 8),
                           _ActionButton(
-                            icon: bookmarked
-                                ? CupertinoIcons.bookmark_fill
-                                : CupertinoIcons.bookmark,
+                            icon: bookmarked ? CupertinoIcons.bookmark_fill : CupertinoIcons.bookmark,
                             color: bookmarked
                                 ? AppColors.starGold
-                                : Colors.white.withValues(alpha: 0.6),
+                                : (isDark
+                                    ? Colors.white.withValues(alpha: 0.6)
+                                    : Colors.black.withValues(alpha: 0.4)),
                             onTap: () => feed.toggleBookmark(article.id),
                           ),
                           const SizedBox(width: 8),
                           _ActionButton(
                             icon: CupertinoIcons.share,
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.6)
+                                : Colors.black.withValues(alpha: 0.4),
                             onTap: () {},
                           ),
                           const Spacer(),
                           Text(
-                            '${page + 1} of ${homeCtrl.stories.length}',
+                            '${page + 1} of $totalCount',
                             style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: AppColors.textSecondaryDark),
+                              fontSize: 13,
+                              color: AppColors.textSecondary(context),
+                            ),
                           ),
                         ],
                       );
@@ -417,7 +676,6 @@ class _StoryPage extends StatelessWidget {
       ],
     );
   }
-
 }
 
 // ═════════════════════════════════════════════
@@ -470,9 +728,8 @@ class _ActionButtonState extends State<_ActionButton> with SingleTickerProviderS
   }
 }
 
-
 // ═════════════════════════════════════════════
-// STARFIELD — twinkling stars behind every card
+// STARFIELD
 // ═════════════════════════════════════════════
 
 class _Starfield extends StatelessWidget {
@@ -517,7 +774,7 @@ class _Starfield extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════
-// NEBULA GLOW — subtle cosmic atmosphere
+// NEBULA GLOW
 // ═════════════════════════════════════════════
 
 class _NebulaGlow extends StatelessWidget {
@@ -529,7 +786,6 @@ class _NebulaGlow extends StatelessWidget {
 
     return Stack(
       children: [
-        // Purple glow
         Positioned(
           left: size.width * 0.2,
           bottom: size.height * 0.25,
@@ -551,7 +807,6 @@ class _NebulaGlow extends StatelessWidget {
               .then()
               .fadeOut(duration: const Duration(seconds: 3)),
         ),
-        // Cyan glow
         Positioned(
           right: size.width * 0.15,
           bottom: size.height * 0.35,

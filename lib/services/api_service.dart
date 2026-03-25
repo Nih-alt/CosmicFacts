@@ -50,6 +50,33 @@ class ApiService {
     }
   }
 
+  /// Fetch news filtered by category/agency search term.
+  static Future<List<SpaceArticle>?> getNewsByCategory(
+    String category, {
+    int offset = 0,
+    int limit = 20,
+  }) async {
+    String url;
+    if (category == 'All') {
+      url = '$_newsBaseUrl/articles/?limit=$limit&offset=$offset';
+    } else {
+      final encoded = Uri.encodeComponent(category);
+      url = '$_newsBaseUrl/articles/?search=$encoded&limit=$limit&offset=$offset';
+    }
+    final response = await _getWithRetry(url);
+    if (response == null) return null;
+
+    try {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final results = data['results'] as List<dynamic>;
+      return results
+          .map((e) => SpaceArticle.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Fetch NASA Astronomy Picture of the Day.
   static Future<ApodModel?> getApod() async {
     final response = await _getWithRetry(

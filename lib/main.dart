@@ -13,6 +13,7 @@ import 'controllers/home_controller.dart';
 import 'controllers/launches_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'screens/splash_screen.dart';
+import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -28,6 +29,9 @@ void main() async {
   await Hive.openBox('quiz_stats');
   await Hive.openBox('bookmarks');
 
+  // Initialize notifications
+  await NotificationService.init();
+
   // Read saved theme synchronously before anything renders
   final initialTheme = ThemeController.initialFromHive();
 
@@ -37,6 +41,9 @@ void main() async {
   Get.put(ExploreController());
   Get.put(LaunchesController());
   Get.put(BookmarkController());
+
+  // Schedule notifications if enabled
+  await NotificationService.scheduleFromPrefs();
 
   // Prefer edge-to-edge, immersive status bar
   SystemChrome.setSystemUIOverlayStyle(

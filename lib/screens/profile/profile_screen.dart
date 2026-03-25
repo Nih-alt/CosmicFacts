@@ -8,8 +8,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/theme_controller.dart';
+import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
+import '../learn/space_quotes_screen.dart';
 import '../onboarding/onboarding_screen.dart';
+import 'notification_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -34,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadPrefs() async {
     final settings = Hive.box('settings');
     _notificationsOn =
-        settings.get('notifications', defaultValue: false) == true;
+        settings.get('notifications_enabled', defaultValue: false) == true;
     final progressBox = await Hive.openBox('learn_progress');
     int count = 0;
     for (final key in progressBox.keys) {
@@ -73,6 +76,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   .fadeIn(duration: 400.ms, delay: 100.ms)
                   .slideY(begin: 0.05, end: 0, delay: 100.ms),
               const SizedBox(height: 20),
+              _buildDailyQuote()
+                  .animate()
+                  .fadeIn(duration: 400.ms, delay: 125.ms)
+                  .slideY(begin: 0.05, end: 0, delay: 125.ms),
+              const SizedBox(height: 20),
               _buildJourney()
                   .animate()
                   .fadeIn(duration: 400.ms, delay: 150.ms)
@@ -82,7 +90,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildThemeRow(),
                 _divider(),
                 _buildIconRow(Icons.notifications_outlined, const Color(0xFF00D4FF),
-                    'Push Notifications', trailing: _notificationSwitch()),
+                    'Push Notifications', trailing: _notificationSwitch(),
+                    onTap: _openNotificationSettings),
                 _divider(),
                 _buildIconRow(Icons.favorite_outline, const Color(0xFFE040FB),
                     'My Interests', onTap: _showInterestsSheet),
@@ -232,6 +241,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: GoogleFonts.inter(fontSize: 10,
                   color: AppColors.textSecondary(context))),
         ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════
+  // DAILY QUOTE
+  // ═══════════════════════════════════════
+
+  Widget _buildDailyQuote() {
+    final quote = getDailyQuote();
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        CupertinoPageRoute(builder: (_) => const SpaceQuotesScreen()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _isDark
+              ? AppColors.accentPurple.withValues(alpha: 0.08)
+              : const Color(0xFFF5F0FF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.15)),
+          boxShadow: AppColors.cardShadow(context),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ShaderMask(
+                  shaderCallback: (b) => AppColors.primaryGradient.createShader(b),
+                  child: const Icon(Icons.format_quote_rounded, size: 20, color: Colors.white),
+                ),
+                const SizedBox(width: 8),
+                Text('Daily Quote',
+                    style: GoogleFonts.spaceGrotesk(fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.accentPurple)),
+                const Spacer(),
+                Icon(CupertinoIcons.chevron_right, size: 14,
+                    color: AppColors.textSecondary(context)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '\u201C${quote.quote}\u201D',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+                color: AppColors.textPrimary(context),
+                height: 1.5,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '\u2014 ${quote.author}, ${quote.role}',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -465,25 +540,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return CupertinoSwitch(
       value: _notificationsOn,
       activeTrackColor: AppColors.accentPurple,
-      onChanged: (val) {
+      onChanged: (val) async {
         setState(() => _notificationsOn = val);
-        Hive.box('settings').put('notifications', val);
+        final settings = Hive.box('settings');
+        await settings.put('notifications_enabled', val);
+        await settings.put('notifications', val);
         if (val) {
-          showCupertinoDialog(
-            context: context,
-            builder: (_) => CupertinoAlertDialog(
-              title: const Text('Notifications'),
-              content: const Text('Push notifications will be available in the next update!'),
-              actions: [
-                CupertinoDialogAction(isDefaultAction: true,
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('OK')),
-              ],
-            ),
-          );
+          await NotificationService.scheduleDailyFact();
+          await NotificationService.scheduleApodReminder();
+          await NotificationService.scheduleQuizReminder();
+        } else {
+          await NotificationService.cancelAll();
         }
       },
     );
+  }
+
+  void _openNotificationSettings() async {
+    await Navigator.of(context).push(
+      CupertinoPageRoute(builder: (_) => const NotificationSettingsScreen()),
+    );
+    // Refresh toggle state after returning
+    final settings = Hive.box('settings');
+    if (mounted) {
+      setState(() {
+        _notificationsOn =
+            settings.get('notifications_enabled', defaultValue: false) == true;
+      });
+    }
   }
 
   // ═══════════════════════════════════════

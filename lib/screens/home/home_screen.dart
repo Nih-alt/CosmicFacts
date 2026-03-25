@@ -16,11 +16,12 @@ import '../stories/story_feed_screen.dart';
 import '../explore/explore_screen.dart';
 import '../launches/launches_screen.dart';
 import '../learn/learn_screen.dart';
+import '../learn/space_quotes_screen.dart';
 import '../profile/profile_screen.dart';
 import '../quick_actions/iss_tracker_screen.dart';
 import '../quick_actions/asteroids_screen.dart';
 import '../quick_actions/moon_phase_screen.dart';
-import '../quick_actions/events_screen.dart';
+import '../quick_actions/space_calendar_screen.dart';
 import 'apod_archive_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -92,6 +93,16 @@ class _HomeTab extends StatefulWidget {
 class _HomeTabState extends State<_HomeTab> {
   final _storyController = PageController(viewportFraction: 0.92);
   int _currentStory = 0;
+  String _selectedStoryCategory = 'All';
+
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  static const _compactCategories = [
+    ('All', ''),
+    ('NASA', '\u{1F534}'),
+    ('ISRO', '\u{1F1EE}\u{1F1F3}'),
+    ('SpaceX', '\u{1F680}'),
+  ];
 
   @override
   void dispose() {
@@ -216,15 +227,72 @@ class _HomeTabState extends State<_HomeTab> {
                         CupertinoButton(
                           padding: EdgeInsets.zero,
                           onPressed: () => Navigator.of(context).push(
-                            CupertinoPageRoute(builder: (_) => const StoryFeedScreen()),
+                            CupertinoPageRoute(builder: (_) => StoryFeedScreen(initialCategory: _selectedStoryCategory)),
                           ),
-                          child: Text('See All',
+                          child: Text('See All \u2192',
                               style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.accentPurple)),
                         ),
                       ],
                     ),
                   ).animate().fadeIn(duration: 500.ms, delay: 200.ms)
                       .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 200.ms),
+                ),
+
+                // ── Compact category pills ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: SizedBox(
+                      height: 34,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: _compactCategories.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final cat = _compactCategories[index];
+                          final isSelected = _selectedStoryCategory == cat.$1;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedStoryCategory = cat.$1),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: isSelected ? AppColors.primaryGradient : null,
+                                color: isSelected ? null : (_isDark ? const Color(0xFF141438) : Colors.white),
+                                borderRadius: BorderRadius.circular(20),
+                                border: isSelected ? null : Border.all(
+                                  color: _isDark
+                                      ? Colors.white.withValues(alpha: 0.1)
+                                      : const Color(0xFFEEECF5),
+                                ),
+                                boxShadow: isSelected
+                                    ? [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.3), blurRadius: 8)]
+                                    : AppColors.cardShadow(context),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (cat.$2.isNotEmpty) ...[
+                                    Text(cat.$2, style: const TextStyle(fontSize: 12)),
+                                    const SizedBox(width: 4),
+                                  ],
+                                  Text(cat.$1,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12, fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : (_isDark ? Colors.white : const Color(0xFF1A1A2E)),
+                                      )),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
 
                 // ── Stories PageView ──
@@ -329,6 +397,23 @@ class _HomeTabState extends State<_HomeTab> {
                     child: const _TodayInSpaceCard(),
                   ).animate().fadeIn(duration: 500.ms, delay: 700.ms)
                       .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 700.ms),
+                ),
+
+                // ── Quote of the Day ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Text('Quote of the Day \u2728',
+                        style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                  ).animate().fadeIn(duration: 500.ms, delay: 800.ms)
+                      .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 800.ms),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    child: _QuoteOfDayCard(isDark: _isDark),
+                  ).animate().fadeIn(duration: 500.ms, delay: 900.ms)
+                      .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 900.ms),
                 ),
 
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -444,6 +529,71 @@ class _HomeTabState extends State<_HomeTab> {
                     ],
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// QUOTE OF THE DAY CARD (Home)
+// ═════════════════════════════════════════════
+
+class _QuoteOfDayCard extends StatelessWidget {
+  final bool isDark;
+  const _QuoteOfDayCard({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final quote = getDailyQuote();
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        CupertinoPageRoute(builder: (_) => const SpaceQuotesScreen()),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: isDark
+              ? AppColors.accentPurple.withValues(alpha: 0.08)
+              : const Color(0xFFF5F0FF),
+          border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.15)),
+          boxShadow: AppColors.cardShadow(context),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('\u201C', style: GoogleFonts.spaceGrotesk(
+                    fontSize: 32, fontWeight: FontWeight.w700,
+                    color: AppColors.accentPurple.withValues(alpha: 0.4))),
+                const Spacer(),
+                Icon(CupertinoIcons.chevron_right, size: 16,
+                    color: AppColors.textSecondary(context)),
+              ],
+            ),
+            Text(
+              quote.quote,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: AppColors.textPrimary(context),
+                height: 1.5,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '\u2014 ${quote.author}',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ],
@@ -676,7 +826,7 @@ const _quickActions = [
   _QuickActionItem('🛰️', 'ISS Tracker', AppColors.accentCyan, Color(0xFF0097A7)),
   _QuickActionItem('☄️', 'Asteroids', Color(0xFF90A4AE), Color(0xFF546E7A)),
   _QuickActionItem('🌙', 'Moon', AppColors.starGold, Color(0xFFFFA000)),
-  _QuickActionItem('📅', 'Events', AppColors.accentPurple, Color(0xFF4A148C)),
+  _QuickActionItem('📅', 'Calendar', AppColors.accentPurple, Color(0xFF4A148C)),
 ];
 
 class _QuickActions extends StatelessWidget {
@@ -686,7 +836,7 @@ class _QuickActions extends StatelessWidget {
     0: ISSTrackerScreen(),
     1: AsteroidsScreen(),
     2: MoonPhaseScreen(),
-    3: EventsScreen(),
+    3: SpaceCalendarScreen(),
   };
 
   @override
