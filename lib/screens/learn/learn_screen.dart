@@ -8,12 +8,15 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../data/learn_content.dart';
 import '../../theme/app_colors.dart';
+import '../bookmarks/bookmarks_screen.dart';
 import '../quiz/quiz_hub_screen.dart';
 import 'planet_comparator_screen.dart';
 import 'space_calculator_screen.dart';
 import 'space_glossary_screen.dart';
 import 'space_quotes_screen.dart';
 import 'space_sounds_screen.dart';
+import 'astronaut_directory_screen.dart';
+import 'constellation_guide_screen.dart';
 import 'topic_detail_screen.dart';
 import 'universe_timeline_screen.dart';
 import '../quick_actions/space_calendar_screen.dart';
@@ -298,6 +301,8 @@ class _LearnScreenState extends State<LearnScreen> {
     _ToolInfo(Icons.volume_up_rounded, 'Sounds', 'Hear cosmos', [Color(0xFF00BFA5), Color(0xFF00E096)]),
     _ToolInfo(Icons.format_quote_rounded, 'Quotes', '100+ quotes', [Color(0xFFE040FB), Color(0xFFAB47BC)]),
     _ToolInfo(Icons.calendar_month_rounded, 'Calendar', 'Space events', [Color(0xFF4A90D9), Color(0xFF1E88E5)]),
+    _ToolInfo(Icons.people_rounded, 'Astronauts', '50 heroes', [Color(0xFFFF4D6A), Color(0xFFFF6B35)]),
+    _ToolInfo(Icons.auto_awesome_rounded, 'Stars', '30 patterns', [Color(0xFF4FC3F7), Color(0xFF7986CB)]),
   ];
 
   Widget _buildToolsRow() {
@@ -309,6 +314,8 @@ class _LearnScreenState extends State<LearnScreen> {
       const SpaceSoundsScreen(),
       const SpaceQuotesScreen(),
       const SpaceCalendarScreen(),
+      const AstronautDirectoryScreen(),
+      const ConstellationGuideScreen(),
     ];
     return SizedBox(
       height: 108,
@@ -395,17 +402,8 @@ class _LearnScreenState extends State<LearnScreen> {
             ),
           ),
           GestureDetector(
-            onTap: () => showCupertinoDialog(
-              context: context,
-              builder: (_) => CupertinoAlertDialog(
-                title: const Text('Bookmarks'),
-                content: const Text('Bookmarked lessons coming in a future update!'),
-                actions: [
-                  CupertinoDialogAction(isDefaultAction: true,
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('OK')),
-                ],
-              ),
+            onTap: () => Navigator.of(context).push(
+              CupertinoPageRoute(builder: (_) => const BookmarksScreen()),
             ),
             child: Container(
               width: 40, height: 40,

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../models/bookmark_model.dart';
+import 'achievement_controller.dart';
 
 class BookmarkController extends GetxController {
   final bookmarks = <BookmarkModel>[].obs;
@@ -31,6 +32,10 @@ class BookmarkController extends GetxController {
     if (bookmarks.any((b) => b.id == bm.id)) return;
     bookmarks.insert(0, bm);
     _save();
+    try {
+      Get.find<AchievementController>()
+          .incrementProgress('bookmarks_saved');
+    } catch (_) {}
   }
 
   void removeBookmark(String id) {

@@ -23,6 +23,8 @@ import '../quick_actions/asteroids_screen.dart';
 import '../quick_actions/moon_phase_screen.dart';
 import '../quick_actions/space_calendar_screen.dart';
 import 'apod_archive_screen.dart';
+import 'earth_from_space_screen.dart';
+import 'space_stats_screen.dart';
 
 // ═════════════════════════════════════════════
 // TAB SCAFFOLD
@@ -823,10 +825,12 @@ class _QuickActionItem {
 }
 
 const _quickActions = [
-  _QuickActionItem('🛰️', 'ISS Tracker', AppColors.accentCyan, Color(0xFF0097A7)),
-  _QuickActionItem('☄️', 'Asteroids', Color(0xFF90A4AE), Color(0xFF546E7A)),
-  _QuickActionItem('🌙', 'Moon', AppColors.starGold, Color(0xFFFFA000)),
-  _QuickActionItem('📅', 'Calendar', AppColors.accentPurple, Color(0xFF4A148C)),
+  _QuickActionItem('\u{1F6F0}\uFE0F', 'ISS Tracker', AppColors.accentCyan, Color(0xFF0097A7)),
+  _QuickActionItem('\u2604\uFE0F', 'Asteroids', Color(0xFF90A4AE), Color(0xFF546E7A)),
+  _QuickActionItem('\u{1F319}', 'Moon', AppColors.starGold, Color(0xFFFFA000)),
+  _QuickActionItem('\u{1F4C5}', 'Calendar', AppColors.accentPurple, Color(0xFF4A148C)),
+  _QuickActionItem('\u{1F4CA}', 'Live Stats', Color(0xFF00E096), Color(0xFF00A86B)),
+  _QuickActionItem('\u{1F30D}', 'Earth', Color(0xFF4A90D9), Color(0xFF1E88E5)),
 ];
 
 class _QuickActions extends StatelessWidget {
@@ -837,6 +841,8 @@ class _QuickActions extends StatelessWidget {
     1: AsteroidsScreen(),
     2: MoonPhaseScreen(),
     3: SpaceCalendarScreen(),
+    4: SpaceStatsScreen(),
+    5: EarthFromSpaceScreen(),
   };
 
   @override

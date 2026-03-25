@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../controllers/achievement_controller.dart';
 import '../../data/learn_content.dart';
 import '../../theme/app_colors.dart';
 
@@ -39,8 +41,13 @@ class _LessonScreenState extends State<LessonScreen> {
     _progressBox = await Hive.openBox('learn_progress');
     if (mounted) {
       setState(() => _boxReady = true);
-      // Mark as read
+      // Mark as read (only track if newly completed)
+      final wasCompleted = _progressBox.get(lesson.id, defaultValue: false) == true;
       await _progressBox.put(lesson.id, true);
+      if (!wasCompleted) {
+        Get.find<AchievementController>()
+            .incrementProgress('lessons_completed');
+      }
     }
   }
 

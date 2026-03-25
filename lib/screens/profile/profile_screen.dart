@@ -7,11 +7,13 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../controllers/achievement_controller.dart';
 import '../../controllers/theme_controller.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import '../learn/space_quotes_screen.dart';
 import '../onboarding/onboarding_screen.dart';
+import 'achievements_screen.dart';
 import 'notification_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -86,6 +88,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   .fadeIn(duration: 400.ms, delay: 150.ms)
                   .slideY(begin: 0.05, end: 0, delay: 150.ms),
               const SizedBox(height: 24),
+              _buildAchievementsRow()
+                  .animate()
+                  .fadeIn(duration: 400.ms, delay: 175.ms)
+                  .slideY(begin: 0.05, end: 0, delay: 175.ms),
+              const SizedBox(height: 20),
               _buildSection('Preferences', [
                 _buildThemeRow(),
                 _divider(),
@@ -392,6 +399,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ═══════════════════════════════════════
+  // ACHIEVEMENTS ROW
+  // ═══════════════════════════════════════
+
+  Widget _buildAchievementsRow() {
+    final ctrl = Get.find<AchievementController>();
+    return Obx(() {
+      final count = ctrl.unlocked.length;
+      final pts = ctrl.totalPoints.value;
+      return GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          CupertinoPageRoute(builder: (_) => const AchievementsScreen()),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _isDark
+                ? AppColors.accentPurple.withValues(alpha: 0.08)
+                : const Color(0xFFF5F0FF),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: AppColors.accentPurple.withValues(alpha: 0.15)),
+            boxShadow: AppColors.cardShadow(context),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44, height: 44,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accentPurple.withValues(alpha: 0.25),
+                      blurRadius: 8, offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Text('\u{1F3C6}', style: TextStyle(fontSize: 22)),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Achievements',
+                        style: GoogleFonts.spaceGrotesk(fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context))),
+                    const SizedBox(height: 2),
+                    Text('$count/40 unlocked \u2022 $pts pts',
+                        style: GoogleFonts.inter(fontSize: 12,
+                            color: AppColors.textSecondary(context))),
+                  ],
+                ),
+              ),
+              Icon(CupertinoIcons.chevron_right, size: 16,
+                  color: AppColors.textSecondary(context)),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ═══════════════════════════════════════
   // SECTION CARD
   // ═══════════════════════════════════════
 
@@ -518,7 +592,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'light': _segmentLabel('Light'),
               },
               onValueChanged: (val) {
-                if (val != null) _themeCtrl.setTheme(val);
+                if (val != null) {
+                  _themeCtrl.setTheme(val);
+                  Get.find<AchievementController>()
+                      .setProgress('theme_switched', 1);
+                }
               },
             );
           }),
@@ -752,7 +830,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
-          return Container(
+          return DefaultTextStyle(
+            style: const TextStyle(decoration: TextDecoration.none),
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
             decoration: BoxDecoration(
               color: AppColors.surface(context),
@@ -828,6 +910,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
             ),
           );
         },

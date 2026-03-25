@@ -3,10 +3,12 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../controllers/achievement_controller.dart';
 import '../../controllers/quiz_controller.dart';
 import '../../theme/app_colors.dart';
 
@@ -42,7 +44,19 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
 
   Future<void> _openBox() async {
     _statsBox = await Hive.openBox('quiz_stats');
-    if (mounted) setState(() => _boxReady = true);
+    if (mounted) {
+      setState(() => _boxReady = true);
+      _trackAchievements();
+    }
+  }
+
+  void _trackAchievements() {
+    final ctrl = Get.find<AchievementController>();
+    ctrl.incrementProgress('quizzes_completed');
+    ctrl.incrementProgress('total_correct', amount: widget.correct);
+    if (_percentage >= 1.0) {
+      ctrl.incrementProgress('perfect_quizzes');
+    }
   }
 
   double get _percentage =>

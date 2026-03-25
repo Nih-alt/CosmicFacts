@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/api_keys.dart';
@@ -348,6 +349,77 @@ class ApiService {
     if (dateKey == null) return [];
     return List<Map<String, dynamic>>.from(
         data['near_earth_objects'][dateKey] ?? []);
+  }
+
+  // ── NASA EPIC (Earth from Space) ──
+  // Uses direct EPIC endpoint (epic.gsfc.nasa.gov) — no API key needed,
+  // more reliable than the api.nasa.gov proxy.
+  static const String _epicBaseUrl = 'https://epic.gsfc.nasa.gov';
+
+  /// Fetch available EPIC image dates (most recent first).
+  static Future<List<String>> getEpicAvailableDates() async {
+    final url = '$_epicBaseUrl/api/natural/all';
+    debugPrint('EPIC: Fetching available dates: $url');
+    try {
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 15));
+      debugPrint('EPIC: Available dates status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          final dates = data
+              .map((e) =>
+                  (e as Map<String, dynamic>)['date']?.toString() ?? '')
+              .where((d) => d.isNotEmpty)
+              .toList();
+          debugPrint('EPIC: Dates found: ${dates.length}');
+          return dates;
+        }
+      }
+    } catch (e) {
+      debugPrint('EPIC: Available dates error: $e');
+    }
+    return [];
+  }
+
+  /// Fetch EPIC images for a specific date.
+  static Future<List<Map<String, dynamic>>> getEpicImages({
+    String? date,
+  }) async {
+    final url = date != null
+        ? '$_epicBaseUrl/api/natural/date/$date'
+        : '$_epicBaseUrl/api/natural';
+    debugPrint('EPIC: Fetching images: $url');
+    try {
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 15));
+      debugPrint('EPIC: Images status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          debugPrint('EPIC: Images found: ${data.length}');
+          return List<Map<String, dynamic>>.from(data);
+        }
+      }
+    } catch (e) {
+      debugPrint('EPIC: Images error: $e');
+    }
+    return [];
+  }
+
+  /// Build URL for a NASA EPIC image (thumbnail or full resolution).
+  /// Uses direct EPIC archive — no API key needed.
+  static String getEpicImageUrl(
+    String date,
+    String imageName, {
+    bool thumbnail = true,
+  }) {
+    final parts = date.split('-');
+    final type = thumbnail ? 'thumbs' : 'png';
+    final ext = thumbnail ? 'jpg' : 'png';
+    return '$_epicBaseUrl/archive/natural/${parts[0]}/${parts[1]}/${parts[2]}/$type/$imageName.$ext';
   }
 
   /// Get trending/curated NASA images.

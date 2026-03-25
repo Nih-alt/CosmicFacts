@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../controllers/achievement_controller.dart';
 import '../../models/space_article.dart';
 import '../../theme/app_colors.dart';
 
@@ -75,8 +76,18 @@ class ArticleDetailScreen extends StatefulWidget {
 
 class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   final _isBookmarked = false.obs;
+  bool _tracked = false;
 
   SpaceArticle get article => widget.article;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_tracked) {
+      _tracked = true;
+      Get.find<AchievementController>().incrementProgress('articles_read');
+    }
+  }
 
   void _launchUrl(String url) async {
     if (url.isEmpty) return;

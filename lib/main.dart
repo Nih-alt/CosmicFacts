@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'controllers/achievement_controller.dart';
 import 'controllers/bookmark_controller.dart';
 import 'controllers/explore_controller.dart';
 import 'controllers/home_controller.dart';
@@ -28,6 +29,7 @@ void main() async {
   await Hive.openBox('launches_cache');
   await Hive.openBox('quiz_stats');
   await Hive.openBox('bookmarks');
+  await Hive.openBox('achievements');
 
   // Initialize notifications
   await NotificationService.init();
@@ -36,11 +38,12 @@ void main() async {
   final initialTheme = ThemeController.initialFromHive();
 
   // Initialize global controllers
-  Get.put(ThemeController(initialTheme));
-  Get.put(HomeController());
-  Get.put(ExploreController());
-  Get.put(LaunchesController());
-  Get.put(BookmarkController());
+  Get.put(ThemeController(initialTheme), permanent: true);
+  Get.put(HomeController(), permanent: true);
+  Get.put(ExploreController(), permanent: true);
+  Get.put(LaunchesController(), permanent: true);
+  Get.put(BookmarkController(), permanent: true);
+  Get.put(AchievementController(), permanent: true);
 
   // Schedule notifications if enabled
   await NotificationService.scheduleFromPrefs();
