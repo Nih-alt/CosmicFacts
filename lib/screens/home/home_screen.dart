@@ -50,33 +50,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      body: IndexedStack(index: _currentTab, children: _tabs),
-      bottomNavigationBar: Theme(
-        data: ThemeData(splashColor: Colors.transparent),
-        child: CupertinoTabBar(
-          backgroundColor: AppColors.navBar(context),
-          border: Border(
-            top: BorderSide(
-              color: AppColors.divider(context),
-              width: 0.5,
+    debugPrint('HOME: Building');
+    try {
+      return Scaffold(
+        backgroundColor: AppColors.background(context),
+        body: IndexedStack(index: _currentTab, children: _tabs),
+        bottomNavigationBar: Theme(
+          data: ThemeData(splashColor: Colors.transparent),
+          child: CupertinoTabBar(
+            backgroundColor: AppColors.navBar(context),
+            border: Border(
+              top: BorderSide(
+                color: AppColors.divider(context),
+                width: 0.5,
+              ),
             ),
+            activeColor: AppColors.accentPurple,
+            inactiveColor: AppColors.textSecondary(context),
+            currentIndex: _currentTab,
+            onTap: (i) => setState(() => _currentTab = i),
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+              BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Explore'),
+              BottomNavigationBarItem(icon: Icon(Icons.rocket_launch_rounded), label: 'Launches'),
+              BottomNavigationBarItem(icon: Icon(Icons.school_rounded), label: 'Learn'),
+              BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
+            ],
           ),
-          activeColor: AppColors.accentPurple,
-          inactiveColor: AppColors.textSecondary(context),
-          currentIndex: _currentTab,
-          onTap: (i) => setState(() => _currentTab = i),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Explore'),
-            BottomNavigationBarItem(icon: Icon(Icons.rocket_launch_rounded), label: 'Launches'),
-            BottomNavigationBarItem(icon: Icon(Icons.school_rounded), label: 'Learn'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
-          ],
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint('HomeScreen build error: $e');
+      return Scaffold(
+        backgroundColor: const Color(0xFF05051A),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              const Text('Something went wrong',
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
+              const SizedBox(height: 8),
+              Text('Pull down to refresh',
+                  style: TextStyle(color: Colors.grey[400])),
+            ],
+          ),
+        ),
+      );
+    }
   }
 }
 

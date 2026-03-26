@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../models/apod_model.dart';
@@ -28,22 +29,26 @@ class HomeController extends GetxController {
     isOffline.value = false;
 
     // STEP 1: Load from cache first (instant)
-    final cachedArticles = await CacheService.getCachedNews();
-    final cachedApod = await CacheService.getCachedApod();
+    try {
+      final cachedArticles = await CacheService.getCachedNews();
+      final cachedApod = await CacheService.getCachedApod();
 
-    if (cachedArticles != null) {
-      stories.assignAll(
-        cachedArticles.map((e) => SpaceArticle.fromJson(e)).toList(),
-      );
-      _offset = cachedArticles.length;
-      isLoading.value = false; // Show cached data immediately
-    }
-    if (cachedApod != null) {
-      todayApod.value = ApodModel.fromJson(cachedApod);
+      if (cachedArticles != null) {
+        stories.assignAll(
+          cachedArticles.map((e) => SpaceArticle.fromJson(e)).toList(),
+        );
+        _offset = cachedArticles.length;
+        isLoading.value = false; // Show cached data immediately
+      }
+      if (cachedApod != null) {
+        todayApod.value = ApodModel.fromJson(cachedApod);
+      }
+    } catch (e) {
+      debugPrint('Cache load error: $e');
     }
 
-    // STEP 2: Fetch fresh data in background
-    await _refreshFromApi();
+    // STEP 2: Fetch fresh data in background (non-blocking for UI)
+    _refreshFromApi();
   }
 
   Future<void> _refreshFromApi() async {
@@ -60,7 +65,12 @@ class HomeController extends GetxController {
         stories.assignAll(newArticles);
         _offset = _pageSize;
         // Cache for next time
-        CacheService.cacheNews(newArticles.map((e) => e.toJson()).toList());
+        try {
+          CacheService.cacheNews(
+              newArticles.map((e) => e.toJson()).toList());
+        } catch (e) {
+          debugPrint('Cache write error: $e');
+        }
       } else if (newArticles == null && stories.isEmpty) {
         hasError.value = true;
       } else if (newArticles == null && stories.isNotEmpty) {
@@ -69,7 +79,11 @@ class HomeController extends GetxController {
 
       if (newApod != null) {
         todayApod.value = newApod;
-        CacheService.cacheApod(newApod.toJson());
+        try {
+          CacheService.cacheApod(newApod.toJson());
+        } catch (e) {
+          debugPrint('APOD cache write error: $e');
+        }
       }
     } catch (_) {
       if (stories.isEmpty) {
@@ -86,14 +100,18 @@ class HomeController extends GetxController {
     if (isLoadingMore.value) return;
     isLoadingMore.value = true;
 
-    final articles = await ApiService.getSpaceNews(
-      limit: _pageSize,
-      offset: _offset,
-    );
+    try {
+      final articles = await ApiService.getSpaceNews(
+        limit: _pageSize,
+        offset: _offset,
+      );
 
-    if (articles != null && articles.isNotEmpty) {
-      stories.addAll(articles);
-      _offset += _pageSize;
+      if (articles != null && articles.isNotEmpty) {
+        stories.addAll(articles);
+        _offset += _pageSize;
+      }
+    } catch (e) {
+      debugPrint('Load more stories error: $e');
     }
 
     isLoadingMore.value = false;

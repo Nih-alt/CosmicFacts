@@ -12,8 +12,12 @@ class ThemeController extends GetxController {
     themeMode.value = newMode;
     Get.changeThemeMode(newMode);
 
-    final box = Hive.box('settings');
-    box.put('theme_mode', mode);
+    try {
+      final box = Hive.box('settings');
+      box.put('theme_mode', mode);
+    } catch (e) {
+      debugPrint('Theme save error: $e');
+    }
   }
 
   String get currentModeString {
@@ -39,8 +43,13 @@ class ThemeController extends GetxController {
   }
 
   static ThemeMode initialFromHive() {
-    final box = Hive.box('settings');
-    final saved = box.get('theme_mode', defaultValue: 'dark') as String;
-    return _modeFromString(saved);
+    try {
+      final box = Hive.box('settings');
+      final saved = box.get('theme_mode', defaultValue: 'dark') as String;
+      return _modeFromString(saved);
+    } catch (e) {
+      debugPrint('Theme read error: $e');
+      return ThemeMode.dark;
+    }
   }
 }

@@ -1,4 +1,4 @@
-package com.example.cosmic_facts
+package com.cosmicfacts.app
 
 import io.flutter.embedding.android.FlutterActivity
 

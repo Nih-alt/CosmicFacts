@@ -20,33 +20,81 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive — open all boxes before app renders
-  await Hive.initFlutter();
-  await Hive.openBox('settings');
-  await Hive.openBox('learn_progress');
-  await Hive.openBox('news_cache');
-  await Hive.openBox('apod_cache');
-  await Hive.openBox('launches_cache');
-  await Hive.openBox('quiz_stats');
-  await Hive.openBox('bookmarks');
-  await Hive.openBox('achievements');
+  // Catch unhandled Flutter errors
+  FlutterError.onError = (details) {
+    debugPrint('Flutter Error: ${details.exception}');
+    debugPrint('Stack: ${details.stack}');
+  };
 
-  // Initialize notifications
-  await NotificationService.init();
+  // Initialize Hive
+  try {
+    await Hive.initFlutter();
+  } catch (e) {
+    debugPrint('FATAL: Hive init failed: $e');
+  }
 
-  // Read saved theme synchronously before anything renders
-  final initialTheme = ThemeController.initialFromHive();
+  // Open each box individually with recovery
+  await _openBox('settings');
+  await _openBox('news_cache');
+  await _openBox('apod_cache');
+  await _openBox('launches_cache');
+  await _openBox('learn_progress');
+  await _openBox('quiz_stats');
+  await _openBox('bookmarks');
+  await _openBox('achievements');
 
-  // Initialize global controllers
-  Get.put(ThemeController(initialTheme), permanent: true);
-  Get.put(HomeController(), permanent: true);
-  Get.put(ExploreController(), permanent: true);
-  Get.put(LaunchesController(), permanent: true);
-  Get.put(BookmarkController(), permanent: true);
-  Get.put(AchievementController(), permanent: true);
+  debugPrint('MAIN: All boxes opened');
+
+  // Initialize controllers safely
+  try {
+    final initialTheme = ThemeController.initialFromHive();
+    Get.put(ThemeController(initialTheme), permanent: true);
+  } catch (e) {
+    debugPrint('Theme controller error: $e');
+    Get.put(ThemeController(ThemeMode.dark), permanent: true);
+  }
+
+  try {
+    Get.put(HomeController(), permanent: true);
+  } catch (e) {
+    debugPrint('Home ctrl error: $e');
+  }
+  try {
+    Get.put(ExploreController(), permanent: true);
+  } catch (e) {
+    debugPrint('Explore ctrl error: $e');
+  }
+  try {
+    Get.put(LaunchesController(), permanent: true);
+  } catch (e) {
+    debugPrint('Launches ctrl error: $e');
+  }
+  try {
+    Get.put(BookmarkController(), permanent: true);
+  } catch (e) {
+    debugPrint('Bookmark ctrl error: $e');
+  }
+  try {
+    Get.put(AchievementController(), permanent: true);
+  } catch (e) {
+    debugPrint('Achievement ctrl error: $e');
+  }
+
+  debugPrint('MAIN: Controllers ready');
+
+  // Init notifications safely
+  try {
+    await NotificationService.init();
+  } catch (e) {
+    debugPrint('Notification init error: $e');
+  }
 
   // Schedule notifications if enabled
-  await NotificationService.scheduleFromPrefs();
+  try {
+    await NotificationService.scheduleFromPrefs();
+  } catch (e) {
+    debugPrint('Notification schedule error: $e');
+  }
 
   // Prefer edge-to-edge, immersive status bar
   SystemChrome.setSystemUIOverlayStyle(
@@ -57,7 +105,26 @@ void main() async {
     ),
   );
 
+  debugPrint('MAIN: Running app');
   runApp(const CosmicFactsApp());
+}
+
+Future<void> _openBox(String name) async {
+  try {
+    if (!Hive.isBoxOpen(name)) {
+      await Hive.openBox(name);
+    }
+  } catch (e) {
+    debugPrint('Failed to open box $name: $e');
+    // Try deleting corrupted box and reopening
+    try {
+      await Hive.deleteBoxFromDisk(name);
+      await Hive.openBox(name);
+      debugPrint('Recovered box $name after corruption');
+    } catch (e2) {
+      debugPrint('FATAL: Cannot recover box $name: $e2');
+    }
+  }
 }
 
 class CosmicFactsApp extends StatelessWidget {
@@ -65,18 +132,27 @@ class CosmicFactsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeCtrl = Get.find<ThemeController>();
-    return Obx(() => GetMaterialApp(
+    return Obx(() {
+      try {
+        final themeCtrl = Get.find<ThemeController>();
+        return GetMaterialApp(
           title: 'Cosmic Facts',
           debugShowCheckedModeBanner: false,
-
-          // Theme
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: themeCtrl.themeMode.value,
-
-          // Entry point
           home: const SplashScreen(),
-        ));
+        );
+      } catch (e) {
+        debugPrint('App build error: $e');
+        return GetMaterialApp(
+          title: 'Cosmic Facts',
+          debugShowCheckedModeBanner: false,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeMode.dark,
+          home: const SplashScreen(),
+        );
+      }
+    });
   }
 }

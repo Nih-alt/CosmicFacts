@@ -7,7 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../data/achievements_data.dart';
 
 class AchievementController extends GetxController {
-  final _box = Hive.box('achievements');
+  late final Box _box;
   final progress = RxMap<String, int>();
   final unlocked = RxSet<String>();
   final totalPoints = 0.obs;
@@ -16,24 +16,33 @@ class AchievementController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadProgress();
+    try {
+      _box = Hive.box('achievements');
+      _loadProgress();
+    } catch (e) {
+      debugPrint('AchievementController init error: $e');
+    }
   }
 
   void _loadProgress() {
-    final savedProgress = _box.get('progress') as String?;
-    if (savedProgress != null) {
-      try {
-        progress.value = Map<String, int>.from(json.decode(savedProgress));
-      } catch (_) {}
+    try {
+      final savedProgress = _box.get('progress') as String?;
+      if (savedProgress != null) {
+        try {
+          progress.value = Map<String, int>.from(json.decode(savedProgress));
+        } catch (_) {}
+      }
+      final savedUnlocked = _box.get('unlocked') as String?;
+      if (savedUnlocked != null) {
+        try {
+          final set = Set<String>.from(json.decode(savedUnlocked));
+          unlocked.addAll(set);
+        } catch (_) {}
+      }
+      totalPoints.value = _box.get('total_points', defaultValue: 0) as int;
+    } catch (e) {
+      debugPrint('Achievement load error: $e');
     }
-    final savedUnlocked = _box.get('unlocked') as String?;
-    if (savedUnlocked != null) {
-      try {
-        final set = Set<String>.from(json.decode(savedUnlocked));
-        unlocked.addAll(set);
-      } catch (_) {}
-    }
-    totalPoints.value = _box.get('total_points', defaultValue: 0) as int;
   }
 
   void incrementProgress(String type, {int amount = 1}) {
@@ -98,9 +107,13 @@ class AchievementController extends GetxController {
   }
 
   void _save() {
-    _box.put('progress', json.encode(progress));
-    _box.put('unlocked', json.encode(unlocked.toList()));
-    _box.put('total_points', totalPoints.value);
+    try {
+      _box.put('progress', json.encode(progress));
+      _box.put('unlocked', json.encode(unlocked.toList()));
+      _box.put('total_points', totalPoints.value);
+    } catch (e) {
+      debugPrint('Achievement save error: $e');
+    }
   }
 
   static void showAchievementUnlocked(Achievement achievement) {

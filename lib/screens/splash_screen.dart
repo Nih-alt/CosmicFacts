@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -23,10 +24,14 @@ class _SplashScreenState extends State<SplashScreen>
 
   late final List<_Star> _backgroundStars;
   late final List<_Particle> _particles;
+  Timer? _safetyTimer;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
+
+    debugPrint('SPLASH: Started');
 
     // 12 twinkling background stars at random positions
     _backgroundStars = List.generate(12, (_) {
@@ -50,19 +55,69 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     // Navigate after splash duration
-    Future.delayed(const Duration(milliseconds: 2500), _navigate);
+    _navigateAfterSplash();
+
+    // Safety net — if splash hangs for any reason, force navigate after 6 seconds
+    _safetyTimer = Timer(const Duration(seconds: 6), () {
+      if (mounted && !_hasNavigated) {
+        debugPrint('SAFETY: Splash timeout — forcing navigation');
+        _doNavigate(const HomeScreen());
+      }
+    });
   }
 
-  void _navigate() {
-    final box = Hive.box('settings');
-    final onboardingDone = box.get('onboarding_complete', defaultValue: false);
+  @override
+  void dispose() {
+    _safetyTimer?.cancel();
+    super.dispose();
+  }
 
-    if (onboardingDone == true) {
-      Get.offAll(() => const HomeScreen(), transition: Transition.cupertino);
-    } else {
-      Get.offAll(() => const OnboardingScreen(),
-          transition: Transition.cupertino);
+  void _navigateAfterSplash() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 2500));
+
+      if (!mounted || _hasNavigated) return;
+      _safetyTimer?.cancel();
+
+      debugPrint('SPLASH: Animation done');
+
+      // Check if onboarding completed
+      bool onboardingDone = false;
+      try {
+        final box = Hive.box('settings');
+        onboardingDone =
+            box.get('onboarding_complete', defaultValue: false) == true;
+      } catch (e) {
+        debugPrint('Settings read error: $e');
+      }
+
+      if (!mounted || _hasNavigated) return;
+
+      debugPrint(
+          'SPLASH: Navigating to ${onboardingDone ? "Home" : "Onboarding"}');
+
+      if (onboardingDone) {
+        _doNavigate(const HomeScreen());
+      } else {
+        _doNavigate(const OnboardingScreen());
+      }
+    } catch (e) {
+      debugPrint('Splash navigation error: $e');
+      // Fallback — always navigate to home even if error
+      if (mounted && !_hasNavigated) {
+        _doNavigate(const HomeScreen());
+      }
     }
+  }
+
+  void _doNavigate(Widget destination) {
+    if (_hasNavigated) return;
+    _hasNavigated = true;
+    _safetyTimer?.cancel();
+    Navigator.pushReplacement(
+      context,
+      CupertinoPageRoute(builder: (_) => destination),
+    );
   }
 
   @override
