@@ -21,6 +21,12 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Clear any stale cached images from previous sessions, then set an 80 MB cap.
+  PaintingBinding.instance.imageCache.clear();
+  PaintingBinding.instance.imageCache.clearLiveImages();
+  PaintingBinding.instance.imageCache.maximumSizeBytes =
+      80 * 1024 * 1024; // 80 MB
+
   // Catch unhandled Flutter errors
   FlutterError.onError = (details) {
     debugPrint('Flutter Error: ${details.exception}');

@@ -33,7 +33,7 @@ class _LearnScreenState extends State<LearnScreen> {
   bool _boxReady = false;
 
   static const _topicGlowColors = <Color>[
-    Color(0xFF7B5BFF), Color(0xFF00D4FF), Color(0xFFFFD700),
+    AppColors.accentBlue, AppColors.accentCyan, Color(0xFFFFD700),
     Color(0xFF4A90D9), Color(0xFFB0B0C0), Color(0xFFFF6B35),
     Color(0xFF00BFA5), Color(0xFFFF9933), Color(0xFF00E096),
     Color(0xFF5B3FBF), Color(0xFFFF4D6A), Color(0xFFE040FB),
@@ -294,8 +294,8 @@ class _LearnScreenState extends State<LearnScreen> {
   // ═══════════════════════════════════════
 
   static const _toolData = <_ToolInfo>[
-    _ToolInfo(Icons.calculate_rounded, 'Calculator', '8 calculators', [Color(0xFF7B5BFF), Color(0xFF00D4FF)]),
-    _ToolInfo(Icons.compare_arrows_rounded, 'Comparator', 'Compare worlds', [Color(0xFF00D4FF), Color(0xFF4A90D9)]),
+    _ToolInfo(Icons.calculate_rounded, 'Calculator', '8 calculators', [AppColors.accentBlue, AppColors.accentCyan]),
+    _ToolInfo(Icons.compare_arrows_rounded, 'Comparator', 'Compare worlds', [AppColors.accentCyan, Color(0xFF4A90D9)]),
     _ToolInfo(Icons.menu_book_rounded, 'Glossary', '200+ terms', [Color(0xFFDAA520), Color(0xFFFFD700)]),
     _ToolInfo(Icons.timeline_rounded, 'Timeline', '13.8B years', [Color(0xFFFF6B35), Color(0xFFFF4D6A)]),
     _ToolInfo(Icons.volume_up_rounded, 'Sounds', 'Hear cosmos', [Color(0xFF00BFA5), Color(0xFF00E096)]),
@@ -446,7 +446,7 @@ class _LearnScreenState extends State<LearnScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentPurple.withValues(alpha: 0.25),
+              color: AppColors.accentBlue.withValues(alpha: 0.25),
               blurRadius: 24, offset: const Offset(0, 8),
             ),
           ],
@@ -549,7 +549,7 @@ class _LearnScreenState extends State<LearnScreen> {
           final topic = items[i].key;
           final done = items[i].value;
           final glowIdx = allTopics.indexOf(topic);
-          final glow = glowIdx >= 0 ? _topicGlowColors[glowIdx] : AppColors.accentPurple;
+          final glow = glowIdx >= 0 ? _topicGlowColors[glowIdx] : AppColors.accentBlue;
           return GestureDetector(
             onTap: () => _openTopic(topic),
             child: Container(
@@ -690,9 +690,9 @@ class _LearnScreenState extends State<LearnScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: _isDark
-            ? AppColors.accentPurple.withValues(alpha: 0.08)
+            ? AppColors.accentBlue.withValues(alpha: 0.08)
             : const Color(0xFFF5F0FF),
-        border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.15)),
+        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.15)),
         boxShadow: AppColors.cardShadow(context),
       ),
       child: Row(
@@ -707,7 +707,7 @@ class _LearnScreenState extends State<LearnScreen> {
                 Text('Daily Space Fact',
                     style: GoogleFonts.spaceGrotesk(fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.accentPurple)),
+                        color: AppColors.accentBlue)),
                 const SizedBox(height: 6),
                 Text(fact,
                     style: GoogleFonts.inter(fontSize: 13,

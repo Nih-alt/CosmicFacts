@@ -403,7 +403,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                 ),
                 errorWidget: (_, _, _) => Container(
                   color:
-                      _isDark ? AppColors.cardDark : const Color(0xFFF0F0FA),
+                      AppColors.card(context),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -429,7 +429,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
             decoration: BoxDecoration(
               color: _isDark
                   ? AppColors.accentCyan.withValues(alpha: 0.1)
-                  : const Color(0xFFF0F8FF),
+                  : AppColors.accentCyan.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                   color: AppColors.accentCyan.withValues(alpha: 0.3)),
@@ -522,7 +522,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
             Text('${_selectedIndex + 1} of ${_images.length} photos',
                 style: GoogleFonts.inter(fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.accentPurple)),
+                    color: AppColors.accentBlue)),
           ],
         ],
       ),
@@ -551,12 +551,12 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: _autoPlaying
-                      ? AppColors.accentPurple.withValues(alpha: 0.15)
+                      ? AppColors.accentBlue.withValues(alpha: 0.15)
                       : AppColors.glass(context),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: _autoPlaying
-                        ? AppColors.accentPurple
+                        ? AppColors.accentBlue
                         : AppColors.glassBorder(context),
                   ),
                 ),
@@ -569,7 +569,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                           : CupertinoIcons.play_fill,
                       size: 12,
                       color: _autoPlaying
-                          ? AppColors.accentPurple
+                          ? AppColors.accentBlue
                           : AppColors.textSecondary(context),
                     ),
                     const SizedBox(width: 4),
@@ -578,7 +578,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: _autoPlaying
-                                ? AppColors.accentPurple
+                                ? AppColors.accentBlue
                                 : AppColors.textSecondary(context))),
                   ],
                 ),
@@ -627,9 +627,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                       placeholder: (_, _) =>
                           Container(color: AppColors.shimmerBase(context)),
                       errorWidget: (_, _, _) => Container(
-                        color: _isDark
-                            ? AppColors.cardDark
-                            : const Color(0xFFF0F0FA),
+                        color: AppColors.card(context),
                         child:
                             const Icon(CupertinoIcons.globe, size: 20),
                       ),
@@ -654,7 +652,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
       decoration: BoxDecoration(
         color: _isDark
             ? AppColors.accentCyan.withValues(alpha: 0.06)
-            : const Color(0xFFF0F8FF),
+            : AppColors.accentCyan.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
         border:
             Border.all(color: AppColors.accentCyan.withValues(alpha: 0.15)),
@@ -721,7 +719,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.accentPurple.withValues(alpha: 0.25),
+                    color: AppColors.accentBlue.withValues(alpha: 0.25),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -855,7 +853,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.accentPurple.withValues(alpha: 0.3),
+                    color: AppColors.accentBlue.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

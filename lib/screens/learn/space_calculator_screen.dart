@@ -12,14 +12,14 @@ class SpaceCalculatorScreen extends StatelessWidget {
   const SpaceCalculatorScreen({super.key});
 
   static const _calcs = <_CalcDef>[
-    _CalcDef(Icons.scale_rounded, 'Weight on Planets', 'Your weight across the solar system', [Color(0xFF4A90D9), Color(0xFF00D4FF)]),
+    _CalcDef(Icons.scale_rounded, 'Weight on Planets', 'Your weight across the solar system', [Color(0xFF4A90D9), AppColors.accentCyan]),
     _CalcDef(Icons.lightbulb_rounded, 'Light Travel Time', 'How long light takes to travel', [Color(0xFFDAA520), Color(0xFFFFD700)]),
     _CalcDef(Icons.rocket_launch_rounded, 'Escape Velocity', 'Speed to escape gravity', [Color(0xFFFF6B35), Color(0xFFFF4D6A)]),
     _CalcDef(Icons.public_rounded, 'Planet Distance', 'Distances between planets', [Color(0xFF00BFA5), Color(0xFF00E096)]),
-    _CalcDef(Icons.straighten_rounded, 'Size Comparator', 'Compare celestial bodies', [Color(0xFF7B5BFF), Color(0xFF9B59B6)]),
-    _CalcDef(Icons.schedule_rounded, 'Time on Planets', 'Your age on other planets', [Color(0xFF00D4FF), Color(0xFF4A90D9)]),
+    _CalcDef(Icons.straighten_rounded, 'Size Comparator', 'Compare celestial bodies', [AppColors.accentBlue, Color(0xFF9B59B6)]),
+    _CalcDef(Icons.schedule_rounded, 'Time on Planets', 'Your age on other planets', [AppColors.accentCyan, Color(0xFF4A90D9)]),
     _CalcDef(Icons.thermostat_rounded, 'Temp Converter', 'Space temperature converter', [Color(0xFFFF6B35), Color(0xFFFF4D6A)]),
-    _CalcDef(Icons.search_rounded, 'Telescope Calc', 'Magnification & visibility', [Color(0xFF00BFA5), Color(0xFF00D4FF)]),
+    _CalcDef(Icons.search_rounded, 'Telescope Calc', 'Magnification & visibility', [Color(0xFF00BFA5), AppColors.accentCyan]),
   ];
 
   @override
@@ -168,7 +168,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
           Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.textSecondary(context).withValues(alpha: 0.25), borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 20),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(_icons[widget.index], color: AppColors.accentPurple, size: 24),
+            Icon(_icons[widget.index], color: AppColors.accentBlue, size: 24),
             const SizedBox(width: 10),
             Text(_titles[widget.index], style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
           ]),
@@ -205,8 +205,8 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
   }
 
   Widget _btn(String label, VoidCallback onTap) => SizedBox(width: double.infinity, height: 52, child: Container(
-    decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]),
-      boxShadow: [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]),
+    decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: AppColors.primaryGradient,
+      boxShadow: [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]),
     child: CupertinoButton(padding: EdgeInsets.zero, borderRadius: BorderRadius.circular(14), onPressed: onTap,
       child: Text(label, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white))),
   ));
@@ -214,7 +214,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
   Widget _result(List<Widget> children) => Container(
     width: double.infinity, padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(color: AppColors.glass(context), borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.15)),
+      border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.15)),
       boxShadow: AppColors.cardShadow(context)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
   ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.08, end: 0);
@@ -222,7 +222,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
   Widget _shareBtn() => _share.isEmpty ? const SizedBox.shrink() : Padding(padding: const EdgeInsets.only(top: 14), child: SizedBox(width: double.infinity, height: 44, child: CupertinoButton(
     padding: EdgeInsets.zero, borderRadius: BorderRadius.circular(12), onPressed: () => SharePlus.instance.share(ShareParams(text: _share)),
     child: Container(alignment: Alignment.center, decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.glassBorder(context))),
-      child: Text('Share Results', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.accentPurple))))));
+      child: Text('Share Results', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.accentBlue))))));
 
   Widget _dd(String val, List<String> items, ValueChanged<String> cb) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -252,7 +252,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
         ..._grav.entries.map((e) { final w = double.parse(_c1.text) * e.value; final maxW = double.parse(_c1.text) * 27.9; return Padding(padding: const EdgeInsets.only(bottom: 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(e.key, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
-            Text('${w.toStringAsFixed(1)} kg', style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accentPurple)),
+            Text('${w.toStringAsFixed(1)} kg', style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accentBlue)),
           ]),
           const SizedBox(height: 4),
           ClipRRect(borderRadius: BorderRadius.circular(3), child: LinearProgressIndicator(value: (w / maxW).clamp(0.0, 1.0), minHeight: 6, backgroundColor: AppColors.divider(context),
@@ -271,7 +271,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
       const SizedBox(height: 12), _label('Quick presets'),
       Wrap(spacing: 8, runSpacing: 8, children: presets.entries.map((e) => GestureDetector(onTap: () { _c1.text = e.value.toStringAsExponential(2); setState(() { _selUnit = 'km'; _done = false; }); },
         child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: AppColors.glass(context), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.glassBorder(context))),
-          child: Text(e.key, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accentPurple))))).toList()),
+          child: Text(e.key, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accentBlue))))).toList()),
       const SizedBox(height: 18), _btn('Calculate', () { if (double.tryParse(_c1.text) == null) return; setState(() => _done = true); }),
       if (_done && double.tryParse(_c1.text) != null) ...[const SizedBox(height: 18), Builder(builder: (_) {
         final d = double.parse(_c1.text); double km; switch (_selUnit) { case 'AU': km = d * 149597870.7; break; case 'light-years': km = d * 9.461e+12; break; default: km = d; }
@@ -282,7 +282,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
         else if (h > 0) { t = '$h hours, $m min'; }
         else if (m > 0) { t = '$m min, ${(s % 60).floor()} sec'; }
         else { t = '${s.toStringAsFixed(2)} seconds'; }
-        _share = 'Light takes $t to travel ${_c1.text} $_selUnit!'; return _result([_label('Light travel time'), Text(t, style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.accentPurple)), const SizedBox(height: 6), Text('Distance: ${km.toStringAsExponential(3)} km', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context)))]);
+        _share = 'Light takes $t to travel ${_c1.text} $_selUnit!'; return _result([_label('Light travel time'), Text(t, style: GoogleFonts.spaceGrotesk(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.accentBlue)), const SizedBox(height: 6), Text('Distance: ${km.toStringAsExponential(3)} km', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary(context)))]);
       }), _shareBtn()],
     ]);
   }
@@ -339,10 +339,10 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
         final r = _sizes[_selBody]!; _share = '$_selBody is ${r}x the diameter of Earth!';
         return _result([Text('$_selBody vs Earth', style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))), const SizedBox(height: 6),
           Text(r >= 1 ? '$_selBody is ${r}x wider than Earth' : '$_selBody is ${(r * 100).toStringAsFixed(0)}% the size of Earth', style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
-          const SizedBox(height: 16), SizedBox(height: 120, child: CustomPaint(size: const Size(double.infinity, 120), painter: _SizeP(ratio: r, name: _selBody, ec: AppColors.accentCyan, bc: AppColors.accentPurple, tc: AppColors.textPrimary(context)))),
+          const SizedBox(height: 16), SizedBox(height: 120, child: CustomPaint(size: const Size(double.infinity, 120), painter: _SizeP(ratio: r, name: _selBody, ec: AppColors.accentCyan, bc: AppColors.accentBlue, tc: AppColors.textPrimary(context)))),
           const SizedBox(height: 12), ..._sizes.entries.map((e) => Padding(padding: const EdgeInsets.only(bottom: 4), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(e.key, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textPrimary(context), fontWeight: e.key == _selBody ? FontWeight.w700 : FontWeight.w400)),
-            Text('${e.value}x Earth', style: GoogleFonts.inter(fontSize: 13, color: e.key == _selBody ? AppColors.accentPurple : AppColors.textSecondary(context), fontWeight: e.key == _selBody ? FontWeight.w700 : FontWeight.w400))])))]);
+            Text('${e.value}x Earth', style: GoogleFonts.inter(fontSize: 13, color: e.key == _selBody ? AppColors.accentBlue : AppColors.textSecondary(context), fontWeight: e.key == _selBody ? FontWeight.w700 : FontWeight.w400))])))]);
       }), _shareBtn()],
     ]);
   }
@@ -377,7 +377,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
       const SizedBox(height: 12), _label('Presets'),
       Wrap(spacing: 8, runSpacing: 8, children: presets.entries.map((e) => GestureDetector(onTap: () { _c1.text = e.value.toString(); setState(() => _done = true); },
         child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: AppColors.glass(context), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.glassBorder(context))),
-          child: Text(e.key, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.accentPurple))))).toList()),
+          child: Text(e.key, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.accentBlue))))).toList()),
       const SizedBox(height: 18), _btn('Convert', () { if (double.tryParse(_c1.text) == null) return; setState(() => _done = true); }),
       if (_done && double.tryParse(_c1.text) != null) ...[const SizedBox(height: 18), Builder(builder: (_) {
         final ce = double.parse(_c1.text); final f = ce * 9 / 5 + 32; final k = ce + 273.15; _share = '${ce.toStringAsFixed(1)}\u00B0C = ${f.toStringAsFixed(1)}\u00B0F = ${k.toStringAsFixed(1)} K';

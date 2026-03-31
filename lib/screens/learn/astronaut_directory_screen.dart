@@ -30,8 +30,8 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
     'Roscosmos': Color(0xFFFF4D6A),
     'CNSA': Color(0xFFDAA520),
     'JAXA': Color(0xFFE040FB),
-    'SpaceX': Color(0xFF7B5BFF),
-    'CSA': Color(0xFF00D4FF),
+    'SpaceX': AppColors.accentBlue,
+    'CSA': AppColors.accentCyan,
     'MBRSC': Color(0xFF00E096),
   };
 
@@ -149,13 +149,13 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.accentPurple.withValues(alpha: 0.15),
+              color: AppColors.accentBlue.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text('${allAstronauts.length}',
                 style: GoogleFonts.spaceGrotesk(fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.accentPurple)),
+                    color: AppColors.accentBlue)),
           ),
         ],
       ),
@@ -240,7 +240,7 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: active
-                    ? AppColors.accentPurple
+                    ? AppColors.accentBlue
                     : _isDark
                         ? Colors.white.withValues(alpha: 0.06)
                         : Colors.white,
@@ -250,7 +250,7 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
                     : Border.all(color: AppColors.glassBorder(context)),
                 boxShadow: active
                     ? [BoxShadow(
-                        color: AppColors.accentPurple.withValues(alpha: 0.3),
+                        color: AppColors.accentBlue.withValues(alpha: 0.3),
                         blurRadius: 8, offset: const Offset(0, 2))]
                     : AppColors.cardShadow(context),
               ),
@@ -278,10 +278,10 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
       child: Row(
         children: [
           _statMini('\u{1F30D}', '$_countryCount', 'Countries',
-              const Color(0xFF00D4FF)),
+              AppColors.accentCyan),
           const SizedBox(width: 10),
           _statMini('\u{1F9D1}\u200D\u{1F680}', '${allAstronauts.length}',
-              'Astronauts', AppColors.accentPurple),
+              'Astronauts', AppColors.accentBlue),
           const SizedBox(width: 10),
           _statMini('\u{1F7E2}', '$_activeCount', 'Active',
               AppColors.success),
@@ -325,7 +325,7 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
 
   Widget _buildAstronautCard(Astronaut astronaut, int index) {
     final agencyColor =
-        _agencyColors[astronaut.agency] ?? AppColors.accentPurple;
+        _agencyColors[astronaut.agency] ?? AppColors.accentBlue;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -334,7 +334,7 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _isDark ? const Color(0xFF141438) : Colors.white,
+            color: _isDark ? AppColors.cardDark : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.glassBorder(context)),
             boxShadow: AppColors.cardShadow(context),
@@ -461,7 +461,7 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
 
   void _showDetail(Astronaut astronaut) {
     final agencyColor =
-        _agencyColors[astronaut.agency] ?? AppColors.accentPurple;
+        _agencyColors[astronaut.agency] ?? AppColors.accentBlue;
 
     showCupertinoModalPopup(
       context: context,
@@ -565,11 +565,11 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: _isDark
-                      ? AppColors.accentPurple.withValues(alpha: 0.08)
+                      ? AppColors.accentBlue.withValues(alpha: 0.08)
                       : const Color(0xFFF5F0FF),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.accentPurple.withValues(alpha: 0.15),
+                    color: AppColors.accentBlue.withValues(alpha: 0.15),
                   ),
                 ),
                 child: Column(
@@ -578,7 +578,7 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
                     Text('\u{1F3C6} Achievement',
                         style: GoogleFonts.inter(fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.accentPurple)),
+                            color: AppColors.accentBlue)),
                     const SizedBox(height: 4),
                     Text(astronaut.achievement,
                         style: GoogleFonts.inter(fontSize: 14,

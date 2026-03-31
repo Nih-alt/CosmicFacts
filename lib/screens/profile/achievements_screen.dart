@@ -148,7 +148,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     Text('${(progress * 100).round()}%',
                         style: GoogleFonts.inter(fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.accentPurple)),
+                            color: AppColors.accentBlue)),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -159,7 +159,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     minHeight: 8,
                     backgroundColor: AppColors.divider(context),
                     valueColor: const AlwaysStoppedAnimation(
-                      AppColors.accentPurple,
+                      AppColors.accentBlue,
                     ),
                   ),
                 ),
@@ -195,7 +195,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: active
-                    ? AppColors.accentPurple
+                    ? AppColors.accentBlue
                     : _isDark
                         ? Colors.white.withValues(alpha: 0.06)
                         : Colors.white,
@@ -205,7 +205,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     : Border.all(color: AppColors.glassBorder(context)),
                 boxShadow: active
                     ? [BoxShadow(
-                        color: AppColors.accentPurple.withValues(alpha: 0.3),
+                        color: AppColors.accentBlue.withValues(alpha: 0.3),
                         blurRadius: 8, offset: const Offset(0, 2))]
                     : AppColors.cardShadow(context),
               ),
@@ -237,7 +237,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _isDark ? const Color(0xFF141438) : Colors.white,
+          color: _isDark ? AppColors.cardDark : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isUnlocked
@@ -273,7 +273,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                         width: 18, height: 18,
                         decoration: BoxDecoration(
                           color: _isDark
-                              ? const Color(0xFF2A2A5A)
+                              ? AppColors.cardDark
                               : const Color(0xFFE8E8F0),
                           shape: BoxShape.circle,
                         ),

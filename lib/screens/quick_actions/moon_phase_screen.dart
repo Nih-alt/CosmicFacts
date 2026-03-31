@@ -344,7 +344,7 @@ class MoonPhaseScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isToday
-              ? AppColors.accentPurple.withValues(alpha: 0.6)
+              ? AppColors.accentBlue.withValues(alpha: 0.6)
               : AppColors.glassBorder(context),
           width: isToday ? 1.5 : 1,
         ),
@@ -357,7 +357,7 @@ class MoonPhaseScreen extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-              color: isToday ? AppColors.accentPurple : AppColors.textSecondary(context),
+              color: isToday ? AppColors.accentBlue : AppColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 6),

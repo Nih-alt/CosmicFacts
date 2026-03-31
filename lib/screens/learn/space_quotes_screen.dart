@@ -20,9 +20,9 @@ class _QuoteCategory {
 }
 
 const _categories = [
-  _QuoteCategory('All', AppColors.accentPurple),
+  _QuoteCategory('All', AppColors.accentBlue),
   _QuoteCategory('Exploration', AppColors.accentCyan),
-  _QuoteCategory('Universe', AppColors.accentPurple),
+  _QuoteCategory('Universe', AppColors.accentBlue),
   _QuoteCategory('Science', AppColors.starGold),
   _QuoteCategory('India', Color(0xFFFF9933)),
   _QuoteCategory('Humanity', AppColors.success),
@@ -33,7 +33,7 @@ Color _categoryColor(String category) {
     case 'Exploration':
       return AppColors.accentCyan;
     case 'Universe':
-      return AppColors.accentPurple;
+      return AppColors.accentBlue;
     case 'Science':
       return AppColors.starGold;
     case 'India':
@@ -41,7 +41,7 @@ Color _categoryColor(String category) {
     case 'Humanity':
       return AppColors.success;
     default:
-      return AppColors.accentPurple;
+      return AppColors.accentBlue;
   }
 }
 
@@ -214,8 +214,8 @@ class _SpaceQuotesScreenState extends State<SpaceQuotesScreen> {
               : null,
           color: _isDark ? null : Colors.white,
           boxShadow: _isDark
-              ? [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 8))]
-              : [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.15), blurRadius: 24, offset: const Offset(0, 8))],
+              ? [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 8))]
+              : [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.15), blurRadius: 24, offset: const Offset(0, 8))],
         ),
         child: Stack(
           children: [
@@ -250,7 +250,7 @@ class _SpaceQuotesScreenState extends State<SpaceQuotesScreen> {
                 style: GoogleFonts.spaceGrotesk(
                   fontSize: 60,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.accentPurple.withValues(alpha: 0.3),
+                  color: AppColors.accentBlue.withValues(alpha: 0.3),
                 ),
               ),
             ),
@@ -279,7 +279,7 @@ class _SpaceQuotesScreenState extends State<SpaceQuotesScreen> {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: _isDark ? Colors.white : const Color(0xFF1A1A2E),
+                          color: _isDark ? Colors.white : AppColors.textPrimaryLight,
                           height: 1.35,
                         ),
                         textAlign: TextAlign.center,
@@ -328,10 +328,10 @@ class _SpaceQuotesScreenState extends State<SpaceQuotesScreen> {
                     shape: BoxShape.circle,
                     color: _isDark
                         ? Colors.white.withValues(alpha: 0.1)
-                        : AppColors.accentPurple.withValues(alpha: 0.1),
+                        : AppColors.accentBlue.withValues(alpha: 0.1),
                   ),
                   child: Icon(CupertinoIcons.share, size: 16,
-                      color: _isDark ? Colors.white.withValues(alpha: 0.7) : AppColors.accentPurple),
+                      color: _isDark ? Colors.white.withValues(alpha: 0.7) : AppColors.accentBlue),
                 ),
               ),
             ),
@@ -364,15 +364,13 @@ class _SpaceQuotesScreenState extends State<SpaceQuotesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 gradient: isSelected ? AppColors.primaryGradient : null,
-                color: isSelected ? null : (_isDark ? const Color(0xFF141438) : Colors.white),
+                color: isSelected ? null : (_isDark ? AppColors.cardDark : Colors.white),
                 borderRadius: BorderRadius.circular(20),
                 border: isSelected ? null : Border.all(
-                  color: _isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : const Color(0xFFEEECF5),
+                  color: AppColors.cardBorder(context),
                 ),
                 boxShadow: isSelected
-                    ? [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.3), blurRadius: 8)]
+                    ? [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.3), blurRadius: 8)]
                     : AppColors.cardShadow(context),
               ),
               child: Text(
@@ -382,7 +380,7 @@ class _SpaceQuotesScreenState extends State<SpaceQuotesScreen> {
                   fontWeight: FontWeight.w600,
                   color: isSelected
                       ? Colors.white
-                      : (_isDark ? Colors.white : const Color(0xFF1A1A2E)),
+                      : AppColors.textPrimary(context),
                 ),
               ),
             ),
@@ -404,12 +402,10 @@ class _SpaceQuotesScreenState extends State<SpaceQuotesScreen> {
       onTap: () => _showFullScreenQuote(quote),
       child: Container(
         decoration: BoxDecoration(
-          color: _isDark ? const Color(0xFF141438) : Colors.white,
+          color: _isDark ? AppColors.cardDark : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : const Color(0xFFEEECF5),
+            color: AppColors.cardBorder(context),
           ),
           boxShadow: AppColors.cardShadow(context),
         ),
@@ -628,10 +624,10 @@ class _FullScreenQuote extends StatelessWidget {
                             shape: BoxShape.circle,
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.1)
-                                : AppColors.accentPurple.withValues(alpha: 0.1),
+                                : AppColors.accentBlue.withValues(alpha: 0.1),
                           ),
                           child: Icon(CupertinoIcons.share, size: 18,
-                              color: isDark ? Colors.white : AppColors.accentPurple),
+                              color: isDark ? Colors.white : AppColors.accentBlue),
                         ),
                       ),
                     ],

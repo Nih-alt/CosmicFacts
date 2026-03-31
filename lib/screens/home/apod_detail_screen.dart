@@ -39,7 +39,7 @@ class ApodDetailScreen extends StatelessWidget {
                             color: AppColors.card(context),
                             child: const Center(
                               child: CupertinoActivityIndicator(
-                                color: AppColors.accentPurple,
+                                color: AppColors.accentBlue,
                               ),
                             ),
                           ),
@@ -130,7 +130,7 @@ class ApodDetailScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.accentPurple,
+                      color: AppColors.accentBlue,
                     ),
                   ),
                   const SizedBox(height: 10),

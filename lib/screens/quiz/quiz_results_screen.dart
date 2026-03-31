@@ -114,7 +114,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
     final rng = Random(42);
     return List.generate(20, (i) {
       final colors = [
-        AppColors.accentPurple,
+        AppColors.accentBlue,
         AppColors.accentCyan,
         AppColors.starGold,
         AppColors.accentOrange,
@@ -159,7 +159,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
     } else if (_percentage >= 0.6) {
       icon = '\u2B50';
       text = 'Great Job!';
-      textColor = AppColors.accentPurple;
+      textColor = AppColors.accentBlue;
     } else if (_percentage >= 0.4) {
       icon = '\u{1F44D}';
       text = 'Good Try!';
@@ -200,7 +200,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
               value: _percentage,
               strokeWidth: 10,
               backgroundColor: AppColors.divider(context),
-              valueColor: const AlwaysStoppedAnimation(AppColors.accentPurple),
+              valueColor: const AlwaysStoppedAnimation(AppColors.accentBlue),
             ),
           ),
           Column(
@@ -234,7 +234,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
         _miniStat('Wrong', '${widget.wrong}', AppColors.error),
         const SizedBox(width: 12),
         _miniStat(
-            'Accuracy', '${(_percentage * 100).round()}%', AppColors.accentPurple),
+            'Accuracy', '${(_percentage * 100).round()}%', AppColors.accentBlue),
       ],
     ).animate().fadeIn(duration: 500.ms, delay: 400.ms);
   }
@@ -363,7 +363,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
         color: AppColors.glass(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: AppColors.accentPurple.withValues(alpha: 0.2)),
+            color: AppColors.accentBlue.withValues(alpha: 0.2)),
         boxShadow: AppColors.cardShadow(context),
       ),
       child: Column(
@@ -382,7 +382,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
               minHeight: 8,
               backgroundColor: AppColors.divider(context),
               valueColor:
-                  const AlwaysStoppedAnimation(AppColors.accentPurple),
+                  const AlwaysStoppedAnimation(AppColors.accentBlue),
             ),
           ),
           const SizedBox(height: 6),
@@ -408,7 +408,7 @@ class _QuizResultsScreenState extends State<QuizResultsScreen> {
           height: 52,
           child: CupertinoButton(
             padding: EdgeInsets.zero,
-            color: AppColors.accentPurple,
+            color: AppColors.accentBlue,
             borderRadius: BorderRadius.circular(14),
             onPressed: _shareScore,
             child: Text('Share Score',

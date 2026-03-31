@@ -368,7 +368,7 @@ class _ConstellationDetailScreenState extends State<ConstellationDetailScreen>
         gradient: LinearGradient(
           colors: [
             c.color.withValues(alpha: _isDark ? 0.12 : 0.08),
-            AppColors.accentPurple.withValues(alpha: _isDark ? 0.08 : 0.04),
+            AppColors.accentBlue.withValues(alpha: _isDark ? 0.08 : 0.04),
           ],
         ),
         border: Border.all(color: c.color.withValues(alpha: 0.2)),
@@ -437,7 +437,7 @@ class _ConstellationDetailScreenState extends State<ConstellationDetailScreen>
                   width: 140,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: _isDark ? const Color(0xFF141438) : Colors.white,
+                    color: _isDark ? AppColors.cardDark : Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: AppColors.glassBorder(context)),
                     boxShadow: AppColors.cardShadow(context),
@@ -487,7 +487,7 @@ class _ConstellationDetailScreenState extends State<ConstellationDetailScreen>
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.accentPurple.withValues(alpha: 0.25),
+                    color: AppColors.accentBlue.withValues(alpha: 0.25),
                     blurRadius: 12, offset: const Offset(0, 4),
                   ),
                 ],
@@ -559,7 +559,7 @@ class _ConstellationDetailScreenState extends State<ConstellationDetailScreen>
       case 'Easy': return AppColors.success;
       case 'Medium': return AppColors.accentOrange;
       case 'Hard': return AppColors.error;
-      default: return AppColors.accentPurple;
+      default: return AppColors.accentBlue;
     }
   }
 }

@@ -360,37 +360,37 @@ List<CalendarEvent> getAllCalendarEvents() {
         name: 'Falcon 9 \u2022 Starlink',
         description: 'Starlink Group 15-1 \u2022 SpaceX',
         type: 'launch',
-        color: AppColors.accentPurple),
+        color: AppColors.accentBlue),
     CalendarEvent(
         date: DateTime(2026, 5, 20),
         name: 'GSLV Mk III \u2022 Gaganyaan',
         description: 'Gaganyaan Uncrewed \u2022 ISRO',
         type: 'launch',
-        color: AppColors.accentPurple),
+        color: AppColors.accentBlue),
     CalendarEvent(
         date: DateTime(2026, 6, 5),
         name: 'Ariane 6 \u2022 Galileo L13',
         description: 'Navigation satellite \u2022 ESA',
         type: 'launch',
-        color: AppColors.accentPurple),
+        color: AppColors.accentBlue),
     CalendarEvent(
         date: DateTime(2026, 7, 15),
         name: 'SLS \u2022 Artemis III',
         description: 'Lunar landing mission \u2022 NASA',
         type: 'launch',
-        color: AppColors.accentPurple),
+        color: AppColors.accentBlue),
     CalendarEvent(
         date: DateTime(2026, 9, 1),
         name: 'Starship \u2022 Mars Cargo Test',
         description: 'Mars cargo test flight \u2022 SpaceX',
         type: 'launch',
-        color: AppColors.accentPurple),
+        color: AppColors.accentBlue),
     CalendarEvent(
         date: DateTime(2026, 10, 10),
         name: 'PSLV \u2022 Aditya-L2',
         description: 'Solar observation mission \u2022 ISRO',
         type: 'launch',
-        color: AppColors.accentPurple),
+        color: AppColors.accentBlue),
   ];
 }
 

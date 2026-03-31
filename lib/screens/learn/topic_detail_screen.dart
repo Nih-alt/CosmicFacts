@@ -25,8 +25,8 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
   TopicData get topic => widget.topic;
 
   static const _topicColors = <String, Color>{
-    'black_holes': Color(0xFF7B5BFF),
-    'galaxies': Color(0xFF00D4FF),
+    'black_holes': AppColors.accentBlue,
+    'galaxies': AppColors.accentCyan,
     'stars': Color(0xFFFFD700),
     'planets': Color(0xFF4A90D9),
     'moons': Color(0xFFB0B0C0),
@@ -39,7 +39,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     'exoplanets': Color(0xFFE040FB),
   };
 
-  Color get _topicColor => _topicColors[topic.id] ?? AppColors.accentPurple;
+  Color get _topicColor => _topicColors[topic.id] ?? AppColors.accentBlue;
 
   @override
   void initState() {

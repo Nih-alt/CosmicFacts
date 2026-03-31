@@ -145,7 +145,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
             Text('Space Sounds', style: GoogleFonts.spaceGrotesk(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
             Text('Real sounds from the cosmos', style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary(context))),
           ])),
-          Icon(Icons.volume_up_rounded, color: AppColors.accentPurple, size: 24),
+          Icon(Icons.volume_up_rounded, color: AppColors.accentBlue, size: 24),
         ],
       ),
     );
@@ -169,7 +169,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                gradient: sel ? const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]) : null,
+                gradient: sel ? AppColors.primaryGradient : null,
                 color: sel ? null : AppColors.glass(context),
                 border: Border.all(color: sel ? Colors.transparent : AppColors.glassBorder(context)),
               ),
@@ -195,10 +195,10 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: LinearGradient(colors: [
-          AppColors.accentPurple.withValues(alpha: 0.15),
+          AppColors.accentBlue.withValues(alpha: 0.15),
           AppColors.accentCyan.withValues(alpha: 0.08),
         ]),
-        border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -218,7 +218,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
                     borderRadius: BorderRadius.circular(2),
                     gradient: const LinearGradient(
                       begin: Alignment.bottomCenter, end: Alignment.topCenter,
-                      colors: [AppColors.accentPurple, AppColors.accentCyan],
+                      colors: [AppColors.accentBlue, AppColors.accentCyan],
                     ),
                   ),
                 );
@@ -228,7 +228,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
           const SizedBox(width: 10),
           // Info
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text('Now Playing', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.accentPurple)),
+            Text('Now Playing', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.accentBlue)),
             Text(sound.name, style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context)),
               maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
@@ -238,7 +238,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
                 value: progress,
                 minHeight: 3,
                 backgroundColor: AppColors.divider(context),
-                valueColor: const AlwaysStoppedAnimation(AppColors.accentPurple),
+                valueColor: const AlwaysStoppedAnimation(AppColors.accentBlue),
               ),
             ),
           ])),
@@ -250,7 +250,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
               width: 36, height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]),
+                gradient: AppColors.primaryGradient,
               ),
               child: Icon(_playing ? Icons.pause_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 20),
             ),
@@ -306,7 +306,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
               width: 44, height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: isPlaying ? const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]) : null,
+                gradient: isPlaying ? AppColors.primaryGradient : null,
                 color: isPlaying ? null : Colors.transparent,
                 border: isPlaying ? null : Border.all(color: AppColors.glassBorder(context), width: 1.5),
               ),

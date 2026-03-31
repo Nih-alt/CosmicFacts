@@ -65,7 +65,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                   child: CupertinoSlidingSegmentedControl<int>(
                     groupValue: _ctrl.selectedTab.value,
                     backgroundColor: AppColors.card(context),
-                    thumbColor: AppColors.accentPurple,
+                    thumbColor: AppColors.accentBlue,
                     onValueChanged: (v) {
                       if (v != null) _ctrl.selectedTab.value = v;
                     },
@@ -137,7 +137,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
 
       return RefreshIndicator(
         onRefresh: _ctrl.loadLaunches,
-        color: AppColors.accentPurple,
+        color: AppColors.accentBlue,
         backgroundColor: AppColors.surface(context),
         child: ListView.builder(
           physics: const BouncingScrollPhysics(
@@ -197,7 +197,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                   color: AppColors.textPrimary(context))),
           const SizedBox(height: 24),
           CupertinoButton(
-            color: AppColors.accentPurple,
+            color: AppColors.accentBlue,
             borderRadius: BorderRadius.circular(12),
             onPressed: _ctrl.loadLaunches,
             child: Text('Retry',
@@ -301,7 +301,7 @@ class _HeroLaunchCardState extends State<_HeroLaunchCard> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentPurple.withValues(alpha: 0.2),
+              color: AppColors.accentBlue.withValues(alpha: 0.2),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -416,14 +416,14 @@ class _HeroLaunchCardState extends State<_HeroLaunchCard> {
 
   Widget _gradientFallback() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF1A0040),
-            Color(0xFF002040),
-            Color(0xFF05051A),
+            const Color(0xFF1A0040),
+            const Color(0xFF002040),
+            AppColors.backgroundDark,
           ],
         ),
       ),
@@ -572,7 +572,7 @@ class _LaunchCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.accentPurple,
+                            color: AppColors.accentBlue,
                           ),
                         ),
                         Text(
@@ -672,17 +672,17 @@ class _LaunchCard extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: AppColors.accentPurple.withValues(alpha: 0.15),
+          color: AppColors.accentBlue.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: AppColors.accentPurple.withValues(alpha: 0.3)),
+              color: AppColors.accentBlue.withValues(alpha: 0.3)),
         ),
         child: Text(
           _relativeTime(launch.launchDate),
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.accentPurple,
+            color: AppColors.accentBlue,
           ),
         ),
       );
@@ -740,9 +740,9 @@ class _ProviderBadge extends StatelessWidget {
     if (p.contains('nasa')) return const Color(0xFF4A90D9);
     if (p.contains('isro')) return const Color(0xFFFF9933);
     if (p.contains('ula')) return AppColors.success;
-    if (p.contains('rocket lab')) return AppColors.accentPurple;
+    if (p.contains('rocket lab')) return AppColors.accentBlue;
     if (p.contains('ariane')) return AppColors.starGold;
-    return AppColors.accentPurple;
+    return AppColors.accentBlue;
   }
 
   @override

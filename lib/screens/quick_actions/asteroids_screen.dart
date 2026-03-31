@@ -200,7 +200,7 @@ class _AsteroidsScreenState extends State<AsteroidsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.accentPurple.withValues(alpha: 0.15),
+                        color: AppColors.accentBlue.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -208,7 +208,7 @@ class _AsteroidsScreenState extends State<AsteroidsScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.accentPurple,
+                          color: AppColors.accentBlue,
                         ),
                       ),
                     ),
@@ -579,7 +579,7 @@ class _AsteroidsScreenState extends State<AsteroidsScreen> {
             ),
             const SizedBox(height: 16),
             CupertinoButton(
-              color: AppColors.accentPurple,
+              color: AppColors.accentBlue,
               borderRadius: BorderRadius.circular(12),
               onPressed: _loadAsteroids,
               child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),

@@ -34,10 +34,15 @@ class ApiService {
   static Future<List<SpaceArticle>?> getSpaceNews({
     int limit = 20,
     int offset = 0,
+    String? searchQuery,
   }) async {
-    final response = await _getWithRetry(
-      '$_newsBaseUrl/articles/?limit=$limit&offset=$offset',
-    );
+    final encoded = searchQuery != null && searchQuery.isNotEmpty
+        ? Uri.encodeComponent(searchQuery)
+        : null;
+    final url = encoded != null
+        ? '$_newsBaseUrl/articles/?limit=$limit&offset=$offset&search=$encoded'
+        : '$_newsBaseUrl/articles/?limit=$limit&offset=$offset';
+    final response = await _getWithRetry(url);
     if (response == null) return null;
 
     try {
@@ -116,23 +121,49 @@ class ApiService {
         if (dataList == null || dataList.isEmpty) continue;
 
         final meta = dataList[0] as Map<String, dynamic>;
-        String thumbUrl = '';
-        if (linksList != null) {
-          for (final link in linksList) {
-            if (link['rel'] == 'preview') {
-              thumbUrl = link['href'] as String? ?? '';
-              break;
-            }
-          }
-        }
+        final links = linksList ?? [];
 
-        if (thumbUrl.isEmpty) continue;
-        results.add(NasaImage.fromJson(meta, thumbUrl));
+        // Grid uses ~thumb.jpg (always exists, fast); detail hero upgrades to ~large.jpg.
+        final mediumUrl = _buildImageUrl(links, quality: 'thumb');
+        final largeUrl  = _buildImageUrl(links, quality: 'large');
+
+        if (mediumUrl.isEmpty) continue;
+        results.add(NasaImage.fromJson(meta, mediumUrl, largeUrl: largeUrl));
       }
       return results;
     } catch (_) {
       return [];
     }
+  }
+
+  /// Returns the NASA CDN URL at the requested quality tier.
+  /// NASA CDN suffixes that EXIST: ~thumb.jpg (~100–300px, always exists) | ~large.jpg (~1800px, usually exists)
+  /// NOTE: ~medium.jpg does NOT exist on NASA CDN — never request it.
+  static String _buildImageUrl(List<dynamic> links, {String quality = 'medium'}) {
+    for (final link in links) {
+      final rel  = link['rel']  as String? ?? '';
+      final href = link['href'] as String? ?? '';
+      if (rel == 'preview' && href.isNotEmpty) {
+        if (quality == 'large') {
+          return href
+              .replaceAll('~thumb.jpg', '~large.jpg')
+              .replaceAll('~small.jpg', '~large.jpg');
+        }
+        // 'medium' and 'thumb' both return the original ~thumb.jpg — it always exists
+        return href;
+      }
+    }
+    // Fallback: first available link
+    if (links.isNotEmpty) {
+      final href = links.first['href'] as String? ?? '';
+      if (quality == 'large') {
+        return href
+            .replaceAll('~thumb.jpg', '~large.jpg')
+            .replaceAll('~small.jpg', '~large.jpg');
+      }
+      return href;
+    }
+    return '';
   }
 
   /// Fetch upcoming launches: SpaceX v5 query → SNAPI → hardcoded fallback.

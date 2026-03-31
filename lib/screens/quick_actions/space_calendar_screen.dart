@@ -282,12 +282,12 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isToday && !isSelected
-                          ? AppColors.accentPurple
+                          ? AppColors.accentBlue
                           : isSelected
-                              ? AppColors.accentPurple.withValues(alpha: 0.2)
+                              ? AppColors.accentBlue.withValues(alpha: 0.2)
                               : Colors.transparent,
                       border: isSelected && !isToday
-                          ? Border.all(color: AppColors.accentPurple)
+                          ? Border.all(color: AppColors.accentBlue)
                           : null,
                     ),
                     child: Column(
@@ -344,7 +344,7 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
 
   Widget _buildLegend() {
     const items = [
-      (AppColors.accentPurple, 'Launch'),
+      (AppColors.accentBlue, 'Launch'),
       (AppColors.starGold, 'Eclipse'),
       (AppColors.accentOrange, 'Meteor'),
       (Color(0xFF4A90D9), 'Planet'),
@@ -474,14 +474,14 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF141438) : Colors.white,
+        color: _isDark ? AppColors.cardDark : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isToday
               ? AppColors.error.withValues(alpha: 0.4)
               : (_isDark
                   ? Colors.white.withValues(alpha: 0.06)
-                  : const Color(0xFFEEECF5)),
+                  : AppColors.cardBorder(context)),
         ),
         boxShadow: AppColors.cardShadow(context),
       ),
@@ -579,7 +579,7 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.accentPurple
+                      color: AppColors.accentBlue
                           .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -587,13 +587,13 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.calendar_today,
-                            size: 10, color: AppColors.accentPurple),
+                            size: 10, color: AppColors.accentBlue),
                         const SizedBox(width: 4),
                         Text('Add',
                             style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.accentPurple)),
+                                color: AppColors.accentBlue)),
                       ],
                     ),
                   ),

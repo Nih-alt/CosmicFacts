@@ -21,9 +21,9 @@ LinearGradient _sourceBadgeGradient(String source) {
   final s = source.toLowerCase();
   if (s.contains('nasa')) return const LinearGradient(colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)]);
   if (s.contains('isro')) return const LinearGradient(colors: [Color(0xFFFF9933), Color(0xFFFF6F00)]);
-  if (s.contains('spacex')) return const LinearGradient(colors: [Color(0xFF00D4FF), Color(0xFF0097A7)]);
+  if (s.contains('spacex')) return const LinearGradient(colors: [AppColors.accentCyan, Color(0xFF0097A7)]);
   if (s.contains('esa')) return const LinearGradient(colors: [Color(0xFF00E096), Color(0xFF00A86B)]);
-  return const LinearGradient(colors: [Color(0xFF7B5BFF), Color(0xFF5B3FD4)]);
+  return const LinearGradient(colors: [AppColors.accentBlue, Color(0xFF5B3FD4)]);
 }
 
 String _sourceDescription(String source) {
@@ -239,7 +239,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                       errorWidget: (_, _, _) => Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(colors: [
-                            AppColors.accentPurple.withValues(alpha: 0.2),
+                            AppColors.accentBlue.withValues(alpha: 0.2),
                             AppColors.backgroundDark,
                           ]),
                         ),
@@ -252,7 +252,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.accentPurple.withValues(alpha: 0.25),
+                            AppColors.accentBlue.withValues(alpha: 0.25),
                             AppColors.accentCyan.withValues(alpha: 0.1),
                             AppColors.backgroundDark,
                           ],
@@ -412,7 +412,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.accentPurple,
+                                  color: AppColors.accentBlue,
                                 ),
                               ),
                             ),
@@ -434,7 +434,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color:
-                              AppColors.accentPurple.withValues(alpha: 0.5),
+                              AppColors.accentBlue.withValues(alpha: 0.5),
                           width: 1.5,
                         ),
                       ),
@@ -470,7 +470,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.accentPurple
+                            color: AppColors.accentBlue
                                 .withValues(alpha: 0.25),
                             blurRadius: 16,
                             offset: const Offset(0, 6),

@@ -91,7 +91,7 @@ class _WallpaperPreviewScreenState extends State<WallpaperPreviewScreen> {
                       maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Text('NASA \u2022 ${widget.image.center}',
-                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.accentPurple)),
+                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.accentBlue)),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -101,7 +101,7 @@ class _WallpaperPreviewScreenState extends State<WallpaperPreviewScreen> {
                           height: 48,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
-                            gradient: const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]),
+                            gradient: AppColors.primaryGradient,
                           ),
                           child: CupertinoButton(
                             padding: EdgeInsets.zero,

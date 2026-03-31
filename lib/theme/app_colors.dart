@@ -1,31 +1,48 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  // ── Static accent colors (same in both themes) ──
-  static const Color accentPurple = Color(0xFF7B5BFF);
-  static const Color accentCyan = Color(0xFF00D4FF);
-  static const Color accentOrange = Color(0xFFFF6B35);
-  static const Color starGold = Color(0xFFFFD700);
-  static const Color success = Color(0xFF00E096);
-  static const Color error = Color(0xFFFF4D6A);
+  // ═══════════════════════════════════════════
+  // SHARED ACCENTS
+  // ═══════════════════════════════════════════
+  static const Color accentBlue      = Color(0xFF0066CC);
+  static const Color accentBlueLight = Color(0xFF3B82F6);
+  static const Color accentBlueDeep  = Color(0xFF1D4ED8);
+  static const Color accentGreen     = Color(0xFF34D399);
+  static const Color accentCyan      = Color(0xFF38BDF8);
+  static const Color accentOrange    = Color(0xFFFB923C);
+  static const Color starGold        = Color(0xFFFFD700);
+  static const Color success         = Color(0xFF34D399);
+  static const Color error           = Color(0xFFFF4D6A);
 
-  // ── Dark-only constants (for splash, onboarding, story feed) ──
-  static const Color backgroundDark = Color(0xFF05051A);
-  static const Color surfaceDark = Color(0xFF0C0C2E);
-  static const Color cardDark = Color(0xFF141438);
+  // Legacy purple — ONLY for planet icons, timeline eras, constellation lines,
+  // and select achievement badges. Do NOT use for buttons, pills, or nav.
+  static const Color legacyPurple    = Color(0xFF7B5BFF);
+
+  // ═══════════════════════════════════════════
+  // DARK — MIDNIGHT BLUE
+  // ═══════════════════════════════════════════
+  static const Color backgroundDark  = Color(0xFF040D1A);
+  static const Color surfaceDark     = Color(0xFF071428);
+  static const Color cardDark        = Color(0xFF0A1E36);
   static const Color textPrimaryDark = Color(0xFFFFFFFF);
-  static const Color textSecondaryDark = Color(0xFF7878AA);
+  static const Color textSecondaryDark = Color(0xFF6B8CAE);
+  static const Color textTertiaryDark  = Color(0xFF3A5470);
 
-  // ── Light-only constants ──
-  static const Color backgroundLight = Color(0xFFF8F7FC);
-  static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color textPrimaryLight = Color(0xFF1A1A2E);
-  static const Color textSecondaryLight = Color(0xFF666680);
+  // ═══════════════════════════════════════════
+  // LIGHT — SKY BLUE
+  // ═══════════════════════════════════════════
+  static const Color backgroundLight = Color(0xFFF0F6FF);
+  static const Color surfaceLight    = Color(0xFFFFFFFF);
+  static const Color cardLight       = Color(0xFFFFFFFF);
+  static const Color textPrimaryLight  = Color(0xFF0A1628);
+  static const Color textSecondaryLight = Color(0xFF5A7A9A);
+  static const Color textTertiaryLight  = Color(0xFF8AAABB);
 
-  // ── Gradients ──
-  static const Color gradientStart = Color(0xFF7B5BFF);
-  static const Color gradientEnd = Color(0xFF00D4FF);
+  // ═══════════════════════════════════════════
+  // GRADIENTS (blue→cyan replaces old purple→cyan)
+  // ═══════════════════════════════════════════
+  static const Color gradientStart = Color(0xFF0066CC);
+  static const Color gradientEnd   = Color(0xFF38BDF8);
 
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [gradientStart, gradientEnd],
@@ -37,11 +54,9 @@ abstract final class AppColors {
     colors: [gradientStart, gradientEnd],
   );
 
-  // Card borders (kept for backward compat)
-  static final Color cardBorderDark = Colors.white.withValues(alpha: 0.06);
-  static final Color cardBorderLight = Colors.black.withValues(alpha: 0.06);
-
-  // ── Theme-aware helpers ──
+  // ═══════════════════════════════════════════
+  // THEME-AWARE HELPERS
+  // ═══════════════════════════════════════════
   static bool _isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
 
@@ -60,51 +75,72 @@ abstract final class AppColors {
   static Color textSecondary(BuildContext context) =>
       _isDark(context) ? textSecondaryDark : textSecondaryLight;
 
-  static Color glass(BuildContext context) =>
+  static Color textTertiary(BuildContext context) =>
+      _isDark(context) ? textTertiaryDark : textTertiaryLight;
+
+  static Color cardBorder(BuildContext context) =>
       _isDark(context)
-          ? Colors.white.withValues(alpha: 0.06)
-          : Colors.white;
+          ? const Color(0xFF0066CC).withValues(alpha: 0.18)
+          : const Color(0xFF0066CC).withValues(alpha: 0.12);
+
+  static Color glass(BuildContext context) =>
+      _isDark(context) ? cardDark : Colors.white;
 
   static Color glassBorder(BuildContext context) =>
       _isDark(context)
-          ? Colors.white.withValues(alpha: 0.1)
-          : const Color(0xFFEEECF5);
+          ? const Color(0xFF0066CC).withValues(alpha: 0.18)
+          : const Color(0xFF0066CC).withValues(alpha: 0.12);
 
   static Color divider(BuildContext context) =>
       _isDark(context)
-          ? Colors.white.withValues(alpha: 0.06)
-          : const Color(0xFFEEECF5);
-
-  static Color shimmerBase(BuildContext context) =>
-      _isDark(context) ? cardDark : const Color(0xFFEEECF5);
-
-  static Color shimmerHighlight(BuildContext context) =>
-      _isDark(context) ? const Color(0xFF1E1E4A) : const Color(0xFFF8F7FC);
+          ? const Color(0xFF0066CC).withValues(alpha: 0.12)
+          : const Color(0xFF0066CC).withValues(alpha: 0.1);
 
   static Color searchBar(BuildContext context) =>
-      _isDark(context) ? cardDark : Colors.white;
-
-  static Color navBar(BuildContext context) =>
       _isDark(context) ? surfaceDark : Colors.white;
 
-  /// Premium card shadow — purple-tinted in light, none in dark.
+  // ── Pills ──
+  static Color pillSelected(BuildContext context) => accentBlue;
+
+  static Color pillUnselected(BuildContext context) =>
+      _isDark(context) ? surfaceDark : const Color(0xFF0066CC).withValues(alpha: 0.08);
+
+  static Color pillBorder(BuildContext context) =>
+      const Color(0xFF0066CC).withValues(alpha: _isDark(context) ? 0.25 : 0.2);
+
+  // ── Navigation ──
+  static Color navBar(BuildContext context) =>
+      _isDark(context) ? backgroundDark : Colors.white;
+
+  static Color navBorder(BuildContext context) =>
+      const Color(0xFF0066CC).withValues(alpha: _isDark(context) ? 0.12 : 0.1);
+
+  static Color navSelected(BuildContext context) =>
+      _isDark(context) ? accentBlueLight : accentBlue;
+
+  static Color navUnselected(BuildContext context) =>
+      _isDark(context) ? textTertiaryDark : textSecondaryLight;
+
+  // ── Shimmer ──
+  static Color shimmerBase(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF071428) : const Color(0xFFE8F0FB);
+
+  static Color shimmerHighlight(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF0D2040) : const Color(0xFFF0F6FF);
+
+  // ── Card shadow ──
   static List<BoxShadow> cardShadow(BuildContext context) =>
       _isDark(context)
           ? const []
           : [
               BoxShadow(
-                color: const Color(0xFF7B5BFF).withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: const Color(0xFF0066CC).withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
               ),
             ];
 
-  /// Colored glow shadow for topic cards in light mode.
+  /// Colored glow shadow for topic cards.
   static List<BoxShadow> coloredShadow(BuildContext context, Color glow) =>
       _isDark(context)
           ? [
@@ -126,4 +162,37 @@ abstract final class AppColors {
                 offset: const Offset(0, 2),
               ),
             ];
+
+  // ═══════════════════════════════════════════
+  // SOURCE / AGENCY BADGES
+  // ═══════════════════════════════════════════
+  static Color sourceBadgeBg(String source, bool isDark) {
+    switch (source.toLowerCase()) {
+      case 'nasa':
+        return const Color(0xFF0066CC).withValues(alpha: isDark ? 0.2 : 0.1);
+      case 'isro':
+        return const Color(0xFFFF9933).withValues(alpha: isDark ? 0.2 : 0.12);
+      case 'spacex':
+        return const Color(0xFF38BDF8).withValues(alpha: isDark ? 0.15 : 0.1);
+      case 'esa':
+        return const Color(0xFF34D399).withValues(alpha: isDark ? 0.15 : 0.1);
+      default:
+        return const Color(0xFF0066CC).withValues(alpha: isDark ? 0.15 : 0.08);
+    }
+  }
+
+  static Color sourceBadgeText(String source, bool isDark) {
+    switch (source.toLowerCase()) {
+      case 'nasa':
+        return isDark ? const Color(0xFF60A5FA) : const Color(0xFF1A56DB);
+      case 'isro':
+        return isDark ? const Color(0xFFFB923C) : const Color(0xFFB45309);
+      case 'spacex':
+        return isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
+      case 'esa':
+        return isDark ? const Color(0xFF34D399) : const Color(0xFF0A7A50);
+      default:
+        return isDark ? const Color(0xFF60A5FA) : const Color(0xFF1A56DB);
+    }
+  }
 }

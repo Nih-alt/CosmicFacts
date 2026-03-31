@@ -48,12 +48,12 @@ class _SpaceGlossaryScreenState extends State<SpaceGlossaryScreen> {
 
   Color _catColor(String category) {
     switch (category) {
-      case 'Astronomy': return const Color(0xFF00D4FF);
-      case 'Physics': return const Color(0xFF7B5BFF);
+      case 'Astronomy': return AppColors.accentCyan;
+      case 'Physics': return AppColors.accentBlue;
       case 'Cosmology': return const Color(0xFFFFB800);
       case 'Technology': return const Color(0xFF00E096);
       case 'Biology': return const Color(0xFFFF5BDB);
-      default: return const Color(0xFF7B5BFF);
+      default: return AppColors.accentBlue;
     }
   }
 
@@ -171,7 +171,7 @@ class _SpaceGlossaryScreenState extends State<SpaceGlossaryScreen> {
         prefix: Padding(
           padding: const EdgeInsets.only(left: 14),
           child: Icon(CupertinoIcons.search,
-              size: 18, color: AppColors.accentPurple),
+              size: 18, color: AppColors.accentBlue),
         ),
         suffix: _query.isNotEmpty
             ? CupertinoButton(
@@ -222,8 +222,7 @@ class _SpaceGlossaryScreenState extends State<SpaceGlossaryScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 gradient: sel
-                    ? const LinearGradient(
-                        colors: [AppColors.accentPurple, AppColors.accentCyan])
+                    ? AppColors.primaryGradient
                     : null,
                 color: sel ? null : AppColors.glass(context),
                 border: Border.all(
@@ -255,7 +254,7 @@ class _SpaceGlossaryScreenState extends State<SpaceGlossaryScreen> {
               style: GoogleFonts.spaceGrotesk(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.accentPurple)),
+                  color: AppColors.accentBlue)),
           const SizedBox(width: 12),
           Expanded(
             child: Container(
@@ -377,7 +376,7 @@ class _SpaceGlossaryScreenState extends State<SpaceGlossaryScreen> {
                                         decoration: BoxDecoration(
                                           color: _isDark
                                               ? AppColors.surfaceDark
-                                              : const Color(0xFFF0F0FA),
+                                              : AppColors.background(context),
                                           borderRadius:
                                               BorderRadius.circular(12),
                                         ),
@@ -386,7 +385,7 @@ class _SpaceGlossaryScreenState extends State<SpaceGlossaryScreen> {
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
                                                 color: AppColors
-                                                    .accentPurple)),
+                                                    .accentBlue)),
                                       ),
                                     ))
                                 .toList(),
@@ -424,7 +423,7 @@ class _SpaceGlossaryScreenState extends State<SpaceGlossaryScreen> {
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         color: has
-                            ? AppColors.accentPurple
+                            ? AppColors.accentBlue
                             : AppColors.textSecondary(context)
                                 .withValues(alpha: 0.2))),
               ),

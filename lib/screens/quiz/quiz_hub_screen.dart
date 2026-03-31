@@ -142,7 +142,7 @@ class _QuizHubScreenState extends State<QuizHubScreen> {
                       subtitle: 'Choose a topic \u2022 10 questions \u2022 No time limit',
                       difficulty: 'You choose',
                       bestLabel: 'Pick a topic',
-                      glowColor: AppColors.accentPurple,
+                      glowColor: AppColors.accentBlue,
                       onTap: _showTopicPicker,
                     ),
                     const SizedBox(height: 12),
@@ -437,7 +437,7 @@ class _QuizHubScreenState extends State<QuizHubScreen> {
         color: AppColors.glass(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: AppColors.accentPurple.withValues(alpha: 0.2)),
+            color: AppColors.accentBlue.withValues(alpha: 0.2)),
         boxShadow: AppColors.cardShadow(context),
       ),
       child: Column(
@@ -471,7 +471,7 @@ class _QuizHubScreenState extends State<QuizHubScreen> {
               value: progress.clamp(0.0, 1.0),
               minHeight: 8,
               backgroundColor: AppColors.divider(context),
-              valueColor: const AlwaysStoppedAnimation(AppColors.accentPurple),
+              valueColor: const AlwaysStoppedAnimation(AppColors.accentBlue),
             ),
           ),
           const SizedBox(height: 6),
@@ -578,7 +578,7 @@ class _QuizHubScreenState extends State<QuizHubScreen> {
                             Text('$count Q',
                                 style: GoogleFonts.inter(
                                     fontSize: 12,
-                                    color: AppColors.accentPurple,
+                                    color: AppColors.accentBlue,
                                     decoration: TextDecoration.none)),
                             const SizedBox(width: 8),
                             Icon(CupertinoIcons.chevron_right,
@@ -667,7 +667,7 @@ class _AnimatedGradientCardState extends State<_AnimatedGradientCard>
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF7B5BFF).withValues(alpha: 0.3),
+                color: AppColors.accentBlue.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),

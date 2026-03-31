@@ -533,7 +533,7 @@ class _StepDiscover extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               const _NebulaGlow(
-                color1: AppColors.accentPurple,
+                color1: AppColors.accentBlue,
                 color2: AppColors.accentCyan,
                 color3: Color(0xFFFF5BDB),
               ),
@@ -1113,7 +1113,7 @@ class _GradientButtonState extends State<_GradientButton>
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentPurple.withValues(alpha: 0.25),
+                color: AppColors.accentBlue.withValues(alpha: 0.25),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),

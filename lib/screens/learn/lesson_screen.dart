@@ -200,10 +200,10 @@ class _LessonScreenState extends State<LessonScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.accentPurple.withValues(alpha: 0.08),
+        color: AppColors.accentBlue.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: AppColors.accentPurple.withValues(alpha: 0.2)),
+            color: AppColors.accentBlue.withValues(alpha: 0.2)),
         boxShadow: AppColors.cardShadow(context),
       ),
       child: Column(
@@ -214,7 +214,7 @@ class _LessonScreenState extends State<LessonScreen> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.accentPurple,
+              color: AppColors.accentBlue,
             ),
           ),
           const SizedBox(height: 8),
@@ -246,7 +246,7 @@ class _LessonScreenState extends State<LessonScreen> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentPurple.withValues(alpha: 0.3),
+              color: AppColors.accentBlue.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

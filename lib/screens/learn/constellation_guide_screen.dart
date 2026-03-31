@@ -142,13 +142,13 @@ class _ConstellationGuideScreenState extends State<ConstellationGuideScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.accentPurple.withValues(alpha: 0.15),
+              color: AppColors.accentBlue.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text('${allConstellations.length}',
                 style: GoogleFonts.spaceGrotesk(fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.accentPurple)),
+                    color: AppColors.accentBlue)),
           ),
         ],
       ),
@@ -311,7 +311,7 @@ class _ConstellationGuideScreenState extends State<ConstellationGuideScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: _isDark ? const Color(0xFF141438) : Colors.white,
+            color: _isDark ? AppColors.cardDark : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.glassBorder(context)),
             boxShadow: AppColors.cardShadow(context),
@@ -408,9 +408,9 @@ class _ConstellationGuideScreenState extends State<ConstellationGuideScreen> {
       case 'Spring': return const Color(0xFF81C784);
       case 'Summer': return const Color(0xFFFFD54F);
       case 'Autumn': return const Color(0xFFFF8A65);
-      case 'Tonight': return AppColors.accentPurple;
+      case 'Tonight': return AppColors.accentBlue;
       case 'Year-round': return AppColors.accentCyan;
-      default: return AppColors.accentPurple;
+      default: return AppColors.accentBlue;
     }
   }
 
@@ -419,7 +419,7 @@ class _ConstellationGuideScreenState extends State<ConstellationGuideScreen> {
       case 'Easy': return AppColors.success;
       case 'Medium': return AppColors.accentOrange;
       case 'Hard': return AppColors.error;
-      default: return AppColors.accentPurple;
+      default: return AppColors.accentBlue;
     }
   }
 }

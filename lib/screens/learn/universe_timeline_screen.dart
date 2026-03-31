@@ -429,13 +429,10 @@ class _UniverseTimelineScreenState extends State<UniverseTimelineScreen> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            gradient: const LinearGradient(colors: [
-                              AppColors.accentPurple,
-                              AppColors.accentCyan,
-                            ]),
+                            gradient: AppColors.primaryGradient,
                             boxShadow: [
                               BoxShadow(
-                                  color: AppColors.accentPurple
+                                  color: AppColors.accentBlue
                                       .withValues(alpha: 0.3),
                                   blurRadius: 12),
                             ],

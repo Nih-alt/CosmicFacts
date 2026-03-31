@@ -28,8 +28,6 @@ class _SpaceStatsScreenState extends State<SpaceStatsScreen> {
   int? _asteroidsToday;
   bool _loadingApi = true;
 
-  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
-
   @override
   void initState() {
     super.initState();
@@ -220,7 +218,7 @@ class _SpaceStatsScreenState extends State<SpaceStatsScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentPurple.withValues(alpha: 0.25),
+            color: AppColors.accentBlue.withValues(alpha: 0.25),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -366,7 +364,7 @@ class _SpaceStatsScreenState extends State<SpaceStatsScreen> {
         label: 'Known Exoplanets',
         value: '5,800+',
         subtitle: 'Confirmed planets beyond our Sun',
-        accent: AppColors.accentPurple,
+        accent: AppColors.accentBlue,
         isLive: false,
         index: 6,
       ),
@@ -395,7 +393,7 @@ class _SpaceStatsScreenState extends State<SpaceStatsScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _isDark ? const Color(0xFF141438) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(16),
         border: Border(left: BorderSide(color: accent, width: 3)),
         boxShadow: AppColors.cardShadow(context),

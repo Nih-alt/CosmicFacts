@@ -52,11 +52,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   Color _typeColor(String type) {
     switch (type) {
       case 'article': return AppColors.accentCyan;
-      case 'image': return AppColors.accentPurple;
+      case 'image': return AppColors.accentBlue;
       case 'apod': return AppColors.starGold;
       case 'glossary': return AppColors.accentOrange;
       case 'lesson': return AppColors.success;
-      default: return AppColors.accentPurple;
+      default: return AppColors.accentBlue;
     }
   }
 
@@ -122,7 +122,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                gradient: sel ? const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]) : null,
+                gradient: sel ? const LinearGradient(colors: [AppColors.accentBlue, AppColors.accentCyan]) : null,
                 color: sel ? null : AppColors.glass(context),
                 border: Border.all(color: sel ? Colors.transparent : AppColors.glassBorder(context)),
               ),

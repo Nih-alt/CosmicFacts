@@ -35,13 +35,13 @@ class SpaceEvent {
       case EventType.meteorShower:
         return AppColors.accentOrange;
       case EventType.planet:
-        return AppColors.accentPurple;
+        return AppColors.accentBlue;
       case EventType.supermoon:
         return const Color(0xFFC0C0C0);
       case EventType.issPass:
         return AppColors.success;
       case EventType.event:
-        return AppColors.accentPurple;
+        return AppColors.accentBlue;
     }
   }
 
@@ -387,7 +387,7 @@ class _EventsScreenState extends State<EventsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.accentPurple.withValues(alpha: 0.12),
+        color: AppColors.accentBlue.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -395,7 +395,7 @@ class _EventsScreenState extends State<EventsScreen> {
         style: GoogleFonts.inter(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: AppColors.accentPurple,
+          color: AppColors.accentBlue,
         ),
       ),
     );
@@ -525,14 +525,14 @@ class _EventsScreenState extends State<EventsScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isSelected
-                  ? AppColors.accentPurple.withValues(alpha: 0.2)
+                  ? AppColors.accentBlue.withValues(alpha: 0.2)
                   : isToday
-                      ? AppColors.accentPurple.withValues(alpha: 0.1)
+                      ? AppColors.accentBlue.withValues(alpha: 0.1)
                       : Colors.transparent,
               border: isToday && !isSelected
-                  ? Border.all(color: AppColors.accentPurple.withValues(alpha: 0.4))
+                  ? Border.all(color: AppColors.accentBlue.withValues(alpha: 0.4))
                   : isSelected
-                      ? Border.all(color: AppColors.accentPurple)
+                      ? Border.all(color: AppColors.accentBlue)
                       : null,
             ),
             child: Column(

@@ -106,7 +106,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.accentPurple,
+                        color: AppColors.accentBlue,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -214,7 +214,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: [
-                          AppColors.accentPurple.withValues(alpha: 0.2),
+                          AppColors.accentBlue.withValues(alpha: 0.2),
                           AppColors.accentCyan.withValues(alpha: 0.2),
                         ],
                       ),
@@ -375,19 +375,19 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: AppColors.accentPurple.withValues(alpha: 0.5),
+            color: AppColors.accentBlue.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.share, color: AppColors.accentPurple, size: 20),
+            Icon(Icons.share, color: AppColors.accentBlue, size: 20),
             const SizedBox(width: 10),
             Text(
               'Share This Launch',
               style: GoogleFonts.inter(
-                color: AppColors.accentPurple,
+                color: AppColors.accentBlue,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
@@ -425,7 +425,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentPurple.withValues(alpha: 0.3),
+              color: AppColors.accentBlue.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -577,7 +577,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.accentPurple, size: 22),
+          Icon(icon, color: AppColors.accentBlue, size: 22),
           const SizedBox(width: 12),
           Text(
             label,
@@ -615,39 +615,39 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
     if (p.contains('nasa')) return const Color(0xFF4A90D9);
     if (p.contains('isro')) return const Color(0xFFFF9933);
     if (p.contains('ula')) return AppColors.success;
-    if (p.contains('rocket lab')) return AppColors.accentPurple;
+    if (p.contains('rocket lab')) return AppColors.accentBlue;
     if (p.contains('ariane')) return AppColors.starGold;
     if (p.contains('blue origin')) return const Color(0xFF2196F3);
-    return AppColors.accentPurple;
+    return AppColors.accentBlue;
   }
 
   List<Color> get _providerGradientColors {
     final p = launch.provider.toLowerCase();
     if (p.contains('spacex')) {
-      return const [Color(0xFF004060), Color(0xFF002040), Color(0xFF05051A)];
+      return [const Color(0xFF004060), const Color(0xFF002040), AppColors.backgroundDark];
     }
     if (p.contains('isro')) {
-      return const [Color(0xFF402000), Color(0xFF201000), Color(0xFF05051A)];
+      return [const Color(0xFF402000), const Color(0xFF201000), AppColors.backgroundDark];
     }
     if (p.contains('nasa')) {
-      return const [Color(0xFF002060), Color(0xFF001040), Color(0xFF05051A)];
+      return [const Color(0xFF002060), const Color(0xFF001040), AppColors.backgroundDark];
     }
     if (p.contains('blue origin')) {
-      return const [Color(0xFF002040), Color(0xFF001020), Color(0xFF05051A)];
+      return [const Color(0xFF002040), const Color(0xFF001020), AppColors.backgroundDark];
     }
     if (p.contains('ariane')) {
-      return const [Color(0xFF203000), Color(0xFF102000), Color(0xFF05051A)];
+      return [const Color(0xFF203000), const Color(0xFF102000), AppColors.backgroundDark];
     }
-    return const [Color(0xFF1A0040), Color(0xFF0A0020), Color(0xFF05051A)];
+    return [const Color(0xFF1A0040), const Color(0xFF0A0020), AppColors.backgroundDark];
   }
 
   Color _statusColor() {
     final s = launch.status.toLowerCase();
     if (s.contains('success')) return const Color(0xFF00E096);
     if (s.contains('failure')) return const Color(0xFFFF4D6A);
-    if (s.contains('upcoming')) return const Color(0xFF7B5BFF);
+    if (s.contains('upcoming')) return AppColors.accentBlue;
     if (s.contains('partial')) return AppColors.accentOrange;
-    return const Color(0xFF7878AA);
+    return AppColors.textSecondaryDark;
   }
 
   String _formatDate(DateTime dt) {

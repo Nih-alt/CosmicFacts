@@ -279,7 +279,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
             style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.accentPurple)),
+                color: AppColors.accentBlue)),
       ),
     );
   }
@@ -323,7 +323,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                         padding: EdgeInsets.zero,
                         child: Text('Done',
                             style: GoogleFonts.inter(
-                                color: AppColors.accentPurple,
+                                color: AppColors.accentBlue,
                                 fontWeight: FontWeight.w600)),
                         onPressed: () {
                           Navigator.pop(ctx);
@@ -400,7 +400,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(CupertinoIcons.play_circle,
-                            size: 48, color: AppColors.accentPurple),
+                            size: 48, color: AppColors.accentBlue),
                         const SizedBox(height: 8),
                         Text('Video APOD',
                             style: GoogleFonts.inter(
@@ -413,7 +413,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                               style: GoogleFonts.inter(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.accentPurple)),
+                                  color: AppColors.accentBlue)),
                         ),
                       ],
                     ),
@@ -432,7 +432,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
               style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.accentPurple)),
+                  color: AppColors.accentBlue)),
           const SizedBox(height: 16),
 
           // Explanation
@@ -484,7 +484,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
                     gradient: const LinearGradient(colors: [
-                      AppColors.accentPurple,
+                      AppColors.accentBlue,
                       AppColors.accentCyan
                     ]),
                   ),
@@ -636,7 +636,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                         horizontal: 20, vertical: 12),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(colors: [
-                        AppColors.accentPurple,
+                        AppColors.accentBlue,
                         AppColors.accentCyan,
                       ]),
                       borderRadius: BorderRadius.circular(12),
@@ -658,13 +658,13 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border:
-                          Border.all(color: AppColors.accentPurple),
+                          Border.all(color: AppColors.accentBlue),
                     ),
                     child: Text('Retry',
                         style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.accentPurple)),
+                            color: AppColors.accentBlue)),
                   ),
                 ),
               ],

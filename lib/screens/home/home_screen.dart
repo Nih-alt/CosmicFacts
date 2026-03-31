@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../controllers/home_controller.dart';
 import '../../models/space_article.dart';
+import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import '../stories/story_feed_screen.dart';
 import '../explore/explore_screen.dart';
@@ -24,6 +26,7 @@ import '../quick_actions/moon_phase_screen.dart';
 import '../quick_actions/space_calendar_screen.dart';
 import 'apod_archive_screen.dart';
 import 'earth_from_space_screen.dart';
+import 'search_screen.dart';
 import 'space_stats_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -65,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 0.5,
               ),
             ),
-            activeColor: AppColors.accentPurple,
+            activeColor: AppColors.accentBlue,
             inactiveColor: AppColors.textSecondary(context),
             currentIndex: _currentTab,
             onTap: (i) => setState(() => _currentTab = i),
@@ -82,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       debugPrint('HomeScreen build error: $e');
       return Scaffold(
-        backgroundColor: const Color(0xFF05051A),
+        backgroundColor: AppColors.backgroundDark,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -148,7 +151,7 @@ class _HomeTabState extends State<_HomeTab> {
 
           return RefreshIndicator(
             onRefresh: ctrl.refreshData,
-            color: AppColors.accentPurple,
+            color: AppColors.accentBlue,
             backgroundColor: AppColors.surface(context),
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(
@@ -200,14 +203,12 @@ class _HomeTabState extends State<_HomeTab> {
                             child: Text('Cosmic Facts',
                                 style: GoogleFonts.spaceGrotesk(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
                           ),
+                          _BellIconButton(isDark: _isDark),
                           CupertinoButton(
                             padding: const EdgeInsets.all(6),
-                            onPressed: () {},
-                            child: Icon(CupertinoIcons.bell, size: 22, color: AppColors.textSecondary(context)),
-                          ),
-                          CupertinoButton(
-                            padding: const EdgeInsets.all(6),
-                            onPressed: () {},
+                            onPressed: () => Navigator.of(context).push(
+                              CupertinoPageRoute(builder: (_) => const SearchScreen()),
+                            ),
                             child: Icon(CupertinoIcons.search, size: 22, color: AppColors.textSecondary(context)),
                           ),
                         ],
@@ -254,7 +255,7 @@ class _HomeTabState extends State<_HomeTab> {
                             CupertinoPageRoute(builder: (_) => StoryFeedScreen(initialCategory: _selectedStoryCategory)),
                           ),
                           child: Text('See All \u2192',
-                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.accentPurple)),
+                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.accentBlue)),
                         ),
                       ],
                     ),
@@ -284,15 +285,15 @@ class _HomeTabState extends State<_HomeTab> {
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                               decoration: BoxDecoration(
                                 gradient: isSelected ? AppColors.primaryGradient : null,
-                                color: isSelected ? null : (_isDark ? const Color(0xFF141438) : Colors.white),
+                                color: isSelected ? null : AppColors.card(context),
                                 borderRadius: BorderRadius.circular(20),
                                 border: isSelected ? null : Border.all(
                                   color: _isDark
                                       ? Colors.white.withValues(alpha: 0.1)
-                                      : const Color(0xFFEEECF5),
+                                      : AppColors.cardBorder(context),
                                 ),
                                 boxShadow: isSelected
-                                    ? [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.3), blurRadius: 8)]
+                                    ? [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.3), blurRadius: 8)]
                                     : AppColors.cardShadow(context),
                               ),
                               child: Row(
@@ -307,7 +308,7 @@ class _HomeTabState extends State<_HomeTab> {
                                         fontSize: 12, fontWeight: FontWeight.w600,
                                         color: isSelected
                                             ? Colors.white
-                                            : (_isDark ? Colors.white : const Color(0xFF1A1A2E)),
+                                            : AppColors.textPrimary(context),
                                       )),
                                 ],
                               ),
@@ -466,7 +467,7 @@ class _HomeTabState extends State<_HomeTab> {
           border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentPurple.withValues(alpha: 0.15),
+              color: AppColors.accentBlue.withValues(alpha: 0.15),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -490,7 +491,7 @@ class _HomeTabState extends State<_HomeTab> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.accentPurple.withValues(alpha: 0.2),
+                      AppColors.accentBlue.withValues(alpha: 0.2),
                       AppColors.accentCyan.withValues(alpha: 0.12),
                       AppColors.surfaceDark,
                     ],
@@ -582,9 +583,9 @@ class _QuoteOfDayCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: isDark
-              ? AppColors.accentPurple.withValues(alpha: 0.08)
-              : const Color(0xFFF5F0FF),
-          border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.15)),
+              ? AppColors.accentBlue.withValues(alpha: 0.08)
+              : AppColors.accentBlue.withValues(alpha: 0.06),
+          border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.15)),
           boxShadow: AppColors.cardShadow(context),
         ),
         child: Column(
@@ -594,7 +595,7 @@ class _QuoteOfDayCard extends StatelessWidget {
               children: [
                 Text('\u201C', style: GoogleFonts.spaceGrotesk(
                     fontSize: 32, fontWeight: FontWeight.w700,
-                    color: AppColors.accentPurple.withValues(alpha: 0.4))),
+                    color: AppColors.accentBlue.withValues(alpha: 0.4))),
                 const Spacer(),
                 Icon(CupertinoIcons.chevron_right, size: 16,
                     color: AppColors.textSecondary(context)),
@@ -633,7 +634,7 @@ class _QuoteOfDayCard extends StatelessWidget {
 
 Widget _shimmerRect(double height, {EdgeInsets margin = EdgeInsets.zero, BuildContext? context}) {
   final base = context != null ? AppColors.shimmerBase(context) : AppColors.cardDark;
-  final highlight = context != null ? AppColors.shimmerHighlight(context) : const Color(0xFF1E1E4A);
+  final highlight = context != null ? AppColors.shimmerHighlight(context) : AppColors.surfaceDark;
   return Padding(
     padding: margin,
     child: Shimmer.fromColors(
@@ -673,7 +674,7 @@ class _ErrorState extends StatelessWidget {
               style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
           const SizedBox(height: 24),
           CupertinoButton(
-            color: AppColors.accentPurple,
+            color: AppColors.accentBlue,
             borderRadius: BorderRadius.circular(12),
             onPressed: onRetry,
             child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
@@ -701,7 +702,7 @@ class _LiveStoryCard extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentPurple.withValues(alpha: 0.1),
+            color: AppColors.accentBlue.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -721,7 +722,7 @@ class _LiveStoryCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.accentPurple.withValues(alpha: 0.15),
+                    AppColors.accentBlue.withValues(alpha: 0.15),
                     AppColors.backgroundDark,
                   ],
                 ),
@@ -839,36 +840,28 @@ class _Starfield extends StatelessWidget {
 // ═════════════════════════════════════════════
 
 class _QuickActionItem {
-  final String emoji;
+  final IconData icon;
   final String label;
-  final Color color1;
-  final Color color2;
-  const _QuickActionItem(this.emoji, this.label, this.color1, this.color2);
+  final Color iconBg;
+  final Widget screen;
+  const _QuickActionItem(this.icon, this.label, this.iconBg, this.screen);
 }
 
-const _quickActions = [
-  _QuickActionItem('\u{1F6F0}\uFE0F', 'ISS Tracker', AppColors.accentCyan, Color(0xFF0097A7)),
-  _QuickActionItem('\u2604\uFE0F', 'Asteroids', Color(0xFF90A4AE), Color(0xFF546E7A)),
-  _QuickActionItem('\u{1F319}', 'Moon', AppColors.starGold, Color(0xFFFFA000)),
-  _QuickActionItem('\u{1F4C5}', 'Calendar', AppColors.accentPurple, Color(0xFF4A148C)),
-  _QuickActionItem('\u{1F4CA}', 'Live Stats', Color(0xFF00E096), Color(0xFF00A86B)),
-  _QuickActionItem('\u{1F30D}', 'Earth', Color(0xFF4A90D9), Color(0xFF1E88E5)),
+final _quickActions = [
+  _QuickActionItem(CupertinoIcons.antenna_radiowaves_left_right, 'ISS Tracker', const Color(0xFF38BDF8), const ISSTrackerScreen()),
+  _QuickActionItem(CupertinoIcons.sparkles, 'Asteroids', const Color(0xFFFB923C), const AsteroidsScreen()),
+  _QuickActionItem(CupertinoIcons.moon_fill, 'Moon', const Color(0xFFFFD700), const MoonPhaseScreen()),
+  _QuickActionItem(CupertinoIcons.calendar, 'Calendar', const Color(0xFF34D399), const SpaceCalendarScreen()),
+  _QuickActionItem(CupertinoIcons.chart_bar_fill, 'Live Stats', const Color(0xFF3B82F6), const SpaceStatsScreen()),
+  _QuickActionItem(CupertinoIcons.globe, 'Earth', const Color(0xFF4A90D9), const EarthFromSpaceScreen()),
 ];
 
 class _QuickActions extends StatelessWidget {
   const _QuickActions();
 
-  static const _screens = <int, Widget>{
-    0: ISSTrackerScreen(),
-    1: AsteroidsScreen(),
-    2: MoonPhaseScreen(),
-    3: SpaceCalendarScreen(),
-    4: SpaceStatsScreen(),
-    5: EarthFromSpaceScreen(),
-  };
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: 90,
       child: ListView.separated(
@@ -881,34 +874,40 @@ class _QuickActions extends StatelessWidget {
           final action = _quickActions[index];
           return GestureDetector(
             onTap: () {
-              final screen = _screens[index];
-              if (screen != null) {
-                Navigator.of(context).push(
-                  CupertinoPageRoute(builder: (_) => screen),
-                );
-              }
+              Navigator.of(context).push(
+                CupertinoPageRoute(builder: (_) => action.screen),
+              );
             },
             child: SizedBox(
               width: 64,
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 60, height: 60,
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
+                      color: action.iconBg.withValues(alpha: isDark ? 0.2 : 0.12),
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                        colors: [action.color1.withValues(alpha: 0.25), action.color2.withValues(alpha: 0.15)],
+                      border: Border.all(
+                        color: action.iconBg.withValues(alpha: isDark ? 0.4 : 0.3),
+                        width: 1.5,
                       ),
-                      border: Border.all(color: action.color1.withValues(alpha: 0.2)),
-                      boxShadow: AppColors.cardShadow(context),
                     ),
-                    child: Center(child: Text(action.emoji, style: const TextStyle(fontSize: 26))),
+                    child: Icon(action.icon, color: action.iconBg, size: 24),
                   ),
-                  const SizedBox(height: 8),
-                  Text(action.label,
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary(context)),
-                      textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 6),
+                  Text(
+                    action.label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : const Color(0xFF0A1628),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
@@ -1048,4 +1047,275 @@ String _timeAgo(DateTime date) {
   if (diff.inHours < 24) return '${diff.inHours}h ago';
   if (diff.inDays < 7) return '${diff.inDays}d ago';
   return '${(diff.inDays / 7).floor()}w ago';
+}
+
+// ═════════════════════════════════════════════
+// BELL ICON WITH BADGE
+// ═════════════════════════════════════════════
+
+class _BellIconButton extends StatefulWidget {
+  final bool isDark;
+  const _BellIconButton({required this.isDark});
+
+  @override
+  State<_BellIconButton> createState() => _BellIconButtonState();
+}
+
+class _BellIconButtonState extends State<_BellIconButton> {
+  bool _hasActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBadge();
+  }
+
+  void _loadBadge() {
+    final s = Hive.box('settings');
+    final master = s.get('notifications_enabled', defaultValue: false) == true;
+    final daily = s.get('notif_daily_fact', defaultValue: true) == true;
+    final apod = s.get('notif_apod', defaultValue: true) == true;
+    final quiz = s.get('notif_quiz', defaultValue: true) == true;
+    setState(() => _hasActive = master && (daily || apod || quiz));
+  }
+
+  Future<void> _showSheet() async {
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (ctx) => _NotificationSheet(onChanged: _loadBadge),
+    );
+    _loadBadge();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      padding: const EdgeInsets.all(6),
+      onPressed: _showSheet,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(CupertinoIcons.bell, size: 22, color: AppColors.textSecondary(context)),
+          if (_hasActive)
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF34D399),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// NOTIFICATION BOTTOM SHEET
+// ═════════════════════════════════════════════
+
+class _NotificationSheet extends StatefulWidget {
+  final VoidCallback onChanged;
+  const _NotificationSheet({required this.onChanged});
+
+  @override
+  State<_NotificationSheet> createState() => _NotificationSheetState();
+}
+
+class _NotificationSheetState extends State<_NotificationSheet> {
+  late bool _master;
+  late bool _daily;
+  late bool _apod;
+  late bool _quiz;
+
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  @override
+  void initState() {
+    super.initState();
+    final s = Hive.box('settings');
+    _master = s.get('notifications_enabled', defaultValue: false) == true;
+    _daily = s.get('notif_daily_fact', defaultValue: true) == true;
+    _apod = s.get('notif_apod', defaultValue: true) == true;
+    _quiz = s.get('notif_quiz', defaultValue: true) == true;
+  }
+
+  Future<void> _save() async {
+    final s = Hive.box('settings');
+    await s.put('notifications_enabled', _master);
+    await s.put('notif_daily_fact', _daily);
+    await s.put('notif_apod', _apod);
+    await s.put('notif_quiz', _quiz);
+    await s.put('notifications', _master);
+
+    await NotificationService.cancelAll();
+    if (_master) {
+      if (_daily) await NotificationService.scheduleDailyFact();
+      if (_apod) await NotificationService.scheduleApodReminder();
+      if (_quiz) await NotificationService.scheduleQuizReminder();
+    }
+    widget.onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = AppColors.surface(context);
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 20),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: (_isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Notifications 🔔',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary(context),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Master toggle
+              _buildRow(
+                title: 'Enable Notifications',
+                subtitle: 'Master toggle for all notifications',
+                value: _master,
+                onChanged: (v) { setState(() => _master = v); _save(); },
+              ),
+              const SizedBox(height: 4),
+              // Individual toggles (dimmed if master off)
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: _master ? 1.0 : 0.4,
+                child: IgnorePointer(
+                  ignoring: !_master,
+                  child: Column(
+                    children: [
+                      _buildRow(
+                        title: 'Daily Space Fact',
+                        subtitle: 'Every morning at 8 AM',
+                        value: _daily,
+                        onChanged: (v) { setState(() => _daily = v); _save(); },
+                      ),
+                      const SizedBox(height: 4),
+                      _buildRow(
+                        title: 'APOD Alert',
+                        subtitle: 'New astronomy photo available',
+                        value: _apod,
+                        onChanged: (v) { setState(() => _apod = v); _save(); },
+                      ),
+                      const SizedBox(height: 4),
+                      _buildRow(
+                        title: 'Quiz Reminder',
+                        subtitle: 'Evening streak reminder',
+                        value: _quiz,
+                        onChanged: (v) { setState(() => _quiz = v); _save(); },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Done button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: double.infinity,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Done',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRow({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary(context),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: _isDark
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : AppColors.textSecondary(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          CupertinoSwitch(
+            value: value,
+            activeTrackColor: AppColors.accentBlue,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
 }

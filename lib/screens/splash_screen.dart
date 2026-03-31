@@ -168,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen>
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            AppColors.accentPurple.withValues(alpha: 0.4),
+                            AppColors.accentBlue.withValues(alpha: 0.4),
                             AppColors.accentCyan.withValues(alpha: 0.1),
                             Colors.transparent,
                           ],

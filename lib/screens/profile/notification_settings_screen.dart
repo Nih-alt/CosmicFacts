@@ -108,7 +108,7 @@ class _NotificationSettingsScreenState
                     // Master toggle
                     _buildToggleCard(
                       icon: Icons.notifications_active_outlined,
-                      iconColor: AppColors.accentPurple,
+                      iconColor: AppColors.accentBlue,
                       title: 'Enable Notifications',
                       subtitle: 'Master toggle for all notifications',
                       value: _masterEnabled,
@@ -181,12 +181,12 @@ class _NotificationSettingsScreenState
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: _isDark
-                            ? AppColors.accentPurple
+                            ? AppColors.accentBlue
                                 .withValues(alpha: 0.08)
-                            : const Color(0xFFF5F0FF),
+                            : AppColors.background(context),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppColors.accentPurple
+                          color: AppColors.accentBlue
                               .withValues(alpha: 0.15),
                         ),
                       ),
@@ -194,7 +194,7 @@ class _NotificationSettingsScreenState
                         children: [
                           Icon(Icons.info_outline,
                               size: 18,
-                              color: AppColors.accentPurple
+                              color: AppColors.accentBlue
                                   .withValues(alpha: 0.7)),
                           const SizedBox(width: 10),
                           Expanded(
@@ -278,7 +278,7 @@ class _NotificationSettingsScreenState
           const SizedBox(width: 8),
           CupertinoSwitch(
             value: value,
-            activeTrackColor: AppColors.accentPurple,
+            activeTrackColor: AppColors.accentBlue,
             onChanged: onChanged,
           ),
         ],

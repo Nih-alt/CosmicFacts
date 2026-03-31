@@ -147,7 +147,7 @@ class _QuizPlayScreenState extends State<QuizPlayScreen>
                             width: 36,
                             height: 36,
                             decoration: const BoxDecoration(
-                              color: AppColors.accentPurple,
+                              color: AppColors.accentBlue,
                               shape: BoxShape.circle,
                             ),
                             alignment: Alignment.center,
@@ -265,7 +265,7 @@ class _QuizPlayScreenState extends State<QuizPlayScreen>
             value: progress,
             minHeight: 4,
             backgroundColor: AppColors.divider(context),
-            valueColor: const AlwaysStoppedAnimation(AppColors.accentPurple),
+            valueColor: const AlwaysStoppedAnimation(AppColors.accentBlue),
           ),
         ),
       );
@@ -387,14 +387,14 @@ class _QuizPlayScreenState extends State<QuizPlayScreen>
                 height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.accentPurple.withValues(alpha: 0.1),
+                  color: AppColors.accentBlue.withValues(alpha: 0.1),
                 ),
                 alignment: Alignment.center,
                 child: Text(labels[index],
                     style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.accentPurple)),
+                        color: AppColors.accentBlue)),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -513,7 +513,7 @@ class _QuizPlayScreenState extends State<QuizPlayScreen>
               : AppColors.divider(context),
           border: Border.all(
             color: available
-                ? AppColors.accentPurple.withValues(alpha: 0.4)
+                ? AppColors.accentBlue.withValues(alpha: 0.4)
                 : AppColors.glassBorder(context),
           ),
         ),

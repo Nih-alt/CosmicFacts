@@ -299,7 +299,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
         ),
         const SizedBox(height: 16),
         CupertinoButton(
-          color: AppColors.accentPurple,
+          color: AppColors.accentBlue,
           borderRadius: BorderRadius.circular(12),
           onPressed: () {
             setState(() {
@@ -398,7 +398,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.accentPurple.withValues(alpha: 0.3),
+                      AppColors.accentBlue.withValues(alpha: 0.3),
                       AppColors.accentCyan.withValues(alpha: 0.2),
                     ],
                   ),
@@ -492,7 +492,7 @@ class _RadarPainter extends CustomPainter {
 
     // Background circle
     final bgPaint = Paint()
-      ..color = isDark ? const Color(0xFF0A0A2E) : const Color(0xFFE8E6F0)
+      ..color = isDark ? AppColors.surfaceDark : const Color(0xFFE8E6F0)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius, bgPaint);
 
@@ -500,9 +500,9 @@ class _RadarPainter extends CustomPainter {
     final borderPaint = Paint()
       ..shader = SweepGradient(
         colors: [
-          const Color(0xFF7B5BFF),
-          const Color(0xFF00D4FF),
-          const Color(0xFF7B5BFF),
+          AppColors.accentBlue,
+          AppColors.accentCyan,
+          AppColors.accentBlue,
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke

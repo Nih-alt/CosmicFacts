@@ -121,7 +121,7 @@ class AchievementController extends GetxController {
       '\u{1F3C6} Achievement Unlocked!',
       '${achievement.icon} ${achievement.name} \u2014 +${achievement.points} pts',
       snackPosition: SnackPosition.TOP,
-      backgroundColor: const Color(0xFF7B5BFF),
+      backgroundColor: const Color(0xFF0066CC),
       colorText: Colors.white,
       duration: const Duration(seconds: 3),
       margin: const EdgeInsets.all(16),

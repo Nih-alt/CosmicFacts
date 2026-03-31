@@ -96,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildSection('Preferences', [
                 _buildThemeRow(),
                 _divider(),
-                _buildIconRow(Icons.notifications_outlined, const Color(0xFF00D4FF),
+                _buildIconRow(Icons.notifications_outlined, AppColors.accentCyan,
                     'Push Notifications', trailing: _notificationSwitch(),
                     onTap: _openNotificationSettings),
                 _divider(),
@@ -115,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildIconRow(Icons.shield_outlined, const Color(0xFF4A90D9),
                     'Privacy Policy', onTap: _openPrivacy),
                 _divider(),
-                _buildIconRow(Icons.info_outline, AppColors.accentPurple,
+                _buildIconRow(Icons.info_outline, AppColors.accentBlue,
                     'About Cosmic Facts', onTap: _showAboutDialog),
               ]).animate().fadeIn(duration: 400.ms, delay: 300.ms)
                   .slideY(begin: 0.05, end: 0, delay: 300.ms),
@@ -154,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             gradient: AppColors.primaryGradient,
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentPurple.withValues(alpha: 0.3),
+                color: AppColors.accentBlue.withValues(alpha: 0.3),
                 blurRadius: 20, spreadRadius: 2,
               ),
             ],
@@ -193,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentPurple.withValues(alpha: 0.25),
+                color: AppColors.accentBlue.withValues(alpha: 0.25),
                 blurRadius: 8, offset: const Offset(0, 2),
               ),
             ],
@@ -216,7 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Expanded(child: _statCard('\u{1F4F0}', '24', 'Articles Read', const Color(0xFF4A90D9))),
         const SizedBox(width: 10),
-        Expanded(child: _statCard('\u{1F4DA}', '$_lessonsDone', 'Lessons Done', AppColors.accentPurple)),
+        Expanded(child: _statCard('\u{1F4DA}', '$_lessonsDone', 'Lessons Done', AppColors.accentBlue)),
         const SizedBox(width: 10),
         Expanded(child: _statCard('\u{1F525}', '7', 'Day Streak', AppColors.starGold)),
       ],
@@ -266,10 +266,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _isDark
-              ? AppColors.accentPurple.withValues(alpha: 0.08)
-              : const Color(0xFFF5F0FF),
+              ? AppColors.accentBlue.withValues(alpha: 0.08)
+              : AppColors.background(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.15)),
+          border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.15)),
           boxShadow: AppColors.cardShadow(context),
         ),
         child: Column(
@@ -285,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text('Daily Quote',
                     style: GoogleFonts.spaceGrotesk(fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.accentPurple)),
+                        color: AppColors.accentBlue)),
                 const Spacer(),
                 Icon(CupertinoIcons.chevron_right, size: 14,
                     color: AppColors.textSecondary(context)),
@@ -356,7 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     height: 2,
                     color: done
-                        ? AppColors.accentPurple
+                        ? AppColors.accentBlue
                         : AppColors.divider(context),
                   ),
                 );
@@ -370,10 +370,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 28, height: 28,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: done ? AppColors.accentPurple : Colors.transparent,
+                      color: done ? AppColors.accentBlue : Colors.transparent,
                       border: Border.all(
                         color: done
-                            ? AppColors.accentPurple
+                            ? AppColors.accentBlue
                             : AppColors.textSecondary(context).withValues(alpha: 0.3),
                         width: 2,
                       ),
@@ -415,11 +415,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _isDark
-                ? AppColors.accentPurple.withValues(alpha: 0.08)
-                : const Color(0xFFF5F0FF),
+                ? AppColors.accentBlue.withValues(alpha: 0.08)
+                : AppColors.background(context),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: AppColors.accentPurple.withValues(alpha: 0.15)),
+                color: AppColors.accentBlue.withValues(alpha: 0.15)),
             boxShadow: AppColors.cardShadow(context),
           ),
           child: Row(
@@ -431,7 +431,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accentPurple.withValues(alpha: 0.25),
+                      color: AppColors.accentBlue.withValues(alpha: 0.25),
                       blurRadius: 8, offset: const Offset(0, 2),
                     ),
                   ],
@@ -488,7 +488,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppColors.accentPurple.withValues(alpha: 0.3),
+                        AppColors.accentBlue.withValues(alpha: 0.3),
                         Colors.transparent,
                       ],
                     ),
@@ -567,11 +567,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             width: 34, height: 34,
             decoration: BoxDecoration(
-              color: AppColors.accentPurple.withValues(alpha: _isDark ? 0.2 : 0.1),
+              color: AppColors.accentBlue.withValues(alpha: _isDark ? 0.2 : 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.dark_mode_outlined,
-                color: AppColors.accentPurple, size: 18),
+                color: AppColors.accentBlue, size: 18),
           ),
           const SizedBox(width: 12),
           Text('Theme',
@@ -584,8 +584,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               groupValue: mode,
               backgroundColor: _isDark
                   ? Colors.white.withValues(alpha: 0.08)
-                  : const Color(0xFFF0ECF8),
-              thumbColor: AppColors.accentPurple,
+                  : AppColors.glass(context),
+              thumbColor: AppColors.accentBlue,
               children: {
                 'dark': _segmentLabel('Dark'),
                 'system': _segmentLabel('Auto'),
@@ -617,7 +617,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _notificationSwitch() {
     return CupertinoSwitch(
       value: _notificationsOn,
-      activeTrackColor: AppColors.accentPurple,
+      activeTrackColor: AppColors.accentBlue,
       onChanged: (val) async {
         setState(() => _notificationsOn = val);
         final settings = Hive.box('settings');
@@ -658,7 +658,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.accentPurple.withValues(alpha: 0.15),
+          color: AppColors.accentBlue.withValues(alpha: 0.15),
         ),
       ),
       child: Row(
@@ -869,18 +869,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
                           color: active
-                              ? AppColors.accentPurple.withValues(alpha: 0.2)
+                              ? AppColors.accentBlue.withValues(alpha: 0.2)
                               : AppColors.glass(context),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: active
-                              ? AppColors.accentPurple
+                              ? AppColors.accentBlue
                               : AppColors.glassBorder(context)),
                         ),
                         child: Text(interest,
                             style: GoogleFonts.inter(fontSize: 14,
                                 fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                                 color: active
-                                    ? AppColors.accentPurple
+                                    ? AppColors.accentBlue
                                     : AppColors.textSecondary(context))),
                       ),
                     );

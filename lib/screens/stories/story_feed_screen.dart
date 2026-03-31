@@ -49,12 +49,12 @@ LinearGradient _badgeGradient(String source) {
     return const LinearGradient(colors: [Color(0xFFFF9933), Color(0xFFFF6F00)]);
   }
   if (s.contains('spacex')) {
-    return const LinearGradient(colors: [Color(0xFF00D4FF), Color(0xFF0097A7)]);
+    return const LinearGradient(colors: [AppColors.accentCyan, Color(0xFF0097A7)]);
   }
   if (s.contains('esa')) {
     return const LinearGradient(colors: [Color(0xFF00E096), Color(0xFF00A86B)]);
   }
-  return const LinearGradient(colors: [Color(0xFF7B5BFF), Color(0xFF5B3FD4)]);
+  return const LinearGradient(colors: [AppColors.accentBlue, Color(0xFF5B3FD4)]);
 }
 
 // ═════════════════════════════════════════════
@@ -240,7 +240,7 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
                       left: 0,
                       right: 0,
                       child: Center(
-                        child: CupertinoActivityIndicator(color: AppColors.accentPurple),
+                        child: CupertinoActivityIndicator(color: AppColors.accentBlue),
                       ),
                     ),
                 ],
@@ -313,15 +313,15 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         gradient: isSelected ? AppColors.primaryGradient : null,
-                        color: isSelected ? null : (_isDark ? const Color(0xFF141438) : Colors.white),
+                        color: isSelected ? null : (_isDark ? AppColors.cardDark : Colors.white),
                         borderRadius: BorderRadius.circular(20),
                         border: isSelected ? null : Border.all(
                           color: _isDark
                               ? Colors.white.withValues(alpha: 0.1)
-                              : const Color(0xFFEEECF5),
+                              : AppColors.cardBorder(context),
                         ),
                         boxShadow: isSelected
-                            ? [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.3), blurRadius: 8)]
+                            ? [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.3), blurRadius: 8)]
                             : AppColors.cardShadow(context),
                       ),
                       child: Row(
@@ -338,7 +338,7 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
                               fontWeight: FontWeight.w600,
                               color: isSelected
                                   ? Colors.white
-                                  : (_isDark ? Colors.white : const Color(0xFF1A1A2E)),
+                                  : (_isDark ? Colors.white : AppColors.textPrimaryLight),
                             ),
                           ),
                         ],
@@ -394,7 +394,7 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
           )),
           const SizedBox(height: 24),
           CupertinoButton(
-            color: AppColors.accentPurple,
+            color: AppColors.accentBlue,
             borderRadius: BorderRadius.circular(12),
             onPressed: _feed.retryCategory,
             child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
@@ -418,7 +418,7 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
                   color: AppColors.textPrimary(context))),
           const SizedBox(height: 24),
           CupertinoButton(
-            color: AppColors.accentPurple,
+            color: AppColors.accentBlue,
             borderRadius: BorderRadius.circular(12),
             onPressed: _homeCtrl.refreshData,
             child: Text('Refresh', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
@@ -559,7 +559,7 @@ class _StoryPage extends StatelessWidget {
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                        color: isDark ? Colors.white : AppColors.textPrimaryLight,
                         height: 1.2,
                       ),
                       maxLines: 3,
@@ -602,7 +602,7 @@ class _StoryPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.accentPurple.withValues(alpha: 0.3),
+                              color: AppColors.accentBlue.withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -796,7 +796,7 @@ class _NebulaGlow extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AppColors.accentPurple.withValues(alpha: 0.06),
+                  AppColors.accentBlue.withValues(alpha: 0.06),
                   Colors.transparent,
                 ],
               ),

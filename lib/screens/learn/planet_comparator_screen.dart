@@ -63,8 +63,8 @@ class _PlanetComparatorScreenState extends State<PlanetComparatorScreen> {
   Widget _selectors() => Row(children: [
     Expanded(child: _selCard(_p1, true)),
     Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Container(width: 36, height: 36,
-      decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]),
-        boxShadow: [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.25), blurRadius: 12)]),
+      decoration: BoxDecoration(shape: BoxShape.circle, gradient: AppColors.primaryGradient,
+        boxShadow: [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.25), blurRadius: 12)]),
       child: Center(child: Text('VS', style: GoogleFonts.spaceGrotesk(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white))))),
     Expanded(child: _selCard(_p2, false)),
   ]);
@@ -133,7 +133,7 @@ class _PlanetComparatorScreenState extends State<PlanetComparatorScreen> {
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(20),
         color: _isDark ? null : AppColors.card(context),
         gradient: _isDark ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [AppColors.surfaceDark, AppColors.cardDark]) : null,
-        border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.12)),
+        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.12)),
         boxShadow: AppColors.cardShadow(context)),
       child: Column(children: [
         Text('Size Comparison', style: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
@@ -198,13 +198,13 @@ class _PlanetComparatorScreenState extends State<PlanetComparatorScreen> {
     final fact = _genFact(_p1!, _p2!);
     return Container(padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(colors: [AppColors.accentPurple.withValues(alpha: 0.08), AppColors.accentCyan.withValues(alpha: 0.05)]),
-        border: Border.all(color: AppColors.accentPurple.withValues(alpha: 0.12))),
+        gradient: LinearGradient(colors: [AppColors.accentBlue.withValues(alpha: 0.08), AppColors.accentCyan.withValues(alpha: 0.05)]),
+        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.12))),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(CupertinoIcons.lightbulb_fill, size: 20, color: AppColors.starGold),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Fun Fact', style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accentPurple)),
+          Text('Fun Fact', style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.accentBlue)),
           const SizedBox(height: 4),
           Text(fact, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textPrimary(context), height: 1.5)),
         ])),
@@ -230,8 +230,8 @@ class _PlanetComparatorScreenState extends State<PlanetComparatorScreen> {
   }
 
   Widget _shareBtn() => SizedBox(width: double.infinity, height: 52, child: Container(
-    decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [AppColors.accentPurple, AppColors.accentCyan]),
-      boxShadow: [BoxShadow(color: AppColors.accentPurple.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]),
+    decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: AppColors.primaryGradient,
+      boxShadow: [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]),
     child: CupertinoButton(padding: EdgeInsets.zero, borderRadius: BorderRadius.circular(14),
       onPressed: () { final f = _genFact(_p1!, _p2!); SharePlus.instance.share(ShareParams(text: '${_p1!.name} vs ${_p2!.name} \u2014 $f\nCompare planets on Cosmic Facts!')); },
       child: Text('Share Comparison', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)))));

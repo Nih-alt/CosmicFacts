@@ -7,16 +7,16 @@ import 'app_text_styles.dart';
 
 abstract final class AppTheme {
   // ──────────────────────────────────────────────
-  // DARK THEME
+  // DARK THEME — MIDNIGHT BLUE
   // ──────────────────────────────────────────────
   static ThemeData get dark {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.backgroundDark,
-      primaryColor: AppColors.accentPurple,
+      primaryColor: AppColors.accentBlue,
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.accentPurple,
-        secondary: AppColors.accentCyan,
+        primary: AppColors.accentBlue,
+        secondary: AppColors.accentGreen,
         surface: AppColors.surfaceDark,
         error: AppColors.error,
         onPrimary: Colors.white,
@@ -65,7 +65,9 @@ abstract final class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.cardBorderDark),
+          side: BorderSide(
+            color: const Color(0xFF0066CC).withValues(alpha: 0.18),
+          ),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -77,7 +79,7 @@ abstract final class AppTheme {
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          backgroundColor: const WidgetStatePropertyAll(AppColors.accentPurple),
+          backgroundColor: const WidgetStatePropertyAll(AppColors.accentBlue),
           foregroundColor: const WidgetStatePropertyAll(Colors.white),
           elevation: const WidgetStatePropertyAll(0),
           textStyle: WidgetStatePropertyAll(
@@ -88,24 +90,24 @@ abstract final class AppTheme {
 
       // Bottom Navigation
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surfaceDark,
-        selectedItemColor: AppColors.accentPurple,
-        unselectedItemColor: AppColors.textSecondaryDark,
+        backgroundColor: AppColors.backgroundDark,
+        selectedItemColor: AppColors.accentBlueLight,
+        unselectedItemColor: AppColors.textTertiaryDark,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
 
       // Cupertino overrides
       cupertinoOverrideTheme: const CupertinoThemeData(
-        primaryColor: AppColors.accentPurple,
+        primaryColor: AppColors.accentBlue,
         brightness: Brightness.dark,
         scaffoldBackgroundColor: AppColors.backgroundDark,
-        barBackgroundColor: AppColors.surfaceDark,
+        barBackgroundColor: AppColors.backgroundDark,
       ),
 
       // Divider
       dividerTheme: DividerThemeData(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: const Color(0xFF0066CC).withValues(alpha: 0.12),
         thickness: 1,
       ),
 
@@ -114,7 +116,7 @@ abstract final class AppTheme {
         filled: true,
         fillColor: AppColors.surfaceDark,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -122,23 +124,25 @@ abstract final class AppTheme {
           vertical: 14,
         ),
         hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textSecondaryDark,
+          color: AppColors.textTertiaryDark,
         ),
       ),
+
+      useMaterial3: true,
     );
   }
 
   // ──────────────────────────────────────────────
-  // LIGHT THEME — Premium Apple-style
+  // LIGHT THEME — SKY BLUE
   // ──────────────────────────────────────────────
   static ThemeData get light {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.backgroundLight,
-      primaryColor: AppColors.accentPurple,
+      primaryColor: AppColors.accentBlue,
       colorScheme: const ColorScheme.light(
-        primary: AppColors.accentPurple,
-        secondary: AppColors.accentCyan,
+        primary: AppColors.accentBlue,
+        secondary: Color(0xFF0A7A50),
         surface: AppColors.surfaceLight,
         error: AppColors.error,
         onPrimary: Colors.white,
@@ -181,12 +185,16 @@ abstract final class AppTheme {
         iconTheme: const IconThemeData(color: AppColors.textPrimaryLight),
       ),
 
-      // Card — white with purple shadow
+      // Card
       cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 0,
+        shadowColor: const Color(0xFF0066CC).withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: const Color(0xFF0066CC).withValues(alpha: 0.12),
+          ),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -198,7 +206,7 @@ abstract final class AppTheme {
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          backgroundColor: const WidgetStatePropertyAll(AppColors.accentPurple),
+          backgroundColor: const WidgetStatePropertyAll(AppColors.accentBlue),
           foregroundColor: const WidgetStatePropertyAll(Colors.white),
           elevation: const WidgetStatePropertyAll(0),
           textStyle: WidgetStatePropertyAll(
@@ -207,26 +215,26 @@ abstract final class AppTheme {
         ),
       ),
 
-      // Bottom Navigation — white with subtle shadow
+      // Bottom Navigation
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
-        selectedItemColor: AppColors.accentPurple,
-        unselectedItemColor: Color(0xFFB0B0C0),
+        selectedItemColor: AppColors.accentBlue,
+        unselectedItemColor: AppColors.textSecondaryLight,
         type: BottomNavigationBarType.fixed,
-        elevation: 12,
+        elevation: 8,
       ),
 
       // Cupertino overrides
       cupertinoOverrideTheme: const CupertinoThemeData(
-        primaryColor: AppColors.accentPurple,
+        primaryColor: AppColors.accentBlue,
         brightness: Brightness.light,
         scaffoldBackgroundColor: AppColors.backgroundLight,
         barBackgroundColor: Colors.white,
       ),
 
       // Divider
-      dividerTheme: const DividerThemeData(
-        color: Color(0xFFEEECF5),
+      dividerTheme: DividerThemeData(
+        color: const Color(0xFF0066CC).withValues(alpha: 0.1),
         thickness: 1,
       ),
 
@@ -246,6 +254,8 @@ abstract final class AppTheme {
           color: AppColors.textSecondaryLight,
         ),
       ),
+
+      useMaterial3: true,
     );
   }
 }

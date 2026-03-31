@@ -68,7 +68,7 @@ const allAchievements = <Achievement>[
     description: 'Complete all lessons in one topic',
     icon: '\u{1F3AF}', category: 'Learning',
     requirement: 1, requirementType: 'topics_completed',
-    color: Color(0xFF00D4FF), points: 75,
+    color: Color(0xFF38BDF8), points: 75,
   ),
   Achievement(
     id: 'all_topics', name: '\u{1F31F} Space Encyclopedia',
@@ -121,14 +121,14 @@ const allAchievements = <Achievement>[
     description: 'Complete 5 Daily Challenges',
     icon: '\u{1F4C5}', category: 'Quiz',
     requirement: 5, requirementType: 'daily_completed',
-    color: Color(0xFF00D4FF), points: 50,
+    color: Color(0xFF38BDF8), points: 50,
   ),
   Achievement(
     id: 'daily_thirty', name: '\u{1F5D3}\uFE0F Dedicated',
     description: 'Complete 30 Daily Challenges',
     icon: '\u{1F5D3}\uFE0F', category: 'Quiz',
     requirement: 30, requirementType: 'daily_completed',
-    color: Color(0xFF00D4FF), points: 200,
+    color: Color(0xFF38BDF8), points: 200,
   ),
   Achievement(
     id: 'quiz_master', name: '\u{1F3C6} Quiz Master',
@@ -223,7 +223,7 @@ const allAchievements = <Achievement>[
     description: 'Compare 10 planet pairs',
     icon: '\u{1F4CA}', category: 'Explorer',
     requirement: 10, requirementType: 'comparisons_made',
-    color: Color(0xFF00D4FF), points: 30,
+    color: Color(0xFF38BDF8), points: 30,
   ),
   Achievement(
     id: 'timeline_reader', name: '\u231B Time Traveler',
@@ -269,7 +269,7 @@ const allAchievements = <Achievement>[
     description: '100 day streak',
     icon: '\u{1F48E}', category: 'Streak',
     requirement: 100, requirementType: 'max_streak',
-    color: Color(0xFF00D4FF), points: 1000,
+    color: Color(0xFF38BDF8), points: 1000,
   ),
 
   // ══════════════════════════════════════
