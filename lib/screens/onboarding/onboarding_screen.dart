@@ -33,9 +33,9 @@ const _cardThemes = <_CardColorTheme>[
   _CardColorTheme(Color(0xFFE040FB), Color(0xFFAA00FF)),
   // Rocket Launches — Orange/Red
   _CardColorTheme(Color(0xFFFF6B35), Color(0xFFD84315)),
-  // ISRO — Saffron Orange
+  // India Space — Saffron Orange
   _CardColorTheme(Color(0xFFFF9933), Color(0xFFFF6F00)),
-  // NASA — Cyan/Teal
+  // Space — Cyan/Teal
   _CardColorTheme(Color(0xFF00D4FF), Color(0xFF0097A7)),
   // Asteroids — Grey/Silver
   _CardColorTheme(Color(0xFF90A4AE), Color(0xFF546E7A)),
@@ -57,8 +57,8 @@ class OnboardingController extends GetxController {
     'Black Holes',
     'Galaxies',
     'Launches',
-    'ISRO',
-    'NASA',
+    'India Space',
+    'Space',
     'Asteroids',
     'Stars',
   ];
@@ -792,6 +792,20 @@ class _StepInterests extends StatelessWidget {
 
           const SizedBox(height: 28),
 
+          // Disclaimer
+          Text(
+            'Space agency names (NASA, ISRO, etc.) are used for content categorisation only. '
+            'This app is not affiliated with any government space agency.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textSecondaryDark.withValues(alpha: 0.65),
+              height: 1.4,
+            ),
+          ).animate().fadeIn(duration: 500.ms, delay: 200.ms),
+
+          const SizedBox(height: 16),
+
           // Interest cards grid
           Expanded(
             child: GridView.builder(
@@ -815,7 +829,7 @@ class _StepInterests extends StatelessWidget {
                     label: interest,
                     icon: icon,
                     selected: selected,
-                    showFlag: interest == 'ISRO',
+                    showFlag: interest == 'India Space',
                     colorTheme: colorTheme,
                     onTap: () => controller.toggleInterest(interest),
                   );

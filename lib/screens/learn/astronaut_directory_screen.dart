@@ -24,8 +24,8 @@ class _AstronautDirectoryScreenState extends State<AstronautDirectoryScreen> {
   ];
 
   static const _agencyColors = <String, Color>{
-    'NASA': Color(0xFF1E88E5),
-    'ISRO': Color(0xFFFF9933),
+    'NASA': Color(0xFF4A90D9),
+    'ISRO': Color(0xFF4A90D9),
     'ESA': Color(0xFF00BFA5),
     'Roscosmos': Color(0xFFFF4D6A),
     'CNSA': Color(0xFFDAA520),

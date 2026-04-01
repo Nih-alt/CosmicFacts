@@ -20,7 +20,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   String _filter = 'All';
 
   static const _filters = ['All', 'article', 'image', 'apod', 'glossary'];
-  static const _filterLabels = ['All', 'Articles', 'Images', 'APOD', 'Glossary'];
+  static const _filterLabels = ['All', 'Articles', 'Images', 'Daily Photo', 'Glossary'];
 
   List<BookmarkModel> get _filtered {
     if (_filter == 'All') return _bmCtrl.bookmarks;
@@ -30,8 +30,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   String _typeLabel(String type) {
     switch (type) {
       case 'article': return 'Article';
-      case 'image': return 'NASA Image';
-      case 'apod': return 'APOD';
+      case 'image': return 'Space Image';
+      case 'apod': return 'Daily Photo';
       case 'glossary': return 'Glossary';
       case 'lesson': return 'Lesson';
       default: return type;

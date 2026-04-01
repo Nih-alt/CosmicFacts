@@ -28,11 +28,11 @@ LinearGradient _sourceBadgeGradient(String source) {
 
 String _sourceDescription(String source) {
   final s = source.toLowerCase();
-  if (s.contains('nasa')) return 'National Aeronautics and Space Administration — America\'s space agency';
+  if (s.contains('nasa')) return 'National Aeronautics and Space Administration — content sourced from public NASA news feeds. Not affiliated with NASA.';
   if (s.contains('spacenews')) return 'Leading source for space industry news and analysis';
   if (s.contains('esa')) return 'European Space Agency — Europe\'s gateway to space';
   if (s.contains('spacex')) return 'SpaceX — Designing, manufacturing, and launching rockets and spacecraft';
-  if (s.contains('isro')) return 'Indian Space Research Organisation — India\'s space agency';
+  if (s.contains('isro')) return 'Indian Space Research Organisation — content sourced from public ISRO news feeds. Not affiliated with ISRO.';
   if (s.contains('space.com')) return 'Space.com — Your source for the latest astronomy news';
   return '$source — Space news and coverage';
 }

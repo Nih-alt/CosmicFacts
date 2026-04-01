@@ -612,8 +612,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   Color get _providerColor {
     final p = launch.provider.toLowerCase();
     if (p.contains('spacex')) return AppColors.accentCyan;
-    if (p.contains('nasa')) return const Color(0xFF4A90D9);
-    if (p.contains('isro')) return const Color(0xFFFF9933);
+    if (p.contains('nasa') || p.contains('isro')) return AppColors.accentBlue;
     if (p.contains('ula')) return AppColors.success;
     if (p.contains('rocket lab')) return AppColors.accentBlue;
     if (p.contains('ariane')) return AppColors.starGold;
@@ -626,11 +625,8 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
     if (p.contains('spacex')) {
       return [const Color(0xFF004060), const Color(0xFF002040), AppColors.backgroundDark];
     }
-    if (p.contains('isro')) {
-      return [const Color(0xFF402000), const Color(0xFF201000), AppColors.backgroundDark];
-    }
-    if (p.contains('nasa')) {
-      return [const Color(0xFF002060), const Color(0xFF001040), AppColors.backgroundDark];
+    if (p.contains('isro') || p.contains('nasa')) {
+      return [const Color(0xFF002040), const Color(0xFF001030), AppColors.backgroundDark];
     }
     if (p.contains('blue origin')) {
       return [const Color(0xFF002040), const Color(0xFF001020), AppColors.backgroundDark];

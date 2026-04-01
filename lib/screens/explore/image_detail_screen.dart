@@ -267,7 +267,7 @@ class _DetailPageState extends State<_DetailPage> {
     try {
       await SharePlus.instance.share(ShareParams(
         text:
-            '${img.title}\n\nNASA / ${img.center}\n\nShared via Cosmic Facts 🌌',
+            '${img.title}\n\nSource: NASA Image Library / ${img.center}\n\nShared via Cosmic Facts \u{1F30C} (not affiliated with NASA)',
       ));
     } catch (_) {}
   }
@@ -596,7 +596,7 @@ class _DetailPageState extends State<_DetailPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            img.center.isNotEmpty ? 'NASA / ${img.center}' : 'NASA',
+            img.center.isNotEmpty ? 'Source: NASA / ${img.center}' : 'Source: NASA Image Library',
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -626,7 +626,7 @@ class _DetailPageState extends State<_DetailPage> {
         DateTime.tryParse(img.dateCreated)?.year.toString() ?? '—';
     final stats = [
       (Icons.camera_alt_outlined,
-          img.center.isNotEmpty ? img.center : 'NASA', 'Source'),
+          img.center.isNotEmpty ? img.center : 'NASA Image Library', 'Source'),
       (Icons.calendar_today_outlined, year, 'Year'),
       (Icons.label_outline_rounded, '${img.keywords.length} tags', 'Tags'),
     ];
@@ -931,7 +931,7 @@ class _DetailPageState extends State<_DetailPage> {
           _infoRow(
             Icons.explore_outlined,
             'Source',
-            img.center.isNotEmpty ? img.center : 'NASA',
+            img.center.isNotEmpty ? img.center : 'NASA Image Library',
           ),
           _infoRow(
             Icons.photo_camera_outlined,

@@ -126,8 +126,8 @@ class _HomeTabState extends State<_HomeTab> {
 
   static const _compactCategories = [
     ('All', ''),
-    ('NASA', '\u{1F534}'),
-    ('ISRO', '\u{1F1EE}\u{1F1F3}'),
+    ('Space News', '\u{1F534}'),
+    ('India Space', '\u{1F1EE}\u{1F1F3}'),
     ('SpaceX', '\u{1F680}'),
   ];
 
@@ -522,7 +522,7 @@ class _HomeTabState extends State<_HomeTab> {
                       gradient: AppColors.primaryGradient,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text('NASA APOD',
+                    child: Text('Astronomy Photo of the Day',
                         style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
                   ),
                   const SizedBox(height: 8),
@@ -1227,7 +1227,7 @@ class _NotificationSheetState extends State<_NotificationSheet> {
                       ),
                       const SizedBox(height: 4),
                       _buildRow(
-                        title: 'APOD Alert',
+                        title: 'Daily Space Photo Alert',
                         subtitle: 'New astronomy photo available',
                         value: _apod,
                         onChanged: (v) { setState(() => _apod = v); _save(); },

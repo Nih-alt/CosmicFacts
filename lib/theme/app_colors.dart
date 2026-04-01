@@ -168,10 +168,6 @@ abstract final class AppColors {
   // ═══════════════════════════════════════════
   static Color sourceBadgeBg(String source, bool isDark) {
     switch (source.toLowerCase()) {
-      case 'nasa':
-        return const Color(0xFF0066CC).withValues(alpha: isDark ? 0.2 : 0.1);
-      case 'isro':
-        return const Color(0xFFFF9933).withValues(alpha: isDark ? 0.2 : 0.12);
       case 'spacex':
         return const Color(0xFF38BDF8).withValues(alpha: isDark ? 0.15 : 0.1);
       case 'esa':
@@ -183,10 +179,6 @@ abstract final class AppColors {
 
   static Color sourceBadgeText(String source, bool isDark) {
     switch (source.toLowerCase()) {
-      case 'nasa':
-        return isDark ? const Color(0xFF60A5FA) : const Color(0xFF1A56DB);
-      case 'isro':
-        return isDark ? const Color(0xFFFB923C) : const Color(0xFFB45309);
       case 'spacex':
         return isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
       case 'esa':

@@ -170,8 +170,8 @@ const allAchievements = <Achievement>[
     color: Color(0xFF00BFA5), points: 30,
   ),
   Achievement(
-    id: 'explorer_nasa', name: '\u{1F6F0}\uFE0F NASA Explorer',
-    description: 'Browse 50 NASA images',
+    id: 'explorer_nasa', name: '\u{1F6F0}\uFE0F Space Explorer',
+    description: 'Browse 50 space images',
     icon: '\u{1F6F0}\uFE0F', category: 'Explorer',
     requirement: 50, requirementType: 'images_browsed',
     color: Color(0xFF1E88E5), points: 50,

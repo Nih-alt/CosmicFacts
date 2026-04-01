@@ -29,7 +29,7 @@ class NotificationService {
     'Pluto is smaller than Russia! \u{1F976}',
     'The largest known star UY Scuti could fit 5 billion Suns inside it! \u2B50',
     "Water ice has been found on the Moon's poles! \u{1F319}",
-    "ISRO's Mangalyaan cost less than the movie Gravity to make! \u{1F1EE}\u{1F1F3}",
+    "India's Mars Orbiter Mission (Mangalyaan) cost less than the movie Gravity to make! \u{1F1EE}\u{1F1F3}",
     'The Voyager 1 spacecraft is the farthest human-made object from Earth! \u{1F6F8}',
     'A black hole the size of a coin would have more mass than Earth! \u{1F573}\uFE0F',
     'There are diamonds raining on Neptune and Uranus! \u{1F48E}',
@@ -92,7 +92,7 @@ class NotificationService {
     await _plugin.zonedSchedule(
       1,
       '\u{1F52D} New Astronomy Photo!',
-      "Today's NASA Astronomy Picture of the Day is ready. Tap to explore!",
+      "Today's daily astronomy photo from public space archives is ready. Tap to explore!",
       _nextInstanceOfTime(7, 0),
       const NotificationDetails(
         android: AndroidNotificationDetails(

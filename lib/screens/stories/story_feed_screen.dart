@@ -18,15 +18,23 @@ import 'article_detail_screen.dart';
 // ═════════════════════════════════════════════
 
 class _CategoryItem {
-  final String label;
+  final String label;      // display label shown in UI
   final String emoji;
-  const _CategoryItem(this.label, this.emoji);
+  final String searchTerm; // term passed to API search
+  const _CategoryItem(this.label, this.emoji, [String? searchTerm])
+      : searchTerm = searchTerm ?? label;
 }
+
+// Maps display label → API search term for categories where they differ.
+const _categorySearchTerms = <String, String>{
+  'Space News': 'NASA',
+  'India Space': 'ISRO',
+};
 
 const _allCategories = [
   _CategoryItem('All', ''),
-  _CategoryItem('NASA', '\u{1F534}'),
-  _CategoryItem('ISRO', '\u{1F1EE}\u{1F1F3}'),
+  _CategoryItem('Space News', '\u{1F534}', 'NASA'),
+  _CategoryItem('India Space', '\u{1F1EE}\u{1F1F3}', 'ISRO'),
   _CategoryItem('SpaceX', '\u{1F680}'),
   _CategoryItem('ESA', '\u{1F30D}'),
   _CategoryItem('Roscosmos', '\u{1F1F7}\u{1F1FA}'),
@@ -42,11 +50,8 @@ const _allCategories = [
 
 LinearGradient _badgeGradient(String source) {
   final s = source.toLowerCase();
-  if (s.contains('nasa')) {
-    return const LinearGradient(colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)]);
-  }
-  if (s.contains('isro')) {
-    return const LinearGradient(colors: [Color(0xFFFF9933), Color(0xFFFF6F00)]);
+  if (s.contains('nasa') || s.contains('isro')) {
+    return const LinearGradient(colors: [AppColors.accentBlue, Color(0xFF5B3FD4)]);
   }
   if (s.contains('spacex')) {
     return const LinearGradient(colors: [AppColors.accentCyan, Color(0xFF0097A7)]);
@@ -88,7 +93,8 @@ class _FeedController extends GetxController {
     if (category == 'All') return; // Use home controller stories
 
     isCategoryLoading.value = true;
-    final articles = await ApiService.getNewsByCategory(category);
+    final searchTerm = _categorySearchTerms[category] ?? category;
+    final articles = await ApiService.getNewsByCategory(searchTerm);
     if (articles != null) {
       categoryArticles.assignAll(articles);
       _categoryOffset = articles.length;
@@ -101,8 +107,9 @@ class _FeedController extends GetxController {
   Future<void> loadMoreCategoryArticles() async {
     if (isCategoryLoadingMore.value || selectedCategory.value == 'All') return;
     isCategoryLoadingMore.value = true;
+    final searchTerm = _categorySearchTerms[selectedCategory.value] ?? selectedCategory.value;
     final articles = await ApiService.getNewsByCategory(
-      selectedCategory.value,
+      searchTerm,
       offset: _categoryOffset,
     );
     if (articles != null && articles.isNotEmpty) {
@@ -115,7 +122,8 @@ class _FeedController extends GetxController {
   Future<void> retryCategory() async {
     categoryHasError.value = false;
     isCategoryLoading.value = true;
-    final articles = await ApiService.getNewsByCategory(selectedCategory.value);
+    final searchTerm = _categorySearchTerms[selectedCategory.value] ?? selectedCategory.value;
+    final articles = await ApiService.getNewsByCategory(searchTerm);
     if (articles != null) {
       categoryArticles.assignAll(articles);
       _categoryOffset = articles.length;

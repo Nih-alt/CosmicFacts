@@ -14,6 +14,7 @@ import '../../theme/app_colors.dart';
 import '../learn/space_quotes_screen.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'achievements_screen.dart';
+import 'legal_screen.dart';
 import 'notification_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -114,6 +115,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _divider(),
                 _buildIconRow(Icons.shield_outlined, const Color(0xFF4A90D9),
                     'Privacy Policy', onTap: _openPrivacy),
+                _divider(),
+                _buildIconRow(Icons.gavel_outlined, AppColors.textSecondary(context),
+                    'Legal & Attributions',
+                    onTap: () => Navigator.push(context,
+                        CupertinoPageRoute(builder: (_) => const LegalScreen()))),
                 _divider(),
                 _buildIconRow(Icons.info_outline, AppColors.accentBlue,
                     'About Cosmic Facts', onTap: _showAboutDialog),
@@ -690,7 +696,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       SharePlus.instance.share(ShareParams(
         text: '\u{1F30C} Cosmic Facts \u2014 Explore the Universe!\n\n'
-            'Daily space news, NASA images, rocket launches, and 84 space lessons!\n\n'
+            'Daily space news, astronomy photos, rocket launches, and 84 space lessons!\n\n'
             'Download: https://play.google.com/store/apps/details?id=com.cosmicfacts.app',
       ));
     } catch (_) {}
@@ -709,9 +715,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: const Text(
           'Version 1.0.0\n\n'
           'Your daily companion for space knowledge and discovery.\n\n'
-          'Explore the universe with daily news, stunning NASA images, '
+          'Explore the universe with daily news, stunning astronomy images, '
           'rocket launch tracking, and 84 educational lessons across '
           '12 space topics.\n\n'
+          'Image and data content is sourced from publicly available APIs '
+          'and archives, including NASA\'s open data programme.\n\n'
+          'This app is not affiliated with, endorsed by, or officially '
+          'connected to NASA, ISRO, or any other government space agency.\n\n'
           'Made with \u2764\uFE0F in India \u{1F1EE}\u{1F1F3}',
         ),
         actions: [
@@ -822,7 +832,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     const allInterests = [
       'Planets', 'Black Holes', 'Galaxies', 'Rocket Launches',
-      'ISRO', 'NASA', 'Asteroids', 'Stars',
+      'India Space', 'Space', 'Asteroids', 'Stars',
       'Dark Matter', 'Exoplanets', 'Space Exploration', 'Moons',
     ];
 

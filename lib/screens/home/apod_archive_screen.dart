@@ -176,7 +176,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('APOD Archive',
+                Text('Daily Photo Archive',
                     style: GoogleFonts.spaceGrotesk(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -226,7 +226,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          Text('(NASA US Eastern Time)',
+          Text('(Archive uses US Eastern Time)',
               style: GoogleFonts.inter(
                   fontSize: 11,
                   color: AppColors.textSecondary(context))),
@@ -402,7 +402,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                         Icon(CupertinoIcons.play_circle,
                             size: 48, color: AppColors.accentBlue),
                         const SizedBox(height: 8),
-                        Text('Video APOD',
+                        Text('Video Photo',
                             style: GoogleFonts.inter(
                                 fontSize: 14,
                                 color: AppColors.textSecondary(context))),
@@ -517,7 +517,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: () => SharePlus.instance.share(ShareParams(
-                    text: '$title\n\nNASA Astronomy Picture of the Day ($date)\n$imageUrl\n\nvia Cosmic Facts',
+                    text: '$title\n\nAstronomy Picture of the Day ($date)\nSource: NASA APOD public archive (api.nasa.gov)\n$imageUrl\n\nShared via Cosmic Facts \u2014 not affiliated with NASA',
                   )),
                   child: Icon(CupertinoIcons.share, size: 20, color: AppColors.textPrimary(context)),
                 ),
@@ -615,7 +615,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                     color: AppColors.textPrimary(context))),
             const SizedBox(height: 8),
             Text(
-                "NASA may not have published this date's photo yet.\nTry a previous date or check your connection.",
+                "This date's photo isn't available yet.\nTry a previous date or check your connection.",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                     fontSize: 14,

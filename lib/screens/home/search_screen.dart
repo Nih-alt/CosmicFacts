@@ -193,7 +193,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'NASA, ISRO, SpaceX, missions...',
+                                'SpaceX, Mars, Black Holes, missions...',
                                 style: TextStyle(
                                     fontSize: 14, color: textSecondary),
                               ),

@@ -145,7 +145,7 @@ class _NotificationSettingsScreenState
                             _buildToggleCard(
                               icon: Icons.photo_library_outlined,
                               iconColor: AppColors.starGold,
-                              title: 'APOD Alert',
+                              title: 'Daily Space Photo Alert',
                               subtitle:
                                   'When new astronomy photo is available at 7 AM',
                               value: _apod,

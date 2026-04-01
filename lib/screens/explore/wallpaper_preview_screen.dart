@@ -90,7 +90,7 @@ class _WallpaperPreviewScreenState extends State<WallpaperPreviewScreen> {
                       style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
                       maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
-                  Text('NASA \u2022 ${widget.image.center}',
+                  Text('Source: NASA Image Library \u2022 ${widget.image.center}',
                       style: GoogleFonts.inter(fontSize: 13, color: AppColors.accentBlue)),
                   const SizedBox(height: 16),
                   Row(
@@ -122,7 +122,7 @@ class _WallpaperPreviewScreenState extends State<WallpaperPreviewScreen> {
                         child: CupertinoButton(
                           padding: EdgeInsets.zero,
                           onPressed: () => SharePlus.instance.share(ShareParams(
-                            text: '${widget.image.title}\n\nNASA Space Wallpaper\n${widget.image.imageUrl}\n\nvia Cosmic Facts',
+                            text: '${widget.image.title}\n\nSource: NASA Image Library\n${widget.image.imageUrl}\n\nShared via Cosmic Facts (not affiliated with NASA)',
                           )),
                           child: const Icon(CupertinoIcons.share, size: 20, color: Colors.white),
                         ),

@@ -737,8 +737,7 @@ class _ProviderBadge extends StatelessWidget {
   Color get _color {
     final p = provider.toLowerCase();
     if (p.contains('spacex')) return AppColors.accentCyan;
-    if (p.contains('nasa')) return const Color(0xFF4A90D9);
-    if (p.contains('isro')) return const Color(0xFFFF9933);
+    if (p.contains('nasa') || p.contains('isro')) return AppColors.accentBlue;
     if (p.contains('ula')) return AppColors.success;
     if (p.contains('rocket lab')) return AppColors.accentBlue;
     if (p.contains('ariane')) return AppColors.starGold;

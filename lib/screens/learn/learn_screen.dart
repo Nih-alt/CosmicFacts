@@ -14,7 +14,6 @@ import 'planet_comparator_screen.dart';
 import 'space_calculator_screen.dart';
 import 'space_glossary_screen.dart';
 import 'space_quotes_screen.dart';
-import 'space_sounds_screen.dart';
 import 'astronaut_directory_screen.dart';
 import 'constellation_guide_screen.dart';
 import 'topic_detail_screen.dart';
@@ -298,7 +297,6 @@ class _LearnScreenState extends State<LearnScreen> {
     _ToolInfo(Icons.compare_arrows_rounded, 'Comparator', 'Compare worlds', [AppColors.accentCyan, Color(0xFF4A90D9)]),
     _ToolInfo(Icons.menu_book_rounded, 'Glossary', '200+ terms', [Color(0xFFDAA520), Color(0xFFFFD700)]),
     _ToolInfo(Icons.timeline_rounded, 'Timeline', '13.8B years', [Color(0xFFFF6B35), Color(0xFFFF4D6A)]),
-    _ToolInfo(Icons.volume_up_rounded, 'Sounds', 'Hear cosmos', [Color(0xFF00BFA5), Color(0xFF00E096)]),
     _ToolInfo(Icons.format_quote_rounded, 'Quotes', '100+ quotes', [Color(0xFFE040FB), Color(0xFFAB47BC)]),
     _ToolInfo(Icons.calendar_month_rounded, 'Calendar', 'Space events', [Color(0xFF4A90D9), Color(0xFF1E88E5)]),
     _ToolInfo(Icons.people_rounded, 'Astronauts', '50 heroes', [Color(0xFFFF4D6A), Color(0xFFFF6B35)]),
@@ -311,7 +309,6 @@ class _LearnScreenState extends State<LearnScreen> {
       const PlanetComparatorScreen(),
       const SpaceGlossaryScreen(),
       const UniverseTimelineScreen(),
-      const SpaceSoundsScreen(),
       const SpaceQuotesScreen(),
       const SpaceCalendarScreen(),
       const AstronautDirectoryScreen(),

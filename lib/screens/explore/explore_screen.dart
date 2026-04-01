@@ -593,7 +593,7 @@ class _FeaturedCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'NASA Featured',
+                        'Featured Images',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,

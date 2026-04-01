@@ -889,8 +889,8 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
     try {
       SharePlus.instance.share(ShareParams(
         text: '\u{1F30D} Earth from Space \u2014 $_currentDate\n\n'
-            'Captured by NASA\'s DSCOVR satellite from 1.5 million km away!\n\n'
-            'Shared via Cosmic Facts \u{1F30C}',
+            'Via NASA DSCOVR/EPIC public archive \u2014 1.5 million km away!\n\n'
+            'Shared via Cosmic Facts \u{1F30C} (not affiliated with NASA)',
       ));
     } catch (_) {}
   }
@@ -903,7 +903,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
       id: 'epic_${_currentDate}_$_selectedIndex',
       type: 'image',
       title: 'Earth from Space \u2014 $_currentDate',
-      subtitle: 'NASA EPIC Camera',
+      subtitle: 'Via NASA EPIC Public API',
       imageUrl: url,
       data: jsonEncode(img),
       savedAt: DateTime.now(),
@@ -963,7 +963,9 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                   'The EPIC (Earth Polychromatic Imaging Camera) captures stunning full-disc '
                   'images of the sunlit side of Earth as it rotates. Multiple images are taken '
                   'each day, showing the Earth\'s rotation.\n\n'
-                  'Images are typically available 2-3 days after capture due to processing time.',
+                  'Images are typically available 2-3 days after capture due to processing time.\n\n'
+                  'Images are sourced from the NASA EPIC public API. This app is not affiliated '
+                  'with or endorsed by NASA.',
                   style: GoogleFonts.inter(
                       fontSize: 14,
                       color: AppColors.textPrimary(context)

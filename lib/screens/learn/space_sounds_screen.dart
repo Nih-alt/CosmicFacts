@@ -94,10 +94,10 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
         context: context,
         builder: (_) => CupertinoAlertDialog(
           title: const Text('Audio Unavailable'),
-          content: const Text('This sound couldn\'t be loaded. Would you like to listen on NASA\'s website?'),
+          content: const Text('This sound couldn\'t be loaded. Would you like to listen on the original source website?'),
           actions: [
             CupertinoDialogAction(child: const Text('Cancel'), onPressed: () => Navigator.pop(context)),
-            CupertinoDialogAction(child: const Text('Open NASA'), onPressed: () {
+            CupertinoDialogAction(child: const Text('Open Source Site'), onPressed: () {
               Navigator.pop(context);
               launchUrl(Uri.parse('https://www.nasa.gov/audio-and-ringtones/'), mode: LaunchMode.externalApplication);
             }),
