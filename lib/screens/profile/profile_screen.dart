@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/achievement_controller.dart';
 import '../../controllers/theme_controller.dart';
-import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import '../learn/space_quotes_screen.dart';
 import '../onboarding/onboarding_screen.dart';
@@ -26,7 +25,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _themeCtrl = Get.find<ThemeController>();
-  bool _notificationsOn = false;
   int _lessonsDone = 0;
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
@@ -38,9 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadPrefs() async {
-    final settings = Hive.box('settings');
-    _notificationsOn =
-        settings.get('notifications_enabled', defaultValue: false) == true;
     final progressBox = await Hive.openBox('learn_progress');
     int count = 0;
     for (final key in progressBox.keys) {
@@ -98,7 +93,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildThemeRow(),
                 _divider(),
                 _buildIconRow(Icons.notifications_outlined, AppColors.accentCyan,
-                    'Push Notifications', trailing: _notificationSwitch(),
+                    'Push Notifications',
+                    trailing: _notificationTrailing(),
                     onTap: _openNotificationSettings),
                 _divider(),
                 _buildIconRow(Icons.favorite_outline, const Color(0xFFE040FB),
@@ -620,23 +616,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _notificationSwitch() {
-    return CupertinoSwitch(
-      value: _notificationsOn,
-      activeTrackColor: AppColors.accentBlue,
-      onChanged: (val) async {
-        setState(() => _notificationsOn = val);
-        final settings = Hive.box('settings');
-        await settings.put('notifications_enabled', val);
-        await settings.put('notifications', val);
-        if (val) {
-          await NotificationService.scheduleDailyFact();
-          await NotificationService.scheduleApodReminder();
-          await NotificationService.scheduleQuizReminder();
-        } else {
-          await NotificationService.cancelAll();
-        }
-      },
+  int _activeNotificationCount() {
+    final settings = Hive.box('settings');
+    if (settings.get('notifications_enabled', defaultValue: false) != true) {
+      return 0;
+    }
+    int count = 0;
+    if (settings.get('notif_daily_fact', defaultValue: true) == true) count++;
+    if (settings.get('notif_apod', defaultValue: true) == true) count++;
+    if (settings.get('notif_quiz', defaultValue: true) == true) count++;
+    if (settings.get('notify_launches', defaultValue: true) == true) count++;
+    if (settings.get('notify_news', defaultValue: true) == true) count++;
+    if (settings.get('notify_asteroids', defaultValue: true) == true) count++;
+    if (settings.get('notify_events', defaultValue: true) == true) count++;
+    return count;
+  }
+
+  Widget _notificationTrailing() {
+    final count = _activeNotificationCount();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          count > 0 ? '$count active' : 'Off',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: AppColors.textSecondary(context),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Icon(CupertinoIcons.chevron_right,
+            size: 16, color: AppColors.textSecondary(context)),
+      ],
     );
   }
 
@@ -644,14 +655,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await Navigator.of(context).push(
       CupertinoPageRoute(builder: (_) => const NotificationSettingsScreen()),
     );
-    // Refresh toggle state after returning
-    final settings = Hive.box('settings');
-    if (mounted) {
-      setState(() {
-        _notificationsOn =
-            settings.get('notifications_enabled', defaultValue: false) == true;
-      });
-    }
+    // Refresh state after returning
+    if (mounted) setState(() {});
   }
 
   // ═══════════════════════════════════════

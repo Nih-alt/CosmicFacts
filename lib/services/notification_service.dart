@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -150,6 +151,40 @@ class NotificationService {
     if (dailyFact) await scheduleDailyFact();
     if (apod) await scheduleApodReminder();
     if (quiz) await scheduleQuizReminder();
+  }
+
+  /// Schedule a custom notification at a specific time (used by SmartNotificationService).
+  static Future<void> scheduleCustomNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledTime,
+  }) async {
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledTime, tz.local),
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'smart_alerts',
+            'Smart Alerts',
+            channelDescription:
+                'Launch alerts, asteroid warnings, event reminders',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+            styleInformation: BigTextStyleInformation(body),
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      debugPrint('Schedule notification error: $e');
+    }
   }
 
   static Future<void> cancelAll() async {

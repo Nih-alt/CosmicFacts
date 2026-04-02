@@ -5,6 +5,7 @@ import '../models/apod_model.dart';
 import '../models/space_article.dart';
 import '../services/api_service.dart';
 import '../services/cache_service.dart';
+import '../services/smart_notification_service.dart';
 
 class HomeController extends GetxController {
   final stories = <SpaceArticle>[].obs;
@@ -21,6 +22,8 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     loadInitialData();
+    // Re-check smart notifications when home screen loads
+    SmartNotificationService.checkAndSchedule();
   }
 
   Future<void> loadInitialData() async {

@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../services/firebase_notification_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 
@@ -21,6 +22,10 @@ class _NotificationSettingsScreenState
   late bool _dailyFact;
   late bool _apod;
   late bool _quiz;
+  late bool _launchAlerts;
+  late bool _newsAlerts;
+  late bool _asteroidAlerts;
+  late bool _eventAlerts;
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
@@ -33,23 +38,58 @@ class _NotificationSettingsScreenState
     _dailyFact = settings.get('notif_daily_fact', defaultValue: true) == true;
     _apod = settings.get('notif_apod', defaultValue: true) == true;
     _quiz = settings.get('notif_quiz', defaultValue: true) == true;
+    _launchAlerts =
+        settings.get('notify_launches', defaultValue: true) == true;
+    _newsAlerts = settings.get('notify_news', defaultValue: true) == true;
+    _asteroidAlerts =
+        settings.get('notify_asteroids', defaultValue: true) == true;
+    _eventAlerts = settings.get('notify_events', defaultValue: true) == true;
   }
 
-  Future<void> _save() async {
+  Future<void> _saveLocal() async {
     final settings = Hive.box('settings');
     await settings.put('notifications_enabled', _masterEnabled);
     await settings.put('notif_daily_fact', _dailyFact);
     await settings.put('notif_apod', _apod);
     await settings.put('notif_quiz', _quiz);
-    // Also keep legacy key in sync
     await settings.put('notifications', _masterEnabled);
 
-    // Cancel all first, then reschedule enabled ones
     await NotificationService.cancelAll();
     if (_masterEnabled) {
       if (_dailyFact) await NotificationService.scheduleDailyFact();
       if (_apod) await NotificationService.scheduleApodReminder();
       if (_quiz) await NotificationService.scheduleQuizReminder();
+    }
+  }
+
+  Future<void> _savePush() async {
+    final settings = Hive.box('settings');
+    await settings.put('notify_launches', _launchAlerts);
+    await settings.put('notify_news', _newsAlerts);
+    await settings.put('notify_asteroids', _asteroidAlerts);
+    await settings.put('notify_events', _eventAlerts);
+
+    if (_masterEnabled) {
+      await FirebaseNotificationService.subscribeToTopics();
+    } else {
+      await FirebaseNotificationService.unsubscribeFromAll();
+    }
+  }
+
+  Future<void> _toggleMaster(bool val) async {
+    setState(() => _masterEnabled = val);
+    final settings = Hive.box('settings');
+    await settings.put('notifications_enabled', val);
+    await settings.put('notifications', val);
+
+    if (val) {
+      // Re-enable everything
+      await _saveLocal();
+      await FirebaseNotificationService.subscribeToTopics();
+    } else {
+      // Disable everything
+      await NotificationService.cancelAll();
+      await FirebaseNotificationService.unsubscribeFromAll();
     }
   }
 
@@ -74,7 +114,7 @@ class _NotificationSettingsScreenState
                   ),
                   Expanded(
                     child: Text(
-                      'Notifications',
+                      'Notification Settings',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 20,
@@ -97,7 +137,7 @@ class _NotificationSettingsScreenState
                   children: [
                     const SizedBox(height: 8),
                     Text(
-                      'Choose which notifications you want to receive.',
+                      'Choose what alerts you receive.',
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         color: AppColors.textSecondary(context),
@@ -109,18 +149,18 @@ class _NotificationSettingsScreenState
                     _buildToggleCard(
                       icon: Icons.notifications_active_outlined,
                       iconColor: AppColors.accentBlue,
-                      title: 'Enable Notifications',
+                      title: 'Enable All Notifications',
                       subtitle: 'Master toggle for all notifications',
                       value: _masterEnabled,
-                      onChanged: (val) {
-                        setState(() => _masterEnabled = val);
-                        _save();
-                      },
+                      onChanged: _toggleMaster,
                     ).animate().fadeIn(duration: 400.ms),
 
+                    const SizedBox(height: 24),
+
+                    // ─── Local Reminders ───
+                    _buildSectionHeader('Local Reminders'),
                     const SizedBox(height: 12),
 
-                    // Individual toggles
                     AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: _masterEnabled ? 1.0 : 0.5,
@@ -137,7 +177,7 @@ class _NotificationSettingsScreenState
                               value: _dailyFact,
                               onChanged: (val) {
                                 setState(() => _dailyFact = val);
-                                _save();
+                                _saveLocal();
                               },
                             ).animate().fadeIn(
                                 duration: 400.ms, delay: 100.ms),
@@ -151,7 +191,7 @@ class _NotificationSettingsScreenState
                               value: _apod,
                               onChanged: (val) {
                                 setState(() => _apod = val);
-                                _save();
+                                _saveLocal();
                               },
                             ).animate().fadeIn(
                                 duration: 400.ms, delay: 200.ms),
@@ -165,10 +205,83 @@ class _NotificationSettingsScreenState
                               value: _quiz,
                               onChanged: (val) {
                                 setState(() => _quiz = val);
-                                _save();
+                                _saveLocal();
                               },
                             ).animate().fadeIn(
                                 duration: 400.ms, delay: 300.ms),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // ─── Push Alerts ───
+                    _buildSectionHeader('Push Alerts'),
+                    const SizedBox(height: 12),
+
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: _masterEnabled ? 1.0 : 0.5,
+                      child: IgnorePointer(
+                        ignoring: !_masterEnabled,
+                        child: Column(
+                          children: [
+                            _buildToggleCard(
+                              icon: Icons.rocket_launch_outlined,
+                              iconColor: AppColors.accentBlue,
+                              title: 'Launch Alerts',
+                              subtitle:
+                                  'Get notified before rocket launches',
+                              value: _launchAlerts,
+                              onChanged: (val) {
+                                setState(() => _launchAlerts = val);
+                                _savePush();
+                              },
+                            ).animate().fadeIn(
+                                duration: 400.ms, delay: 350.ms),
+                            const SizedBox(height: 12),
+                            _buildToggleCard(
+                              icon: Icons.newspaper_outlined,
+                              iconColor: const Color(0xFFE040FB),
+                              title: 'Breaking Space News',
+                              subtitle:
+                                  'Important space news and discoveries',
+                              value: _newsAlerts,
+                              onChanged: (val) {
+                                setState(() => _newsAlerts = val);
+                                _savePush();
+                              },
+                            ).animate().fadeIn(
+                                duration: 400.ms, delay: 400.ms),
+                            const SizedBox(height: 12),
+                            _buildToggleCard(
+                              icon: Icons.warning_amber_outlined,
+                              iconColor: AppColors.error,
+                              title: 'Asteroid Alerts',
+                              subtitle:
+                                  'When hazardous asteroids approach Earth',
+                              value: _asteroidAlerts,
+                              onChanged: (val) {
+                                setState(() => _asteroidAlerts = val);
+                                _savePush();
+                              },
+                            ).animate().fadeIn(
+                                duration: 400.ms, delay: 450.ms),
+                            const SizedBox(height: 12),
+                            _buildToggleCard(
+                              icon: Icons.event_outlined,
+                              iconColor: AppColors.starGold,
+                              title: 'Space Events',
+                              subtitle:
+                                  'Eclipses, meteor showers, planet events',
+                              value: _eventAlerts,
+                              onChanged: (val) {
+                                setState(() => _eventAlerts = val);
+                                _savePush();
+                              },
+                            ).animate().fadeIn(
+                                duration: 400.ms, delay: 500.ms),
                           ],
                         ),
                       ),
@@ -199,7 +312,7 @@ class _NotificationSettingsScreenState
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Notifications are delivered at approximate times. Your device may adjust timing to save battery.',
+                              'Local reminders are scheduled on your device. Push alerts are sent from our server for real-time events.',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: AppColors.textSecondary(context),
@@ -210,7 +323,7 @@ class _NotificationSettingsScreenState
                         ],
                       ),
                     ).animate()
-                        .fadeIn(duration: 400.ms, delay: 400.ms),
+                        .fadeIn(duration: 400.ms, delay: 550.ms),
 
                     const SizedBox(height: 40),
                   ],
@@ -219,6 +332,38 @@ class _NotificationSettingsScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.accentBlue.withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

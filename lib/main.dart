@@ -2,6 +2,7 @@
 // Use CupertinoButton, CupertinoSwitch, CupertinoAlertDialog, CupertinoActivityIndicator,
 // CupertinoActionSheet, CupertinoPageRoute, CupertinoTabBar, CupertinoSliverNavigationBar.
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -15,7 +16,9 @@ import 'controllers/launches_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'screens/splash_screen.dart';
 
+import 'services/firebase_notification_service.dart';
 import 'services/notification_service.dart';
+import 'services/smart_notification_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -51,6 +54,14 @@ void main() async {
   await _openBox('achievements');
 
   debugPrint('MAIN: All boxes opened');
+
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    debugPrint('Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('Firebase init error: $e');
+  }
 
   // Initialize controllers safely
   try {
@@ -101,6 +112,20 @@ void main() async {
     await NotificationService.scheduleFromPrefs();
   } catch (e) {
     debugPrint('Notification schedule error: $e');
+  }
+
+  // Initialize Firebase Cloud Messaging
+  try {
+    await FirebaseNotificationService.init();
+  } catch (e) {
+    debugPrint('Firebase notification init error: $e');
+  }
+
+  // Smart notifications — launch alerts, asteroid warnings, event reminders
+  try {
+    SmartNotificationService.checkAndSchedule();
+  } catch (e) {
+    debugPrint('Smart notification error: $e');
   }
 
   // Prefer edge-to-edge, immersive status bar

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "210315054218",
+    "project_id": "elevateai-e3a72",
+    "storage_bucket": "elevateai-e3a72.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:210315054218:android:dce4fac1e6fb4c4245b173",
+        "android_client_info": {
+          "package_name": "com.cosmicfacts.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUOhbX3wf0Wx8MvoFU1DrtVXxnCoX24nI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:210315054218:android:36b250b8a2bcfb1545b173",
+        "android_client_info": {
+          "package_name": "com.elevateai.fitness"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUOhbX3wf0Wx8MvoFU1DrtVXxnCoX24nI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
