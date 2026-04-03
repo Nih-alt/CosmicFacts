@@ -937,20 +937,28 @@ const _trendingFacts = [
   _TrendingFact('🪐', 'Saturn would float if placed in a giant bathtub'),
 ];
 
+List<_TrendingFact> _getDailyFacts(List<_TrendingFact> allFacts) {
+  final today = DateTime.now();
+  final seed = today.year * 10000 + today.month * 100 + today.day;
+  final shuffled = List<_TrendingFact>.from(allFacts)..shuffle(Random(seed));
+  return shuffled.take(5).toList();
+}
+
 class _TrendingFactsRow extends StatelessWidget {
   const _TrendingFactsRow();
   @override
   Widget build(BuildContext context) {
+    final facts = _getDailyFacts(_trendingFacts);
     return SizedBox(
       height: 120,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _trendingFacts.length,
+        itemCount: facts.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final fact = _trendingFacts[index];
+          final fact = facts[index];
           return ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: BackdropFilter(

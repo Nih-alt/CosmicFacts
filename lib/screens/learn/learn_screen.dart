@@ -20,6 +20,8 @@ import 'topic_detail_screen.dart';
 import 'universe_timeline_screen.dart';
 import 'active_missions_screen.dart';
 import '../explore/exoplanet_explorer_screen.dart';
+import '../research/space_research_screen.dart';
+import '../weather/space_weather_screen.dart';
 import '../quick_actions/space_calendar_screen.dart';
 
 class LearnScreen extends StatefulWidget {
@@ -305,6 +307,8 @@ class _LearnScreenState extends State<LearnScreen> {
     _ToolInfo(Icons.auto_awesome_rounded, 'Stars', '30 patterns', [Color(0xFF4FC3F7), Color(0xFF7986CB)]),
     _ToolInfo(Icons.satellite_alt_rounded, 'Missions', '20 missions', [Color(0xFF6C63FF), Color(0xFF448AFF)]),
     _ToolInfo(Icons.blur_circular_rounded, 'Exoplanets', '5,000+ worlds', [Color(0xFF00E676), Color(0xFF6C63FF)]),
+    _ToolInfo(Icons.article_outlined, 'Research', 'Latest papers', [Color(0xFFFFB800), Color(0xFFFF8F00)]),
+    _ToolInfo(Icons.wb_sunny_outlined, 'Weather', 'Live solar data', [Color(0xFFFFAB40), Color(0xFFFF5252)]),
   ];
 
   Widget _buildToolsRow() {
@@ -319,6 +323,8 @@ class _LearnScreenState extends State<LearnScreen> {
       const ConstellationGuideScreen(),
       const ActiveMissionsScreen(),
       const ExoplanetExplorerScreen(),
+      const SpaceResearchScreen(),
+      const SpaceWeatherScreen(),
     ];
     return SizedBox(
       height: 108,
