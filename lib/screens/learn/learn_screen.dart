@@ -18,6 +18,8 @@ import 'astronaut_directory_screen.dart';
 import 'constellation_guide_screen.dart';
 import 'topic_detail_screen.dart';
 import 'universe_timeline_screen.dart';
+import 'active_missions_screen.dart';
+import '../explore/exoplanet_explorer_screen.dart';
 import '../quick_actions/space_calendar_screen.dart';
 
 class LearnScreen extends StatefulWidget {
@@ -301,6 +303,8 @@ class _LearnScreenState extends State<LearnScreen> {
     _ToolInfo(Icons.calendar_month_rounded, 'Calendar', 'Space events', [Color(0xFF4A90D9), Color(0xFF1E88E5)]),
     _ToolInfo(Icons.people_rounded, 'Astronauts', '50 heroes', [Color(0xFFFF4D6A), Color(0xFFFF6B35)]),
     _ToolInfo(Icons.auto_awesome_rounded, 'Stars', '30 patterns', [Color(0xFF4FC3F7), Color(0xFF7986CB)]),
+    _ToolInfo(Icons.satellite_alt_rounded, 'Missions', '20 missions', [Color(0xFF6C63FF), Color(0xFF448AFF)]),
+    _ToolInfo(Icons.blur_circular_rounded, 'Exoplanets', '5,000+ worlds', [Color(0xFF00E676), Color(0xFF6C63FF)]),
   ];
 
   Widget _buildToolsRow() {
@@ -313,6 +317,8 @@ class _LearnScreenState extends State<LearnScreen> {
       const SpaceCalendarScreen(),
       const AstronautDirectoryScreen(),
       const ConstellationGuideScreen(),
+      const ActiveMissionsScreen(),
+      const ExoplanetExplorerScreen(),
     ];
     return SizedBox(
       height: 108,
@@ -591,73 +597,197 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 
   // ═══════════════════════════════════════
-  // TOPIC CARD
+  // TOPIC CARD — premium themed version
   // ═══════════════════════════════════════
+
+  static const _topicThemes = <String, (List<Color>, Color, Color, IconData)>{
+    'Black Holes':          ([Color(0xFF1A0533), Color(0xFF0D0221)], Color(0xFFAA00FF), Color(0xFF7B00FF), Icons.radio_button_unchecked),
+    'Galaxies':             ([Color(0xFF001A3A), Color(0xFF000D2B)], Color(0xFF2979FF), Color(0xFF0D47A1), Icons.blur_circular),
+    'Stars & Supernovae':   ([Color(0xFF2A1500), Color(0xFF1A0D00)], Color(0xFFFFAB00), Color(0xFFFF6D00), Icons.star_border),
+    'Planets':              ([Color(0xFF003320), Color(0xFF001A10)], Color(0xFF00E676), Color(0xFF00BFA5), Icons.circle_outlined),
+    'Moons':                ([Color(0xFF0A0A2E), Color(0xFF050514)], Color(0xFF7986CB), Color(0xFF3949AB), Icons.nightlight_round),
+    'Asteroids & Comets':   ([Color(0xFF1A1A2E), Color(0xFF0D0D1A)], Color(0xFF80DEEA), Color(0xFF00838F), Icons.architecture),
+    'Telescopes & Missions':([Color(0xFF001A2E), Color(0xFF00101A)], Color(0xFF00E5FF), Color(0xFF006064), Icons.satellite_alt),
+    'Space Exploration':    ([Color(0xFF0D1A2E), Color(0xFF060D1A)], Color(0xFF40C4FF), Color(0xFF0277BD), Icons.rocket_launch_outlined),
+    'Earth & Climate':      ([Color(0xFF003300), Color(0xFF001A00)], Color(0xFF76FF03), Color(0xFF33691E), Icons.biotech_outlined),
+    'Dark Matter & Energy': ([Color(0xFF0A0A2E), Color(0xFF050514)], Color(0xFF7986CB), Color(0xFF3949AB), Icons.blur_on),
+    'Big Bang & Universe':  ([Color(0xFF1A1A00), Color(0xFF0D0D00)], Color(0xFFFFEE58), Color(0xFFF57F17), Icons.all_inclusive),
+    'Exoplanets & Aliens':  ([Color(0xFF1A0020), Color(0xFF0D0013)], Color(0xFFE040FB), Color(0xFFAD1457), Icons.cloud_outlined),
+  };
+
+  static (List<Color>, Color, Color, IconData) _getTopicTheme(String name) {
+    return _topicThemes[name] ??
+        (const [Color(0xFF1A1A3A), Color(0xFF0D0D2E)], const Color(0xFF6C63FF), const Color(0xFF3D35CC), Icons.auto_awesome_outlined);
+  }
 
   Widget _buildTopicCard(TopicData topic, Color glow, int index) {
     final completed = _completedCount(topic);
     final total = topic.lessons.length;
     final progress = total > 0 ? completed / total : 0.0;
 
+    final (gradColors, accent, glowC, decorIcon) = _isDark
+        ? _getTopicTheme(topic.name)
+        : ([Colors.white, _topicLightTints[index]], glow, glow, _topicDecoIcons[index]);
+
     return GestureDetector(
       onTap: () => _openTopic(topic),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: _isDark
-              ? null
-              : LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.white, _topicLightTints[index]],
-                ),
-          color: _isDark ? AppColors.glass(context) : null,
-          border: Border.all(
-            color: _isDark
-                ? AppColors.glassBorder(context)
-                : glow.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradColors,
           ),
-          boxShadow: AppColors.coloredShadow(context, glow),
+          border: Border.all(
+            color: accent.withValues(alpha: _isDark ? 0.25 : 0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: glowC.withValues(alpha: _isDark ? 0.2 : 0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+            if (!_isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+          ],
         ),
         child: Stack(
           children: [
-            // Decorative icon top-right
+            // Background decorative large icon
             Positioned(
-              top: 12, right: 12,
-              child: Icon(_topicDecoIcons[index],
-                  size: 40, color: glow.withValues(alpha: _isDark ? 0.08 : 0.12)),
+              top: -8,
+              right: -8,
+              child: Icon(decorIcon,
+                  size: 80,
+                  color: accent.withValues(alpha: _isDark ? 0.08 : 0.07)),
             ),
-            // Content
+            // Dot star particles
+            Positioned(
+              top: 12,
+              right: 16,
+              child: Container(
+                width: 3,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: _isDark ? 0.4 : 0.0),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 24,
+              right: 36,
+              child: Container(
+                width: 2,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: _isDark ? 0.25 : 0.0),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 18,
+              right: 56,
+              child: Container(
+                width: 2,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: _isDark ? 0.5 : 0.0),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            // Main content
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(topic.emoji, style: const TextStyle(fontSize: 44)),
-                  const Spacer(),
-                  Text(topic.name,
-                      style: GoogleFonts.spaceGrotesk(fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary(context)),
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 6),
-                  if (completed > 0) ...[
-                    Text('$completed/$total completed',
-                        style: GoogleFonts.inter(fontSize: 12,
-                            color: AppColors.textSecondary(context))),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progress, minHeight: 4,
-                        backgroundColor: AppColors.divider(context),
-                        valueColor: AlwaysStoppedAnimation(glow),
+                  // Icon container with glow
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: accent.withValues(alpha: 0.3),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
-                  ] else
-                    Text('${topic.lessons.length} lessons',
-                        style: GoogleFonts.inter(fontSize: 12,
-                            color: AppColors.textSecondary(context))),
+                    child: Center(
+                      child: Text(topic.emoji,
+                          style: const TextStyle(fontSize: 26)),
+                    ),
+                  ),
+                  const Spacer(),
+                  // Topic name
+                  Text(topic.name,
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                          color: _isDark
+                              ? Colors.white
+                              : AppColors.textPrimaryLight),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 6),
+                  // Lesson count with accent dot
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: accent,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: accent.withValues(alpha: 0.6),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        completed > 0
+                            ? '$completed/$total completed'
+                            : '${topic.lessons.length} lessons',
+                        style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: _isDark
+                                ? Colors.white60
+                                : AppColors.textSecondaryLight),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Progress bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 2,
+                      backgroundColor: _isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.06),
+                      valueColor: AlwaysStoppedAnimation(accent),
+                    ),
+                  ),
                 ],
               ),
             ),

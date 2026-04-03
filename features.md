@@ -16,7 +16,7 @@
 | Flutter | 3.41.3 |
 | Theme | Dark + Light (premium) |
 | Offline Support | ~60% features work offline |
-| Total Features | 47+ |
+| Total Features | 50+ |
 
 ---
 
@@ -416,11 +416,75 @@
 - Full bio expandable
 - Stats: countries, total astronauts, currently active
 
+### 43. Active Missions Tracker
+- Complete active space missions screen with 20 real missions
+- Two filter rows: by destination (Mars, Moon, Deep Space, Sun, Earth Orbit, En Route) and by agency (NASA, ISRO, ESA, CNSA, Multi-Agency)
+- Hero card for Voyager 1 — farthest mission with pulsing signal animation
+- Expandable mission cards with:
+  - Key Discovery callout (purple card)
+  - Current Activity card
+  - Distance visualization bar (logarithmic scale — ISS to Voyager)
+  - Visit Official Page button (url_launcher)
+  - Launch year chip
+- Sort bottom sheet: Distance, Launch Date, Agency, Name
+- Dynamic mission count badge
+- Added to Tools & Discovery section in Learn screen
+- Play Store safe: agency names as text labels only, emoji flags, no official logos
+
+### 44. Exoplanet Explorer
+- Real data from NASA Exoplanet Archive TAP API (free, no key needed)
+- Top 100 exoplanets fetched: radius, mass, orbital period, temperature, discovery year, method, distance
+- Offline fallback: 10 hardcoded famous exoplanets (Kepler-452b, TRAPPIST-1e, etc.)
+- Custom PlanetPainter (CustomPainter):
+  - Radial gradient for 3D sphere effect
+  - Specular highlight (top-left glint)
+  - Dark limb shadow
+  - Surface texture lines
+  - Atmosphere glow for habitable zone planets
+  - Ring system for Gas Giants and Hot Jupiters (radius > 8x Earth)
+- Planet type classifier: Sub-Earth, Earth-like, Super Earth, Mini Neptune, Neptune-like, Gas Giant, Hot Jupiter
+- Habitable zone detection (200K-320K temperature range)
+- Hero card: Kepler-452b — "Most Earth-like" with habitable zone badge
+- Search by planet name or star name
+- Filter by planet type (7 types) and discovery method (Transit, Radial Velocity, Direct Imaging, Microlensing)
+- Expandable card details:
+  - 4 stat chips: radius, mass, orbital period, temperature
+  - Size comparison bar vs Earth and Jupiter
+  - Host star info with star type classification
+  - Discovery year + method with one-liner explanation
+  - Habitable zone status card (green/red/blue)
+  - Distance context text
+- Sort options: Most Earth-like, Closest, Largest, Hottest, Most Recent
+- Added to Tools & Discovery section in Learn screen
+
+### 45. Premium Topic Cards (Learn Screen)
+- Each topic card now has unique gradient background based on topic
+- Color themes per topic:
+  - Black Holes: purple gradient + purple glow
+  - Galaxies: deep blue gradient
+  - Stars & Supernovae: amber/orange gradient
+  - Planets: teal/green gradient
+  - Moons: indigo gradient
+  - Asteroids & Comets: cyan/teal gradient
+  - Telescopes & Missions: cyan gradient
+  - Space Exploration: blue gradient
+  - Earth & Climate: lime green gradient
+  - Dark Matter & Energy: indigo gradient
+  - Big Bang & Universe: yellow gradient
+  - Exoplanets & Aliens: pink/magenta gradient
+- Decorative background icon (large, low opacity) per topic
+- Star particle dots (decorative, dark mode only)
+- Emoji wrapped in glowing accent container with rounded corners
+- Accent colored dot before lesson count
+- Thin linear progress bar at card bottom (always visible)
+- Colored box shadow per topic accent color
+- Premium border with accent color tint
+
 ---
 
 ## Settings & Technical
 
-### 43. Light/Dark Theme
+### 46. Light/Dark Theme
 - Premium light theme: warm lavender #F8F7FC, white cards with purple shadows
 - Deep space dark theme: #05051A, glassmorphism cards
 - Instant toggle from Profile
@@ -429,20 +493,20 @@
 - Story feed always dark (immersive)
 - All screens theme-responsive
 
-### 44. 16KB Page Size Compliance
+### 47. 16KB Page Size Compliance
 - AGP 8.11.1, Gradle 8.14, NDK r28
 - compileSdk 36, targetSdk 36
 - useLegacyPackaging = false
 - Flutter 3.41.3 (16KB aligned engine)
 - Mandatory for Play Store since Nov 2025
 
-### 45. App Icon
+### 48. App Icon
 - Custom designed purple planet with golden ring
 - Deep space background with stars
 - Adaptive icon with #0A0520 background
 - Generated via flutter_launcher_icons
 
-### 46. Offline Caching
+### 49. Offline Caching
 - Hive local database
 - Cache-first strategy: load from cache then refresh from API
 - News: 30 min TTL
@@ -451,7 +515,7 @@
 - Asteroids: 6 hr TTL
 - API calls: 8s timeout, 2 retries
 
-### 47. Crash Protection
+### 50. Crash Protection
 - Try-catch on all Hive operations
 - Corrupted box auto-recovery
 - 6-second splash safety timeout
@@ -472,6 +536,7 @@
 | Spaceflight News API v4 | Space news articles | No key |
 | SpaceX v5 API | Launch data | No key |
 | Open Notify | ISS position + astronauts | No key |
+| NASA Exoplanet Archive TAP | Exoplanet data (100 planets) | No key |
 
 ---
 
@@ -520,7 +585,8 @@ lib/
 │   ├── constellation_data.dart (30 constellations)
 │   ├── astronaut_data.dart (50 astronauts)
 │   ├── calendar_events_data.dart
-│   └── achievements_data.dart (40 badges)
+│   ├── achievements_data.dart (40 badges)
+│   └── active_missions_data.dart (20 missions)
 ├── models/
 │   └── bookmark_model.dart
 ├── services/
@@ -546,7 +612,8 @@ lib/
     │   ├── explore_screen.dart
     │   ├── image_detail_screen.dart
     │   ├── wallpapers_screen.dart
-    │   └── wallpaper_preview_screen.dart
+    │   ├── wallpaper_preview_screen.dart
+    │   └── exoplanet_explorer_screen.dart
     ├── launches/
     │   ├── launches_screen.dart
     │   └── launch_detail_screen.dart
@@ -561,7 +628,8 @@ lib/
     │   ├── constellation_guide_screen.dart
     │   ├── space_sounds_screen.dart
     │   ├── space_quotes_screen.dart
-    │   └── astronaut_directory_screen.dart
+    │   ├── astronaut_directory_screen.dart
+    │   └── active_missions_screen.dart
     ├── quiz/
     │   ├── quiz_hub_screen.dart
     │   ├── quiz_play_screen.dart
@@ -594,6 +662,7 @@ lib/
 | Privacy Policy | https://nih-alt.github.io/cosmic-facts-privacy/ |
 | No YouTube WebView | Uses launchUrl only |
 | No dangerous permissions | Yes |
+| Agency Compliance | No official logos — emoji flags + text labels only |
 | flutter analyze | 0 issues |
 | AAB Build | 44.1 MB |
 | Release Keystore | Needed before submission |
@@ -602,6 +671,13 @@ lib/
 ---
 
 ## Changelog
+
+### v1.1.0 (April 2026)
+- Active Missions Tracker: 20 real space missions with filters, hero card, expandable details
+- Exoplanet Explorer: NASA Exoplanet Archive API, custom PlanetPainter, habitable zone detection
+- Premium Topic Cards: unique gradient themes per topic, glowing icon containers, star particles
+- Explore screen filter/sort bottom sheet (was non-functional)
+- Total features: 50+
 
 ### v1.0.0 (March 2026)
 - Initial release
@@ -616,7 +692,7 @@ lib/
 
 ---
 
-*Last updated: March 2026*
+*Last updated: April 2026*
 *Developer: Nihal*
 *GitHub: https://github.com/Nih-alt/CosmicFacts*
 

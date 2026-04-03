@@ -105,21 +105,31 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface(context),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.cardBorder(context),
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) => _buildFilterSheet(context),
+                      );
+                    },
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface(context),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.cardBorder(context),
+                        ),
+                        boxShadow: AppColors.cardShadow(context),
                       ),
-                      boxShadow: AppColors.cardShadow(context),
-                    ),
-                    child: Icon(
-                      CupertinoIcons.slider_horizontal_3,
-                      size: 18,
-                      color: AppColors.textSecondary(context),
+                      child: Icon(
+                        CupertinoIcons.slider_horizontal_3,
+                        size: 18,
+                        color: AppColors.textSecondary(context),
+                      ),
                     ),
                   ),
                 ],
@@ -493,6 +503,115 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 fontSize: 14, color: AppColors.textSecondary(context)),
           ),
         ],
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════
+  // FILTER / SORT BOTTOM SHEET
+  // ═════════════════════════════════════════════
+
+  Widget _buildFilterSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF141438) : Colors.white,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              'Sort & Filter',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'SORT BY',
+              style: TextStyle(
+                fontSize: 11,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white38 : Colors.black38,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...[
+              ['Latest First', Icons.new_releases_outlined],
+              ['Oldest First', Icons.history],
+              ['A \u2192 Z', Icons.sort_by_alpha],
+            ].map((item) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    item[1] as IconData,
+                    color: const Color(0xFF6C63FF),
+                    size: 20,
+                  ),
+                  title: Text(
+                    item[0] as String,
+                    style: TextStyle(
+                      color:
+                          isDark ? Colors.white : const Color(0xFF1A1A2E),
+                      fontSize: 15,
+                    ),
+                  ),
+                  onTap: () => Navigator.pop(context),
+                )),
+            const SizedBox(height: 8),
+            Divider(color: isDark ? Colors.white12 : Colors.black12),
+            const SizedBox(height: 8),
+            Text(
+              'VIEW',
+              style: TextStyle(
+                fontSize: 11,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white38 : Colors.black38,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...[
+              ['Grid View', Icons.grid_view],
+              ['List View', Icons.view_list_outlined],
+            ].map((item) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    item[1] as IconData,
+                    color: const Color(0xFF6C63FF),
+                    size: 20,
+                  ),
+                  title: Text(
+                    item[0] as String,
+                    style: TextStyle(
+                      color:
+                          isDark ? Colors.white : const Color(0xFF1A1A2E),
+                      fontSize: 15,
+                    ),
+                  ),
+                  onTap: () => Navigator.pop(context),
+                )),
+          ],
+        ),
       ),
     );
   }

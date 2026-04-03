@@ -465,4 +465,56 @@ class ApiService {
     final apiPage = ((page - 1) ~/ queries.length) + 1;
     return searchNasaImages(query: query, page: apiPage);
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // Exoplanet Archive TAP Service — free, no API key needed
+  // Data: NASA Exoplanet Archive (public domain)
+  // ═══════════════════════════════════════════════════════════
+
+  static const String _exoplanetBase =
+      'https://exoplanetarchive.ipac.caltech.edu/TAP/sync';
+
+  static Future<List<Map<String, dynamic>>> getExoplanets() async {
+    const query =
+        'select top 100 pl_name,hostname,pl_rade,pl_bmasse,pl_orbper,'
+        'pl_eqt,disc_year,discoverymethod,sy_dist,'
+        'st_teff,pl_dens,sy_snum,sy_pnum '
+        'from pscomppars '
+        'where pl_rade is not null '
+        'and pl_bmasse is not null '
+        'order by disc_year desc';
+
+    final encoded = Uri.encodeComponent(query);
+    final url = '$_exoplanetBase?query=$encoded&format=json';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      }
+    } catch (e) {
+      debugPrint('Exoplanet API error: $e');
+    }
+    return _getFallbackExoplanets();
+  }
+
+  static List<Map<String, dynamic>> _getFallbackExoplanets() {
+    return [
+      {'pl_name': 'Kepler-452b', 'hostname': 'Kepler-452', 'pl_rade': 1.63, 'pl_bmasse': 5.0, 'pl_orbper': 384.84, 'pl_eqt': 265.0, 'disc_year': 2015, 'discoverymethod': 'Transit', 'sy_dist': 430.0, 'st_teff': 5757.0, 'sy_pnum': 1},
+      {'pl_name': 'TRAPPIST-1e', 'hostname': 'TRAPPIST-1', 'pl_rade': 0.92, 'pl_bmasse': 0.77, 'pl_orbper': 6.1, 'pl_eqt': 251.0, 'disc_year': 2017, 'discoverymethod': 'Transit', 'sy_dist': 12.4, 'st_teff': 2559.0, 'sy_pnum': 7},
+      {'pl_name': 'TRAPPIST-1f', 'hostname': 'TRAPPIST-1', 'pl_rade': 1.04, 'pl_bmasse': 1.07, 'pl_orbper': 9.2, 'pl_eqt': 219.0, 'disc_year': 2017, 'discoverymethod': 'Transit', 'sy_dist': 12.4, 'st_teff': 2559.0, 'sy_pnum': 7},
+      {'pl_name': 'Proxima Cen b', 'hostname': 'Proxima Centauri', 'pl_rade': 1.1, 'pl_bmasse': 1.27, 'pl_orbper': 11.2, 'pl_eqt': 234.0, 'disc_year': 2016, 'discoverymethod': 'Radial Velocity', 'sy_dist': 1.3, 'st_teff': 3050.0, 'sy_pnum': 2},
+      {'pl_name': '55 Cnc e', 'hostname': '55 Cancri', 'pl_rade': 1.88, 'pl_bmasse': 7.99, 'pl_orbper': 0.74, 'pl_eqt': 2709.0, 'disc_year': 2004, 'discoverymethod': 'Radial Velocity', 'sy_dist': 12.6, 'st_teff': 5196.0, 'sy_pnum': 5},
+      {'pl_name': 'HD 209458 b', 'hostname': 'HD 209458', 'pl_rade': 15.1, 'pl_bmasse': 220.0, 'pl_orbper': 3.52, 'pl_eqt': 1449.0, 'disc_year': 1999, 'discoverymethod': 'Transit', 'sy_dist': 47.0, 'st_teff': 6065.0, 'sy_pnum': 1},
+      {'pl_name': 'Kepler-22b', 'hostname': 'Kepler-22', 'pl_rade': 2.38, 'pl_bmasse': 9.1, 'pl_orbper': 289.9, 'pl_eqt': 262.0, 'disc_year': 2011, 'discoverymethod': 'Transit', 'sy_dist': 190.0, 'st_teff': 5518.0, 'sy_pnum': 1},
+      {'pl_name': 'GJ 667C c', 'hostname': 'GJ 667C', 'pl_rade': 1.77, 'pl_bmasse': 3.8, 'pl_orbper': 28.1, 'pl_eqt': 277.0, 'disc_year': 2011, 'discoverymethod': 'Radial Velocity', 'sy_dist': 6.8, 'st_teff': 3350.0, 'sy_pnum': 3},
+      {'pl_name': '51 Peg b', 'hostname': '51 Pegasi', 'pl_rade': 13.0, 'pl_bmasse': 150.0, 'pl_orbper': 4.23, 'pl_eqt': 1258.0, 'disc_year': 1995, 'discoverymethod': 'Radial Velocity', 'sy_dist': 15.6, 'st_teff': 5793.0, 'sy_pnum': 1},
+      {'pl_name': 'Kepler-186f', 'hostname': 'Kepler-186', 'pl_rade': 1.17, 'pl_bmasse': 1.44, 'pl_orbper': 129.9, 'pl_eqt': 188.0, 'disc_year': 2014, 'discoverymethod': 'Transit', 'sy_dist': 178.0, 'st_teff': 3755.0, 'sy_pnum': 5},
+    ];
+  }
 }
