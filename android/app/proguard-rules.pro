@@ -86,6 +86,23 @@
 -keepattributes InnerClasses
 
 # ─────────────────────────────────────────
+# fl_chart
+# ─────────────────────────────────────────
+-keep class com.github.mikephil.** { *; }
+
+# ─────────────────────────────────────────
+# XML parser
+# ─────────────────────────────────────────
+-dontwarn org.xmlpull.**
+-dontwarn org.w3c.**
+
+# ─────────────────────────────────────────
+# Timezone
+# ─────────────────────────────────────────
+-keep class com.timezone.** { *; }
+-dontwarn com.timezone.**
+
+# ─────────────────────────────────────────
 # General optimisation
 # ─────────────────────────────────────────
 -optimizationpasses 5
