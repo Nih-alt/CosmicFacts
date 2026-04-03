@@ -670,6 +670,60 @@ lib/
 
 ---
 
+## Recently Added
+
+## 🪐 3D Solar System Explorer
+- True 3D using Three.js (r128) via CDN inside flutter_inappwebview
+- All 8 planets with real orbital speeds and sizes (logarithmic scale)
+- Planet-specific details: Jupiter bands + Great Red Spot, Saturn rings,
+  Earth continents + atmosphere, Mars polar caps, Uranus tilted rings
+- 3000 stars background with varied colors (white/blue/yellow/orange)
+- Sun with animated corona glow layers
+- Drag to rotate, pinch to zoom, tap planet for info card
+- Info card shows: diameter, day length, year, temperature, moons, distance
+- Toggle: orbital lines, planet labels, animation speed slider
+- Supports landscape + portrait mode
+- Full immersive mode (system UI hidden)
+- Files created: assets/solar_system.html,
+  lib/screens/explore/solar_system_screen.dart
+- Modified: explore_screen.dart, pubspec.yaml
+
+## 🪐 3D Solar System — Full Visual Rewrite
+- Sun: multi-layer corona glow, lens flare rays, animated bloom
+- All 8 planets visible with proper scale + orbit distances
+- Moon orbiting Earth with label
+- HTML div labels — perfectly synced to planet screen positions
+- Gas giants: multi-layer surface bands (Jupiter 7 bands, Saturn 6 bands)
+- Jupiter Great Red Spot with inner eye detail
+- Earth: continents, polar ice caps, atmosphere glow
+- Mars: polar caps
+- Saturn: 4-layer ring system with proper UV fix
+- Uranus: tilted ring system
+- ACES Filmic tone mapping for cinematic look
+- Sun PointLight with shadow casting — real illumination on planets
+- Pinch zoom, drag orbit, tap for info card
+- Info card: mini painted planet icon + 6 stats
+- goBack JS handler connected to Flutter Navigator
+- Speed slider, orbit toggle, label toggle
+
+## 🌟 AR Sky Map
+- Real-time camera overlay with star, constellation and planet identification
+- 90+ stars from hardcoded catalog with RA/Dec coordinates
+- Proper astronomical math: Julian Date → GMST → LST → Hour Angle → Alt/Az
+- 12 major constellations with connecting lines (Orion, Ursa Major, Scorpius etc.)
+- 5 planets with simplified VSOP position calculation (Mercury, Venus, Mars, Jupiter, Saturn)
+- Low-pass filter + azimuth smoothing for stable sensor readings
+- Tap-to-identify: tap any star/planet → shows name, Bayer designation, magnitude, altitude, azimuth
+- Compass rose (N/E/S/W) and horizon line overlay
+- Camera fallback: static starfield background if camera unavailable
+- Calibration screen with figure-8 instructions
+- Toggle controls: Constellation Lines, Labels, Planets
+- Play Store compliant: camera + location permissions with proper rationale
+- Files created: star_catalog.dart, constellation_data.dart, astronomy_math.dart, ar_sky_map_screen.dart
+- Placed as featured card in Explore screen
+
+---
+
 ## Changelog
 
 ### v1.1.0 (April 2026)

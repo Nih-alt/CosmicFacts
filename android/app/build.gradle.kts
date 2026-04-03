@@ -66,18 +66,6 @@ android {
         }
     }
 
-    // ABI splits for APK builds only — AAB handles this automatically
-    if (gradle.startParameter.taskNames.any { it.contains("assemble") }) {
-        splits {
-            abi {
-                isEnable = true
-                reset()
-                include("arm64-v8a", "armeabi-v7a")
-                isUniversalApk = false
-            }
-        }
-    }
-
     packaging {
         jniLibs {
             useLegacyPackaging = false
