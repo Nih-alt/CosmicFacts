@@ -60,3 +60,4 @@ flutter:
   assets:
     - assets/icon/
     - assets/solar_system.html
+    - assets/spacecraft_tracker.html

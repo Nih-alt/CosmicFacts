@@ -66,8 +66,15 @@ class _SolarSystemScreenState extends State<SolarSystemScreen> {
                 },
               );
             },
-            onLoadStop: (controller, url) {
+            onLoadStop: (controller, url) async {
               setState(() => _isLoading = false);
+
+              // Inject theme
+              final isDark =
+                  Theme.of(context).brightness == Brightness.dark;
+              await controller.evaluateJavascript(
+                source: 'setTheme(${isDark ? 'true' : 'false'});',
+              );
             },
             onReceivedError: (controller, request, error) {
               setState(() => _isLoading = false);

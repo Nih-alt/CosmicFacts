@@ -13,6 +13,7 @@ import '../../theme/app_colors.dart';
 import 'ar_sky_map_screen.dart';
 import 'image_detail_screen.dart';
 import 'solar_system_screen.dart';
+import 'spacecraft_tracker_screen.dart';
 import 'wallpapers_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -399,6 +400,114 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1,
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Spacecraft Tracker card ──
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SpacecraftTrackerScreen(),
+                  ),
+                ),
+                child: Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF001A2E), Color(0xFF0A0A1A)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF00E676).withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 16),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF00E676), Color(0xFF00B4D8)],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.track_changes,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Spacecraft Tracker',
+                              style: GoogleFonts.spaceGrotesk(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const Text(
+                              'ISS \u2022 Hubble \u2022 JWST \u2014 Live',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(right: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00E676)
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFF00E676)
+                                .withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              margin: const EdgeInsets.only(right: 4),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF00E676),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const Text(
+                              'LIVE',
+                              style: TextStyle(
+                                color: Color(0xFF00E676),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

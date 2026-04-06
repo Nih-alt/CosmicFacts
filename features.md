@@ -744,6 +744,28 @@ lib/
 - 16KB page size compliant
 - Made with love in India
 
+## Spacecraft Tracker — Section A (Earth Orbiters)
+- Real-time ISS, Hubble, JWST tracking on 3D Earth globe
+- TLE orbital data from CelesTrak (US government public domain, no API key)
+- satellite.js (v4.0.0) via CDN for orbital propagation math
+- Three.js (r128) via CDN for 3D rendering
+- 3D Earth globe with painted continents + multi-layer atmosphere glow
+- Custom 3D spacecraft models: ISS (truss + modules + 8 solar panels),
+  Hubble (cylinder body + mirror dish + solar wings), JWST (7 hex mirrors + sunshield)
+- Live data strip: altitude, speed, latitude, longitude, LIVE status
+- Orbital path visualization (1 full orbit ahead, 90-point resolution)
+- HTML div labels synced to 3D world positions via camera projection
+- Flutter fetches TLE in parallel → injects into WebView via evaluateJavascript
+- Fallback TLE data when offline (stale but functional for demo)
+- Drag to rotate Earth, pinch to zoom, momentum-based inertia
+- Tap spacecraft to select + show detailed info card (6 stats per craft)
+- Spacecraft selector tabs with color-coded active states
+- 3000-star background with varied star colors
+- Immersive fullscreen mode
+- Files: assets/spacecraft_tracker.html, lib/services/tle_service.dart,
+  lib/screens/explore/spacecraft_tracker_screen.dart
+- Modified: explore_screen.dart (entry card), pubspec.yaml (asset registration)
+
 ---
 
 *Last updated: April 2026*

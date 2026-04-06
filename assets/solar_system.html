@@ -3,8 +3,34 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
+:root {
+  --bg: #000005;
+  --card-bg: rgba(8,8,24,0.92);
+  --card-bg2: rgba(8,8,24,0.85);
+  --border: rgba(108,99,255,0.35);
+  --text-pri: rgba(255,255,255,0.9);
+  --text-sec: rgba(255,255,255,0.4);
+  --btn-bg: rgba(8,8,24,0.88);
+  --btn-border: rgba(108,99,255,0.35);
+  --btn-text: rgba(255,255,255,0.7);
+  --shadow: none;
+}
+
+:root.light {
+  --bg: #0A0A1A;
+  --card-bg: rgba(255,255,255,0.95);
+  --card-bg2: rgba(255,255,255,0.88);
+  --border: rgba(108,99,255,0.3);
+  --text-pri: rgba(15,15,40,0.92);
+  --text-sec: rgba(15,15,40,0.45);
+  --btn-bg: rgba(255,255,255,0.9);
+  --btn-border: rgba(108,99,255,0.4);
+  --btn-text: rgba(15,15,40,0.7);
+  --shadow: 0 2px 12px rgba(108,99,255,0.15);
+}
+
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:#000008; overflow:hidden; width:100vw; height:100vh; }
+body { background:#000005; overflow:hidden; width:100vw; height:100vh; }
 canvas { display:block; }
 
 #ui-overlay {
@@ -44,13 +70,13 @@ canvas { display:block; }
   display:none;
   position:fixed;
   bottom:16px; left:12px; right:12px;
-  background:rgba(8,8,24,0.95);
-  border:1px solid rgba(108,99,255,0.6);
+  background:var(--card-bg);
+  border:1px solid var(--border);
   border-radius:20px;
   padding:16px;
   pointer-events:all;
   z-index:20;
-  box-shadow:0 0 30px rgba(108,99,255,0.2);
+  box-shadow:var(--shadow);
 }
 #info-header {
   display:flex;
@@ -66,12 +92,12 @@ canvas { display:block; }
 #info-name {
   font-size:20px;
   font-weight:700;
-  color:white;
+  color:var(--text-pri);
   font-family:-apple-system,sans-serif;
 }
 #info-type {
   font-size:10px;
-  color:rgba(255,255,255,0.4);
+  color:var(--text-sec);
   letter-spacing:1.2px;
   font-family:-apple-system,sans-serif;
   margin-top:1px;
@@ -82,14 +108,14 @@ canvas { display:block; }
   gap:7px;
 }
 .stat-box {
-  background:rgba(255,255,255,0.05);
+  background:var(--card-bg2);
   border-radius:10px;
   padding:8px 10px;
-  border:1px solid rgba(255,255,255,0.06);
+  border:1px solid var(--border);
 }
 .stat-label {
   font-size:9px;
-  color:rgba(255,255,255,0.35);
+  color:var(--text-sec);
   letter-spacing:0.8px;
   margin-bottom:3px;
   font-family:-apple-system,sans-serif;
@@ -97,7 +123,7 @@ canvas { display:block; }
 .stat-value {
   font-size:12px;
   font-weight:600;
-  color:rgba(255,255,255,0.9);
+  color:var(--text-pri);
   font-family:-apple-system,sans-serif;
 }
 #close-btn {
@@ -127,18 +153,19 @@ canvas { display:block; }
 }
 #back-btn {
   width:38px; height:38px;
-  background:rgba(0,0,0,0.7);
-  border:1px solid rgba(255,255,255,0.15);
+  background:var(--card-bg2);
+  border:1px solid var(--border);
   border-radius:50%;
   display:flex; align-items:center; justify-content:center;
   cursor:pointer;
   pointer-events:all;
   flex-shrink:0;
 }
+#back-btn svg { stroke:var(--text-pri); }
 #title {
   flex:1;
   text-align:center;
-  color:rgba(255,255,255,0.9);
+  color:var(--text-pri);
   font-size:16px;
   font-weight:700;
   font-family:-apple-system,sans-serif;
@@ -165,9 +192,9 @@ canvas { display:block; }
   border-color:rgba(108,99,255,0.55) !important;
 }
 .ctrl-btn {
-  background:rgba(8,8,24,0.88);
-  border:1px solid rgba(108,99,255,0.35);
-  color:rgba(255,255,255,0.7);
+  background:var(--btn-bg);
+  border:1px solid var(--btn-border);
+  color:var(--btn-text);
   border-radius:10px;
   padding:8px 0; width:72px; text-align:center;
   font-size:11px;
@@ -193,8 +220,8 @@ canvas { display:block; }
   gap:5px;
   pointer-events:all;
   z-index:20;
-  background:rgba(8,8,24,0.75);
-  border:1px solid rgba(108,99,255,0.3);
+  background:var(--btn-bg);
+  border:1px solid var(--btn-border);
   border-radius:12px;
   padding:5px 8px;
 }
@@ -210,7 +237,7 @@ canvas { display:block; }
   font-family:-apple-system,sans-serif;
 }
 #speed-lbl {
-  color:rgba(255,255,255,0.4);
+  color:var(--text-sec);
   font-size:9px;
   font-family:-apple-system,sans-serif;
   letter-spacing:0.8px;
@@ -250,7 +277,7 @@ canvas { display:block; }
 <div id="top-bar">
   <div id="back-btn" onclick="goBack()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-      stroke="white" stroke-width="2.5" stroke-linecap="round">
+      stroke-width="2.5" stroke-linecap="round">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
   </div>
@@ -1170,6 +1197,16 @@ function onResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+// ── THEME ─────────────────────────────────────
+function applyTheme(isDark) {
+  if (isDark) {
+    document.documentElement.classList.remove('light');
+  } else {
+    document.documentElement.classList.add('light');
+  }
+}
+function setTheme(isDark) { applyTheme(isDark); }
 
 window.onload=init;
 </script>

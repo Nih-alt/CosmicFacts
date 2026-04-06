@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,
+  initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+:root {
+  --bg:        #000008;
+  --card-bg:   rgba(8,8,24,0.93);
+  --card-bg2:  rgba(8,8,24,0.88);
+  --border:    rgba(108,99,255,0.35);
+  --text-pri:  rgba(255,255,255,0.92);
+  --text-sec:  rgba(255,255,255,0.38);
+  --text-dim:  rgba(255,255,255,0.55);
+  --tab-bg:    rgba(10,10,30,0.85);
+  --tab-text:  rgba(255,255,255,0.55);
+  --sb-bg:     rgba(255,255,255,0.05);
+  --sb-border: rgba(255,255,255,0.06);
+  --strip-bg:  rgba(8,8,24,0.92);
+  --btn-bg:    rgba(8,8,24,0.88);
+  --shadow:    none;
+}
+
+:root.light {
+  --bg:        #EEF2FF;
+  --card-bg:   rgba(255,255,255,0.97);
+  --card-bg2:  rgba(255,255,255,0.92);
+  --border:    rgba(108,99,255,0.3);
+  --text-pri:  rgba(15,15,40,0.92);
+  --text-sec:  rgba(15,15,40,0.45);
+  --text-dim:  rgba(15,15,40,0.6);
+  --tab-bg:    rgba(255,255,255,0.85);
+  --tab-text:  rgba(15,15,40,0.55);
+  --sb-bg:     rgba(108,99,255,0.06);
+  --sb-border: rgba(108,99,255,0.12);
+  --strip-bg:  rgba(255,255,255,0.95);
+  --btn-bg:    rgba(255,255,255,0.9);
+  --shadow:    0 2px 12px rgba(108,99,255,0.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); overflow:hidden;
+       width:100vw; height:100vh; }
+canvas { display:block; }
+
+#top-bar {
+  position:fixed; top:0; left:0; right:0;
+  display:flex; align-items:center;
+  padding:10px 14px; z-index:20; pointer-events:none;
+}
+#back-btn {
+  width:38px; height:38px;
+  background:var(--card-bg2);
+  border:1px solid var(--border);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; pointer-events:all; flex-shrink:0;
+}
+#back-btn svg { stroke:var(--text-pri); }
+#title {
+  flex:1; text-align:center;
+  color:var(--text-pri);
+  font-size:15px; font-weight:700;
+  font-family:-apple-system,sans-serif;
+  text-shadow:0 0 10px rgba(0,0,0,0.8);
+}
+
+#selector {
+  position:fixed; top:58px; left:0; right:0;
+  display:flex; justify-content:center;
+  gap:8px; padding:0 16px;
+  z-index:20; pointer-events:all;
+}
+.sc-tab {
+  padding:7px 18px; border-radius:20px;
+  border:1px solid rgba(255,255,255,0.2);
+  background:var(--tab-bg);
+  color:var(--tab-text);
+  font-size:12px; font-weight:600;
+  font-family:-apple-system,sans-serif;
+  cursor:pointer;
+}
+.sc-tab.active-iss  { background:rgba(0,230,118,0.3);
+  border-color:#00E676; color:white; }
+.sc-tab.active-hubble { background:rgba(33,150,243,0.3);
+  border-color:#2196F3; color:white; }
+.sc-tab.active-jwst { background:rgba(255,184,0,0.3);
+  border-color:#FFB800; color:white; }
+
+#live-strip {
+  position:fixed; top:106px; left:12px; right:12px;
+  background:var(--strip-bg);
+  border:1px solid var(--border);
+  border-radius:14px; padding:10px 8px;
+  display:flex; justify-content:space-around;
+  z-index:20; pointer-events:none;
+  box-shadow:var(--shadow);
+}
+.si { display:flex; flex-direction:column;
+      align-items:center; min-width:50px; }
+.sl { font-size:8px; color:var(--text-sec);
+  letter-spacing:1px; font-family:-apple-system,sans-serif;
+  margin-bottom:3px; }
+.sv { font-size:12px; font-weight:700; color:var(--text-pri);
+  font-family:-apple-system,sans-serif; }
+.sv.live { color:#00E676; }
+.sv.updating { color:#FFB800; }
+
+#info-card {
+  position:fixed; bottom:12px; left:12px; right:12px;
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:18px; padding:14px 14px;
+  z-index:20; pointer-events:all;
+  box-shadow:var(--shadow);
+}
+#sc-name { font-size:17px; font-weight:700; color:var(--text-pri);
+  font-family:-apple-system,sans-serif; margin-bottom:1px; }
+#sc-type { font-size:9px; color:var(--text-sec);
+  letter-spacing:1px; font-family:-apple-system,sans-serif;
+  margin-bottom:9px; }
+#sc-stats { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.sb { background:var(--sb-bg);
+  border:1px solid var(--sb-border);
+  border-radius:9px; padding:7px 9px; }
+.sbl { font-size:8px; color:var(--text-sec);
+  letter-spacing:0.8px; font-family:-apple-system,sans-serif;
+  margin-bottom:2px; }
+.sbv { font-size:11px; font-weight:600;
+  color:var(--text-pri);
+  font-family:-apple-system,sans-serif; }
+
+#orbit-btn {
+  position:fixed; right:12px; top:160px;
+  background:var(--btn-bg);
+  border:1px solid var(--border);
+  color:var(--text-pri); border-radius:10px;
+  padding:7px 12px; font-size:11px; font-weight:600;
+  cursor:pointer; pointer-events:all; z-index:20;
+  font-family:-apple-system,sans-serif;
+}
+
+#labels-layer {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none; z-index:15;
+}
+.sc-lbl {
+  position:absolute;
+  display:flex; flex-direction:column; align-items:center;
+  gap:2px; transform:translate(-50%,-130%);
+  pointer-events:none;
+}
+.sc-lbl span {
+  font-family:-apple-system,sans-serif;
+  font-size:10px; font-weight:700;
+  text-shadow:0 0 8px #000, 0 0 4px #000;
+  white-space:nowrap;
+}
+.sc-lbl .ldot {
+  width:5px; height:5px; border-radius:50%;
+}
+
+#loading {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  color:var(--text-dim);
+  font-family:-apple-system,sans-serif;
+  font-size:13px; text-align:center; z-index:30;
+}
+.spin {
+  width:32px; height:32px;
+  border:2px solid rgba(108,99,255,0.2);
+  border-top-color:#6C63FF; border-radius:50%;
+  animation:sp 0.8s linear infinite;
+  margin:0 auto 10px;
+}
+@keyframes sp { to{transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spin"></div>
+  Building Earth...
+</div>
+
+<div id="top-bar">
+  <div id="back-btn" onclick="goBack()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      stroke-width="2.5" stroke-linecap="round">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+  </div>
+  <div id="title">Spacecraft Tracker</div>
+  <div style="width:38px"></div>
+</div>
+
+<div id="selector">
+  <div class="sc-tab active-iss"
+       id="tab-ISS" onclick="selectSC('ISS')">ISS</div>
+  <div class="sc-tab"
+       id="tab-Hubble" onclick="selectSC('Hubble')">Hubble</div>
+  <div class="sc-tab"
+       id="tab-JWST" onclick="selectSC('JWST')">JWST</div>
+</div>
+
+<div id="live-strip">
+  <div class="si">
+    <div class="sl">ALTITUDE</div>
+    <div class="sv" id="d-alt">...</div>
+  </div>
+  <div class="si">
+    <div class="sl">SPEED</div>
+    <div class="sv" id="d-spd">...</div>
+  </div>
+  <div class="si">
+    <div class="sl">LAT</div>
+    <div class="sv" id="d-lat">...</div>
+  </div>
+  <div class="si">
+    <div class="sl">LON</div>
+    <div class="sv" id="d-lon">...</div>
+  </div>
+  <div class="si">
+    <div class="sl">STATUS</div>
+    <div class="sv live" id="d-status">LIVE</div>
+  </div>
+</div>
+
+<button id="orbit-btn" onclick="toggleOrbit()">Orbit</button>
+
+<div id="labels-layer"></div>
+
+<div id="info-card">
+  <div id="sc-name">ISS</div>
+  <div id="sc-type">INTERNATIONAL SPACE STATION</div>
+  <div id="sc-stats"></div>
+</div>
+
+<div id="jwst-overlay" style="display:none;
+  position:fixed; top:160px; left:12px; right:12px;
+  background:rgba(255,184,0,0.08);
+  border:1px solid rgba(255,184,0,0.4);
+  border-radius:14px; padding:12px 14px;
+  z-index:20; pointer-events:none;">
+  <div style="display:flex; align-items:center; gap:8px;
+    margin-bottom:8px;">
+    <span style="font-size:18px;">&#10024;</span>
+    <div>
+      <div style="color:#FFB800; font-size:11px;
+        font-weight:700; font-family:-apple-system,sans-serif;
+        letter-spacing:0.5px;">
+        JAMES WEBB &mdash; L2 LAGRANGE POINT
+      </div>
+      <div style="color:rgba(255,255,255,0.45);
+        font-size:10px; font-family:-apple-system,sans-serif;">
+        1.5 million km from Earth &mdash; not to scale
+      </div>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <div style="background:rgba(255,184,0,0.12);
+      border:1px solid rgba(255,184,0,0.25);
+      border-radius:8px; padding:6px 10px; flex:1;">
+      <div style="color:rgba(255,255,255,0.35);
+        font-size:8px; letter-spacing:1px;
+        font-family:-apple-system,sans-serif;">
+        DISTANCE FROM EARTH
+      </div>
+      <div id="jwst-dist" style="color:#FFB800;
+        font-size:13px; font-weight:700;
+        font-family:-apple-system,sans-serif;">
+        1,500,000 km
+      </div>
+    </div>
+    <div style="background:rgba(255,184,0,0.12);
+      border:1px solid rgba(255,184,0,0.25);
+      border-radius:8px; padding:6px 10px; flex:1;">
+      <div style="color:rgba(255,255,255,0.35);
+        font-size:8px; letter-spacing:1px;
+        font-family:-apple-system,sans-serif;">
+        ORBITAL SPEED
+      </div>
+      <div style="color:white; font-size:13px;
+        font-weight:700;
+        font-family:-apple-system,sans-serif;">
+        0.30 km/s
+      </div>
+    </div>
+    <div style="background:rgba(255,184,0,0.12);
+      border:1px solid rgba(255,184,0,0.25);
+      border-radius:8px; padding:6px 10px; flex:1;">
+      <div style="color:rgba(255,255,255,0.35);
+        font-size:8px; letter-spacing:1px;
+        font-family:-apple-system,sans-serif;">
+        ORBIT TYPE
+      </div>
+      <div style="color:white; font-size:13px;
+        font-weight:700;
+        font-family:-apple-system,sans-serif;">
+        Halo Orbit
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.0.0/satellite.min.js"
+  onerror="console.log('satellite.js CDN failed')"></script>
+
+<script>
+'use strict';
+
+// ── CONFIG ────────────────────────────────────
+const CFG = {
+  ISS: {
+    full:'International Space Station',
+    type:'CREWED ORBITAL LAB',
+    color:'#00E676', hex:0x00E676,
+    alt:408, inc:51.6, period:5552,
+    stats:{'Launched':'1998','Crew':'7 (typical)',
+           'Mass':'420,000 kg','Length':'109 m',
+           'Orbit':'Low Earth Orbit','Agency':'Multi-Agency'}
+  },
+  Hubble: {
+    full:'Hubble Space Telescope',
+    type:'SPACE OBSERVATORY',
+    color:'#2196F3', hex:0x2196F3,
+    alt:540, inc:28.5, period:5765,
+    stats:{'Launched':'April 1990','Mirror':'2.4 m',
+           'Mass':'11,110 kg','Length':'13.2 m',
+           'Orbit':'Low Earth Orbit','Agency':'NASA / ESA'}
+  },
+  JWST: {
+    full:'James Webb Space Telescope',
+    type:'INFRARED OBSERVATORY',
+    color:'#FFB800', hex:0xFFB800,
+    alt:1500000, inc:5, period:375840,
+    stats:{'Launched':'Dec 2021','Mirror':'6.5 m',
+           'Mass':'6,200 kg','Distance':'1.5M km',
+           'Orbit':'L2 Lagrange Point','Agency':'NASA/ESA/CSA'}
+  },
+};
+
+// ── GLOBALS ───────────────────────────────────
+let scene, camera, renderer, raycaster;
+const ER = 1.8;
+const ERkm = 6371;
+let earthMesh;
+let scObj = {};
+let tleData = {};
+let activeSC = 'ISS';
+let showOrbit = true;
+let updateTimer = null;
+
+// Camera
+let camR=22, camT=0.3, camP=1.25;
+const CMIN=8, CMAX=40;
+let lastTouch=null, pinchD=0, didMove=false, t0=0;
+let vt=0, vp=0;
+
+// ── EARTH TEXTURE VIA CANVAS ──────────────────
+function makeEarthTexture() {
+  const W=2048, H=1024;
+  const c=document.createElement('canvas');
+  c.width=W; c.height=H;
+  const ctx=c.getContext('2d');
+
+  // Ocean gradient
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0A2850');
+  g.addColorStop(0.5,'#1455A0');
+  g.addColorStop(1,'#0A2850');
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,H);
+
+  // lon/lat to pixel — CORRECT formula
+  function p(lon,lat){
+    return [
+      (lon+180)/360*W,
+      (90-lat)/180*H
+    ];
+  }
+
+  function poly(pts, col){
+    ctx.fillStyle=col;
+    ctx.beginPath();
+    const [x0,y0]=p(pts[0][0],pts[0][1]);
+    ctx.moveTo(x0,y0);
+    for(let i=1;i<pts.length;i++){
+      const [x,y]=p(pts[i][0],pts[i][1]);
+      ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // North America
+  poly([
+    [-165,70],[-140,70],[-100,73],[-85,68],
+    [-70,47],[-55,47],[-60,44],[-70,41],
+    [-75,34],[-80,24],[-88,18],[-95,16],
+    [-90,13],[-83,10],[-78,8],
+    [-105,18],[-112,22],[-117,29],
+    [-122,37],[-124,47],[-130,54],
+    [-140,58],[-155,58],[-160,63],[-165,70]
+  ],'#2D6A3F');
+
+  // South America
+  poly([
+    [-80,12],[-63,12],[-50,4],[-35,-5],
+    [-34,-10],[-37,-14],[-39,-22],
+    [-44,-28],[-48,-34],[-53,-38],
+    [-63,-43],[-67,-54],[-64,-54],
+    [-58,-48],[-52,-38],[-48,-28],
+    [-44,-22],[-44,-14],[-48,-4],
+    [-58,0],[-68,5],[-74,9],[-80,12]
+  ],'#245C35');
+
+  // Europe
+  poly([
+    [-9,37],[0,36],[10,37],[16,38],
+    [28,39],[30,45],[25,50],[20,54],
+    [15,58],[10,57],[5,54],[0,49],
+    [-5,44],[-8,41],[-9,37]
+  ],'#2D6A3F');
+
+  // Africa
+  poly([
+    [-17,15],[-14,4],[-14,-5],
+    [-9,-19],[-14,-34],[-18,-34],
+    [-22,-29],[-28,-24],[-23,-9],
+    [-18,0],[-8,4],[2,4],
+    [12,10],[22,12],[36,14],
+    [40,9],[43,2],[43,-4],
+    [36,-11],[30,-18],[24,-28],
+    [17,-34],[14,-34],[8,-23],
+    [3,-8],[0,4],[-5,4],
+    [-17,15]
+  ],'#245C35');
+
+  // Asia
+  poly([
+    [26,42],[36,40],[41,37],[46,34],
+    [57,24],[67,22],[80,19],[91,22],
+    [101,19],[105,14],[110,19],
+    [116,24],[121,29],[131,34],
+    [141,39],[145,44],[140,51],
+    [130,57],[119,62],[108,65],
+    [98,68],[87,72],[78,70],
+    [68,68],[58,62],[50,57],
+    [43,54],[38,51],[34,47],
+    [29,44],[26,42]
+  ],'#2D6A3F');
+
+  // Australia
+  poly([
+    [114,-21],[120,-17],[128,-14],
+    [136,-11],[139,-17],[142,-21],
+    [148,-27],[152,-31],[150,-37],
+    [145,-37],[138,-34],[131,-31],
+    [124,-31],[117,-27],[114,-21]
+  ],'#245C35');
+
+  // Greenland
+  poly([
+    [-54,82],[-28,82],[-19,75],
+    [-17,69],[-24,64],[-40,62],
+    [-51,64],[-57,71],[-54,82]
+  ],'#2D6A3F');
+
+  // Ice caps
+  ctx.fillStyle='rgba(215,235,255,0.9)';
+  ctx.fillRect(0,0,W,H*0.055);       // North
+  ctx.fillRect(0,H*0.935,W,H*0.065); // South
+
+  // Subtle grid
+  ctx.strokeStyle='rgba(255,255,255,0.03)';
+  ctx.lineWidth=1;
+  for(let lon=-180;lon<=180;lon+=30){
+    ctx.beginPath();
+    ctx.moveTo((lon+180)/360*W,0);
+    ctx.lineTo((lon+180)/360*W,H);
+    ctx.stroke();
+  }
+  for(let lat=-90;lat<=90;lat+=30){
+    ctx.beginPath();
+    ctx.moveTo(0,(90-lat)/180*H);
+    ctx.lineTo(W,(90-lat)/180*H);
+    ctx.stroke();
+  }
+
+  return new THREE.CanvasTexture(c);
+}
+
+// ── INIT ──────────────────────────────────────
+function init() {
+  scene=new THREE.Scene();
+
+  camera=new THREE.PerspectiveCamera(
+    48, window.innerWidth/window.innerHeight, 0.01, 500);
+  moveCam();
+
+  renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2.5));
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.05;
+  renderer.setClearColor(0x000008, 1);
+  document.body.insertBefore(renderer.domElement,
+    document.getElementById('loading'));
+
+  raycaster=new THREE.Raycaster();
+
+  addStars();
+  addEarth();
+  addSpacecraft();
+  addLights();
+
+  setupTouch();
+  window.addEventListener('resize', onResize);
+
+  document.getElementById('loading').style.display='none';
+
+  selectSC('ISS');
+  requestAnimationFrame(loop);
+
+  // Default dark theme
+  applyTheme(true);
+
+  // Force immediate first update after 100ms
+  setTimeout(function(){
+    updatePositions();
+  }, 100);
+
+  // Start regular updates
+  if(updateTimer) clearInterval(updateTimer);
+  updateTimer=setInterval(updatePositions, 1000);
+}
+
+// ── EARTH ─────────────────────────────────────
+function addEarth() {
+  const geo=new THREE.SphereGeometry(ER,64,64);
+  const tex=makeEarthTexture();
+  const mat=new THREE.MeshStandardMaterial({
+    map: tex, roughness:0.78, metalness:0.0,
+  });
+  earthMesh=new THREE.Mesh(geo,mat);
+  earthMesh.receiveShadow=true;
+  scene.add(earthMesh);
+
+  [[ER*1.02,0.10,0x4499FF],
+   [ER*1.05,0.05,0x2255CC],
+   [ER*1.10,0.02,0x113399]
+  ].forEach(function([r,op,col]){
+    const m=new THREE.MeshBasicMaterial({
+      color:col,transparent:true,opacity:op,
+      side:THREE.FrontSide,depthWrite:false});
+    scene.add(new THREE.Mesh(
+      new THREE.SphereGeometry(r,32,32),m));
+  });
+}
+
+function addLights() {
+  const sun=new THREE.DirectionalLight(0xFFFDE7,2.2);
+  sun.position.set(8,3,6);
+  sun.castShadow=true;
+  scene.add(sun);
+  scene.add(new THREE.AmbientLight(0x112244,0.5));
+}
+
+function addStars() {
+  const pos=[],col=[];
+  const pal=[[1,1,1],[1,1,1],[0.7,0.8,1],[1,0.9,0.7],[1,0.5,0.3]];
+  for(let i=0;i<3000;i++){
+    const t=Math.random()*Math.PI*2;
+    const p=Math.acos(2*Math.random()-1);
+    const r=150+Math.random()*100;
+    pos.push(r*Math.sin(p)*Math.cos(t),
+             r*Math.sin(p)*Math.sin(t),
+             r*Math.cos(p));
+    const c=pal[Math.floor(Math.random()*pal.length)];
+    col.push(c[0],c[1],c[2]);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',
+    new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('color',
+    new THREE.Float32BufferAttribute(col,3));
+  scene.add(new THREE.Points(g,
+    new THREE.PointsMaterial({
+      size:0.6,vertexColors:true,
+      transparent:true,opacity:0.85})));
+}
+
+// ── SPACECRAFT ────────────────────────────────
+function addSpacecraft() {
+  const layer=document.getElementById('labels-layer');
+  Object.keys(CFG).forEach(function(name){
+    const cfg=CFG[name];
+
+    const geo=new THREE.SphereGeometry(0.055,16,16);
+    const mat=new THREE.MeshBasicMaterial({color:cfg.hex});
+    const mesh=new THREE.Mesh(geo,mat);
+    scene.add(mesh);
+
+    const h=new THREE.Mesh(
+      new THREE.SphereGeometry(0.11,12,12),
+      new THREE.MeshBasicMaterial({
+        color:cfg.hex,transparent:true,
+        opacity:0.25,depthWrite:false}));
+    mesh.add(h);
+
+    const ol=new THREE.Line(
+      new THREE.BufferGeometry(),
+      new THREE.LineBasicMaterial({
+        color:cfg.hex,transparent:true,
+        opacity:0.4,depthWrite:false}));
+    scene.add(ol);
+
+    const el=document.createElement('div');
+    el.className='sc-lbl';
+    el.style.display='none';
+    el.innerHTML=
+      '<span style="color:'+cfg.color+'">'+name+'</span>'+
+      '<div class="ldot" style="background:'+cfg.color+
+      ';box-shadow:0 0 5px '+cfg.color+'"></div>';
+    layer.appendChild(el);
+
+    scObj[name]={mesh:mesh,orbitLine:ol,labelEl:el,pos:null};
+
+    if(name==='JWST'){
+      // JWST shown at fixed position in scene
+      // far from Earth but visible
+      mesh.position.set(3.5, 2.5, -8);
+      scObj[name]._jwstFixed = true;
+    }
+  });
+}
+
+// ── ORBITAL MATH ──────────────────────────────
+function getPosition(name, time) {
+  if(typeof satellite!=='undefined' && tleData[name] &&
+     tleData[name].line1) {
+    try {
+      const sr=satellite.twoline2satrec(
+        tleData[name].line1, tleData[name].line2);
+      const pv=satellite.propagate(sr,time);
+      if(pv && pv.position && !isNaN(pv.position.x)) {
+        const gmst=satellite.gstime(time);
+        const geo=satellite.eciToGeodetic(pv.position,gmst);
+        const lat=satellite.degreesLat(geo.latitude);
+        const lon=satellite.degreesLong(geo.longitude);
+        const alt=geo.height;
+        const v=pv.velocity;
+        const spd=Math.sqrt(v.x**2+v.y**2+v.z**2);
+        const p=ll2xyz(lat,lon,alt);
+        p.lat=lat; p.lon=lon; p.alt=Math.round(alt);
+        p.spd=spd.toFixed(2);
+        return p;
+      }
+    } catch(e){}
+  }
+
+  const o=CFG[name];
+  const sec=time.getTime()/1000;
+  const angle=(sec/o.period)*Math.PI*2;
+  const lat=Math.sin(angle)*o.inc;
+  const lon=((sec/o.period*360)%360)-180;
+  const p=ll2xyz(lat,lon,o.alt);
+  p.lat=lat.toFixed(1);
+  p.lon=lon.toFixed(1);
+  p.alt=o.alt;
+  p.spd=name==='JWST'?'0.30':'7.66';
+  return p;
+}
+
+function ll2xyz(lat,lon,altKm){
+  const r=(ERkm+altKm)/ERkm*ER;
+  const phi=(90-lat)*Math.PI/180;
+  const th=(lon+180)*Math.PI/180;
+  return {
+    x:r*Math.sin(phi)*Math.cos(th),
+    y:r*Math.cos(phi),
+    z:r*Math.sin(phi)*Math.sin(th)
+  };
+}
+
+function getOrbitPoints(name){
+  const o=CFG[name];
+
+  if(typeof satellite!=='undefined' && tleData[name] &&
+     tleData[name].line1){
+    try{
+      const sr=satellite.twoline2satrec(
+        tleData[name].line1,tleData[name].line2);
+      const no=sr.no;
+      const period=(2*Math.PI/no)*60;
+      const now=new Date();
+      const pts=[];
+      for(let i=0;i<=100;i++){
+        const t=new Date(now.getTime()+(i/100)*period*1000);
+        const pv=satellite.propagate(sr,t);
+        if(!pv||!pv.position||isNaN(pv.position.x)) continue;
+        const gm=satellite.gstime(t);
+        const g=satellite.eciToGeodetic(pv.position,gm);
+        const p=ll2xyz(
+          satellite.degreesLat(g.latitude),
+          satellite.degreesLong(g.longitude),
+          g.height);
+        pts.push(new THREE.Vector3(p.x,p.y,p.z));
+      }
+      if(pts.length>5) return pts;
+    }catch(e){}
+  }
+
+  const pts=[];
+  for(let i=0;i<=120;i++){
+    const a=(i/120)*Math.PI*2;
+    const lat=Math.sin(a)*o.inc;
+    const lon=(a*180/Math.PI)-180;
+    const p=ll2xyz(lat,lon,o.alt);
+    pts.push(new THREE.Vector3(p.x,p.y,p.z));
+  }
+  return pts;
+}
+
+// ── UPDATE POSITIONS ──────────────────────────
+function updatePositions(){
+  const now=new Date();
+  Object.keys(CFG).forEach(function(name){
+    const pos=getPosition(name,now);
+    if(!pos) return;
+    scObj[name].pos=pos;
+    // Don't move JWST mesh — it's at a fixed scene position
+    if(!scObj[name]._jwstFixed){
+      scObj[name].mesh.position.set(pos.x,pos.y,pos.z);
+    }
+  });
+
+  // Update strip for active SC
+  const ap=scObj[activeSC]?scObj[activeSC].pos:null;
+  if(ap){
+    const rawAlt = typeof ap.alt==='number'
+      ? ap.alt : parseFloat(ap.alt);
+    let altVal;
+    if(rawAlt >= 1000000) {
+      altVal = (rawAlt/1000000).toFixed(1)+'M km';
+    } else if(rawAlt >= 1000) {
+      altVal = (rawAlt/1000).toFixed(0)+'K km';
+    } else {
+      altVal = Math.round(rawAlt)+' km';
+    }
+    const spdVal=typeof ap.spd==='number'
+      ?ap.spd.toFixed(2)+' km/s'
+      :ap.spd+' km/s';
+    const latVal=typeof ap.lat==='number'
+      ?ap.lat.toFixed(1)+'\u00B0'
+      :ap.lat+'\u00B0';
+    const lonVal=typeof ap.lon==='number'
+      ?ap.lon.toFixed(1)+'\u00B0'
+      :ap.lon+'\u00B0';
+
+    const ea=document.getElementById('d-alt');
+    const es=document.getElementById('d-spd');
+    const el=document.getElementById('d-lat');
+    const eo=document.getElementById('d-lon');
+
+    if(ea) ea.textContent=altVal;
+    if(es) es.textContent=spdVal;
+    if(el) el.textContent=latVal;
+    if(eo) eo.textContent=lonVal;
+  }
+
+  // Special JWST display
+  const jwstEl = document.getElementById('jwst-overlay');
+  if(jwstEl) {
+    jwstEl.style.display = activeSC==='JWST' ? 'block':'none';
+  }
+
+  // Format JWST altitude nicely
+  if(activeSC==='JWST') {
+    const ea2=document.getElementById('d-alt');
+    if(ea2) ea2.textContent='1.5M km';
+  }
+}
+
+// ── SELECT SPACECRAFT ─────────────────────────
+function selectSC(name){
+  activeSC=name;
+  const cfg=CFG[name];
+
+  ['ISS','Hubble','JWST'].forEach(function(n){
+    const t=document.getElementById('tab-'+n);
+    t.className='sc-tab';
+    if(n===name){
+      const cls={ISS:'active-iss',
+                 Hubble:'active-hubble',
+                 JWST:'active-jwst'}[n];
+      t.classList.add(cls);
+    }
+  });
+
+  document.getElementById('sc-name').textContent=name;
+  document.getElementById('sc-type').textContent=cfg.type;
+  document.getElementById('info-card').style.borderColor=
+    cfg.color+'88';
+  const s=document.getElementById('sc-stats');
+  s.innerHTML='';
+  Object.keys(cfg.stats).forEach(function(k){
+    var b=document.createElement('div');
+    b.className='sb';
+    b.innerHTML='<div class="sbl">'+k.toUpperCase()+
+      '</div><div class="sbv">'+cfg.stats[k]+'</div>';
+    s.appendChild(b);
+  });
+
+  Object.keys(CFG).forEach(function(n){
+    const pts=getOrbitPoints(n);
+    if(pts.length>1){
+      const geo=new THREE.BufferGeometry()
+        .setFromPoints(pts);
+      scObj[n].orbitLine.geometry.dispose();
+      scObj[n].orbitLine.geometry=geo;
+    }
+    scObj[n].orbitLine.visible=
+      showOrbit && n===name && n!=='JWST';
+  });
+
+  updatePositions();
+}
+
+// ── LOOP ──────────────────────────────────────
+let lastT=0;
+function loop(t){
+  t=t||0;
+  requestAnimationFrame(loop);
+  const dt=Math.min((t-lastT)/16.667,3);
+  lastT=t;
+
+  earthMesh.rotation.y+=0.00006*dt;
+
+  Object.keys(CFG).forEach(function(name){
+    const obj=scObj[name];
+
+    if(obj._jwstFixed) {
+      // JWST stays at fixed position, slowly rotates
+      obj.mesh.rotation.y += 0.005;
+      // Update JWST label from fixed mesh position
+      const wp=obj.mesh.position.clone();
+      const pr=wp.clone().project(camera);
+      if(pr.z>1){obj.labelEl.style.display='none';return;}
+      const x=(pr.x*0.5+0.5)*window.innerWidth;
+      const y=(-(pr.y)*0.5+0.5)*window.innerHeight;
+      if(x<-50||x>window.innerWidth+50||
+         y<-50||y>window.innerHeight+50){
+        obj.labelEl.style.display='none';return;
+      }
+      obj.labelEl.style.display='flex';
+      obj.labelEl.style.left=x+'px';
+      obj.labelEl.style.top=y+'px';
+      return;
+    }
+
+    if(!obj.pos){obj.labelEl.style.display='none';return;}
+    const wp=new THREE.Vector3(
+      obj.pos.x,obj.pos.y,obj.pos.z);
+    const pr=wp.clone().project(camera);
+    if(pr.z>1){obj.labelEl.style.display='none';return;}
+    const x=(pr.x*0.5+0.5)*window.innerWidth;
+    const y=(-(pr.y)*0.5+0.5)*window.innerHeight;
+    if(x<-50||x>window.innerWidth+50||
+       y<-50||y>window.innerHeight+50){
+      obj.labelEl.style.display='none';return;
+    }
+    obj.labelEl.style.display='flex';
+    obj.labelEl.style.left=x+'px';
+    obj.labelEl.style.top=y+'px';
+  });
+
+  renderer.render(scene,camera);
+}
+
+// ── CAMERA ────────────────────────────────────
+function moveCam(){
+  camera.position.set(
+    camR*Math.sin(camP)*Math.sin(camT),
+    camR*Math.cos(camP),
+    camR*Math.sin(camP)*Math.cos(camT));
+  camera.lookAt(0,0,0);
+}
+
+// ── TOUCH ─────────────────────────────────────
+function setupTouch(){
+  const el=renderer.domElement;
+  el.addEventListener('touchstart',function(e){
+    e.preventDefault();
+    didMove=false; t0=Date.now();
+    if(e.touches.length===1)
+      lastTouch={x:e.touches[0].clientX,
+                 y:e.touches[0].clientY};
+    else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      pinchD=Math.sqrt(dx*dx+dy*dy);
+    }
+  },{passive:false});
+
+  el.addEventListener('touchmove',function(e){
+    e.preventDefault(); didMove=true;
+    if(e.touches.length===1&&lastTouch){
+      const dx=e.touches[0].clientX-lastTouch.x;
+      const dy=e.touches[0].clientY-lastTouch.y;
+      vt=dx*0.007; vp=dy*0.007;
+      camT-=vt;
+      camP=Math.max(0.2,Math.min(Math.PI*0.85,camP+vp));
+      moveCam();
+      lastTouch={x:e.touches[0].clientX,
+                 y:e.touches[0].clientY};
+    } else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      const f=1+(pinchD/d-1)*0.65;
+      camR=Math.max(CMIN,Math.min(CMAX,camR*f));
+      pinchD=d; moveCam();
+    }
+  },{passive:false});
+
+  el.addEventListener('touchend',function(e){
+    e.preventDefault(); lastTouch=null;
+    if(didMove){
+      let lv=vt*0.4,lp=vp*0.4;
+      (function m(){
+        if(Math.abs(lv)<0.001&&Math.abs(lp)<0.001)return;
+        lv*=0.88; lp*=0.88;
+        camT-=lv;
+        camP=Math.max(0.2,Math.min(Math.PI*0.85,camP+lp));
+        moveCam(); requestAnimationFrame(m);
+      })();
+    }
+  },{passive:false});
+}
+
+// ── HELPERS ───────────────────────────────────
+function toggleOrbit(){
+  showOrbit=!showOrbit;
+  const btn=document.getElementById('orbit-btn');
+  btn.style.background=showOrbit
+    ?'rgba(108,99,255,0.3)':'var(--btn-bg)';
+  Object.keys(CFG).forEach(function(n){
+    scObj[n].orbitLine.visible=
+      showOrbit&&n===activeSC;
+  });
+}
+
+function goBack(){
+  clearInterval(updateTimer);
+  if(window.flutter_inappwebview)
+    window.flutter_inappwebview.callHandler('goBack');
+  else history.back();
+}
+
+function onResize(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+}
+
+// ── THEME ─────────────────────────────────────
+function applyTheme(isDark) {
+  if (isDark) {
+    document.documentElement.classList.remove('light');
+    if (renderer) renderer.setClearColor(0x000008, 1);
+  } else {
+    document.documentElement.classList.add('light');
+    if (renderer) renderer.setClearColor(0xEEF2FF, 1);
+  }
+}
+
+function setTheme(isDark) {
+  applyTheme(isDark);
+}
+
+// ── TLE INJECTION (from Flutter) ──────────────
+function initWithTle(tleJson){
+  try{
+    const p=JSON.parse(tleJson);
+    Object.keys(p).forEach(function(n){
+      if(p[n]&&p[n].line1&&p[n].line2) tleData[n]=p[n];
+    });
+  }catch(e){}
+  if(scene){
+    Object.keys(CFG).forEach(function(n){
+      var pts=getOrbitPoints(n);
+      if(pts.length>1){
+        var geo=new THREE.BufferGeometry().setFromPoints(pts);
+        scObj[n].orbitLine.geometry.dispose();
+        scObj[n].orbitLine.geometry=geo;
+      }
+    });
+  }
+  selectSC(activeSC);
+}
+
+window.onload=init;
+</script>
+</body>
+</html>
