@@ -768,23 +768,6 @@ lib/
 
 ---
 
-## 🌌 360° Space Tours
-- 6 immersive panoramic environments
-- Moon Surface: craters, Earth in sky, regolith texture
-- Mars Surface: pink sky, dust devils, Olympus Mons, rocks
-- Saturn Rings: ice chunks, Cassini Division, Saturn below
-- Jupiter Clouds: banded atmosphere, Great Red Spot, lightning
-- Deep Space: nebula clouds, Milky Way band, Andromeda galaxy
-- ISS Window: Earth below, solar panels, window frame
-- All textures painted programmatically via Canvas API
-- Gyroscope navigation — move phone to look around
-- Touch drag with inertia for manual navigation
-- Info hotspots per location (3 per scene) with popup details
-- Location stats card (gravity, temp, distance etc.)
-- Light/dark theme via CSS variables + setTheme() injection
-- Files created: assets/space_tours.html,
-  lib/screens/explore/space_tours_screen.dart
-
 *Last updated: April 2026*
 *Developer: Nihal*
 *GitHub: https://github.com/Nih-alt/CosmicFacts*
