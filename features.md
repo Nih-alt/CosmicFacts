@@ -768,6 +768,63 @@ lib/
 
 ---
 
+## ✨ UI Polish Pass — Complete
+
+- **Theme consistency:** all 7 main screens already check `isDark` / use `AppColors.*` helper (815 calls across 25 screens, 0 deprecated `withOpacity` left)
+- **Loading states:** shimmer placeholders present on all data-fetching screens (home, explore, launches, story feed, gallery)
+- **Error states:** retry buttons wired through controllers (`hasError` / `loadTrendingImages` / `refreshData`)
+- **Empty states:** friendly icon + message everywhere (gallery, search, launches)
+- **Typography:** consistent `GoogleFonts.spaceGrotesk` (titles) / `GoogleFonts.inter` (body) usage across screens
+- **Navigation:** `MaterialPageRoute` → `CupertinoPageRoute` migration in `explore_screen.dart` (5x) and `nasa_gallery_screen.dart` (1x) for native iOS swipe-back feel
+- **Bottom sheets:** all modal sheets in target screens already wrapped in `Material(color: Colors.transparent)`
+- **Section headers:** accent gradient bars (4×18px purple→cyan) used in JWST, Interactive Experiences, Space Image Gallery sections
+- **Card shadows:** light-mode depth via `AppColors.cardShadow(context)` helper
+- **Performance — `cacheExtent: 500`** added to:
+  - `home_screen.dart` CustomScrollView
+  - `explore_screen.dart` CustomScrollView
+  - `learn_screen.dart` CustomScrollView
+  - `launches_screen.dart` ListView.builder
+  - `nasa_gallery_screen.dart` MasonryGridView
+- **Performance — `memCacheWidth`** added to:
+  - `explore_screen.dart` masonry tiles (400) + JWST PageView cards (700)
+  - `nasa_gallery_screen.dart` gallery tiles (400)
+  - `home_screen.dart` APOD hero (800) + trending fact cards (600)
+  - `launches_screen.dart` launch background (700)
+  - `story_feed_screen.dart` full-bleed article image (800)
+- **SafeArea:** verified on every target screen (top-only on tabbed screens to avoid bottom-nav double-padding)
+- **`flutter analyze`:** 0 issues before, 0 issues after
+
+## ✨ UI Surgical Polish — Round 2
+
+- **Section headers — accent gradient bars** (4×20px purple→cyan) added to:
+  - `home_screen.dart`: "Trending Facts 🔥", "This Day in Space 📅", "Quote of the Day ✨"
+  - `learn_screen.dart`: "Tools & Discovery", "Continue Learning", "Topics"
+  - `profile_screen.dart`: "Preferences", "About", "Data" (via shared `_buildSection` builder — single edit covers all 3)
+  - All headers use `letterSpacing: -0.3` for tighter premium look
+- **Light-mode card gradient + purple shadow** added to:
+  - `_QuoteOfDayCard` in `home_screen.dart`
+  - `_TodayInSpaceCard` in `home_screen.dart` (wrapped in `Builder` to access `isDark` since the card was a `const StatelessWidget` with no theme access)
+  - Trending facts tiles intentionally skipped — they use `BackdropFilter` glass effect by design
+  - APOD card and image cards skipped per spec
+- **Bottom nav bar premium shadow** — wrapped existing `CupertinoTabBar` in `Container` with light-mode `BoxShadow(blurRadius: 20, offset: -4)` (top border via `AppColors.divider` was already present)
+- **Profile avatar** — replaced 3-ring nested person-icon avatar with single 92px gradient circle (purple→cyan) + 🚀 emoji + purple glow shadow per spec
+- **Spacing** — bumped section header top padding from 20→24 in home_screen.dart between major sections; bottom padding from 8/10→12 between header and content
+- **Daily facts rotation** — verified `_getDailyFacts` at home_screen.dart:943 already uses date-seeded `Random(today.year*10000 + today.month*100 + today.day)`. ✓
+- **`flutter analyze`:** 0 issues before, 0 issues after
+
+---
+
+### Items intentionally NOT changed in this pass
+
+These would require visual judgment / design approval and are deferred to a separate prompt:
+- Hardcoded color → `isDark` ternary refactor: not needed — codebase already uses centralized `AppColors` helper
+- Typography scale rewrite: risk of visual regression across 6300+ lines; current scale is consistent
+- "Premium gradient overlays" on cards: design change, needs approval
+- `WillPopScope`/`PopScope` wrappers on sub-screens: not needed for plain Navigator pops
+- `setState` audit for unnecessary rebuilds: requires per-screen profiling
+
+---
+
 *Last updated: April 2026*
 *Developer: Nihal*
 *GitHub: https://github.com/Nih-alt/CosmicFacts*

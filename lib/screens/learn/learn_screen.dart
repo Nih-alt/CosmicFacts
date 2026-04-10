@@ -132,6 +132,7 @@ class _LearnScreenState extends State<LearnScreen> {
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
+          cacheExtent: 500,
           slivers: [
             SliverToBoxAdapter(child: _buildTopBar()),
             SliverToBoxAdapter(
@@ -142,11 +143,30 @@ class _LearnScreenState extends State<LearnScreen> {
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: Text('Tools & Discovery',
-                    style: GoogleFonts.spaceGrotesk(
-                        fontSize: 18, fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context))),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('Tools & Discovery',
+                        style: GoogleFonts.spaceGrotesk(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                            color: AppColors.textPrimary(context))),
+                  ],
+                ),
               ),
             ),
             SliverToBoxAdapter(child: _buildToolsRow()),
@@ -162,11 +182,30 @@ class _LearnScreenState extends State<LearnScreen> {
             if (inProgress.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                  child: Text('Continue Learning',
-                      style: GoogleFonts.spaceGrotesk(
-                          fontSize: 18, fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary(context))),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text('Continue Learning',
+                          style: GoogleFonts.spaceGrotesk(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                              color: AppColors.textPrimary(context))),
+                    ],
+                  ),
                 ),
               ),
               SliverToBoxAdapter(child: _buildContinueRow(inProgress)),
@@ -177,10 +216,29 @@ class _LearnScreenState extends State<LearnScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-                child: Text('Topics',
-                    style: GoogleFonts.spaceGrotesk(
-                        fontSize: 18, fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context))),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('Topics',
+                        style: GoogleFonts.spaceGrotesk(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                            color: AppColors.textPrimary(context))),
+                  ],
+                ),
               ),
             ),
 

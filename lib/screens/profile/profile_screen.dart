@@ -148,33 +148,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final rank = _rank;
     return Column(
       children: [
-        // Avatar with glow ring
+        // Avatar — gradient circle with rocket emoji
         Container(
           width: 92, height: 92,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: AppColors.primaryGradient,
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accentBlue.withValues(alpha: 0.3),
-                blurRadius: 20, spreadRadius: 2,
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
-          padding: const EdgeInsets.all(3),
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.background(context),
-            ),
-            padding: const EdgeInsets.all(3),
-            child: Container(
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: AppColors.primaryGradient,
-              ),
-              child: const Icon(Icons.person, color: Colors.white, size: 40),
-            ),
+          child: const Center(
+            child: Text('🚀', style: TextStyle(fontSize: 38)),
           ),
         ),
         const SizedBox(height: 14),
@@ -476,13 +469,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 10),
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Row(
             children: [
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
               Text(title,
-                  style: GoogleFonts.spaceGrotesk(fontSize: 16,
+                  style: GoogleFonts.spaceGrotesk(
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary(context))),
+                      letterSpacing: -0.3,
+                      color: AppColors.textPrimary(context))),
               const SizedBox(width: 10),
               Expanded(
                 child: Container(

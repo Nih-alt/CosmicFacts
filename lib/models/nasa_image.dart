@@ -4,6 +4,7 @@ class NasaImage {
   final String description;
   final String imageUrl;       // medium ~500px — for grid tiles
   final String largeImageUrl;  // large ~1800px — for detail hero
+  final String hdUrl;          // HD URL — ~large for full screen viewing
   final String dateCreated;
   final String center;
   final List<String> keywords;
@@ -14,6 +15,7 @@ class NasaImage {
     required this.description,
     required this.imageUrl,
     this.largeImageUrl = '',
+    this.hdUrl = '',
     required this.dateCreated,
     required this.center,
     required this.keywords,
@@ -24,12 +26,18 @@ class NasaImage {
     String thumbUrl, {
     String largeUrl = '',
   }) {
+    final hd = largeUrl.isNotEmpty
+        ? largeUrl
+        : (thumbUrl.contains('~thumb')
+            ? thumbUrl.replaceAll('~thumb', '~large')
+            : thumbUrl);
     return NasaImage(
       nasaId: (json['nasa_id'] as String?) ?? '',
       title: (json['title'] as String?) ?? '',
       description: (json['description'] as String?) ?? '',
       imageUrl: thumbUrl,
       largeImageUrl: largeUrl,
+      hdUrl: hd,
       dateCreated: (json['date_created'] as String?) ?? '',
       center: (json['center'] as String?) ?? 'NASA',
       keywords: List<String>.from(json['keywords'] ?? []),
@@ -42,6 +50,7 @@ class NasaImage {
         'description': description,
         'image_url': imageUrl,
         'large_image_url': largeImageUrl,
+        'hd_url': hdUrl,
         'date_created': dateCreated,
         'center': center,
         'keywords': keywords,

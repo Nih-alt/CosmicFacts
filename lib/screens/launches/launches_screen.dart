@@ -143,6 +143,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
+          cacheExtent: 500,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
           itemCount:
               isUpcoming ? launches.length : launches.length,
@@ -315,6 +316,7 @@ class _HeroLaunchCardState extends State<_HeroLaunchCard> {
               CachedNetworkImage(
                 imageUrl: launch.imageUrl,
                 fit: BoxFit.cover,
+                memCacheWidth: 700,
                 placeholder: (_, _) =>
                     Container(color: AppColors.card(context)),
                 errorWidget: (_, _, _) =>

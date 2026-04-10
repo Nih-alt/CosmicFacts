@@ -477,6 +477,7 @@ class _StoryPage extends StatelessWidget {
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
+              memCacheWidth: 800,
               placeholder: (_, _) => const SizedBox.shrink(),
               errorWidget: (_, _, _) => const SizedBox.shrink(),
             ),

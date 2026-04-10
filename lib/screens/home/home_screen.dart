@@ -55,30 +55,44 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     debugPrint('HOME: Building');
     try {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Scaffold(
         backgroundColor: AppColors.background(context),
         body: IndexedStack(index: _currentTab, children: _tabs),
-        bottomNavigationBar: Theme(
-          data: ThemeData(splashColor: Colors.transparent),
-          child: CupertinoTabBar(
-            backgroundColor: AppColors.navBar(context),
-            border: Border(
-              top: BorderSide(
-                color: AppColors.divider(context),
-                width: 0.5,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+          ),
+          child: Theme(
+            data: ThemeData(splashColor: Colors.transparent),
+            child: CupertinoTabBar(
+              backgroundColor: AppColors.navBar(context),
+              border: Border(
+                top: BorderSide(
+                  color: AppColors.divider(context),
+                  width: 0.5,
+                ),
               ),
+              activeColor: AppColors.accentBlue,
+              inactiveColor: AppColors.textSecondary(context),
+              currentIndex: _currentTab,
+              onTap: (i) => setState(() => _currentTab = i),
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+                BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Explore'),
+                BottomNavigationBarItem(icon: Icon(Icons.rocket_launch_rounded), label: 'Launches'),
+                BottomNavigationBarItem(icon: Icon(Icons.school_rounded), label: 'Learn'),
+                BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
+              ],
             ),
-            activeColor: AppColors.accentBlue,
-            inactiveColor: AppColors.textSecondary(context),
-            currentIndex: _currentTab,
-            onTap: (i) => setState(() => _currentTab = i),
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: 'Explore'),
-              BottomNavigationBarItem(icon: Icon(Icons.rocket_launch_rounded), label: 'Launches'),
-              BottomNavigationBarItem(icon: Icon(Icons.school_rounded), label: 'Learn'),
-              BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: 'Profile'),
-            ],
           ),
         ),
       );
@@ -157,6 +171,7 @@ class _HomeTabState extends State<_HomeTab> {
               physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics(),
               ),
+              cacheExtent: 500,
               slivers: [
                 // Offline banner
                 if (ctrl.isOffline.value)
@@ -388,12 +403,29 @@ class _HomeTabState extends State<_HomeTab> {
                 // ── Trending Facts ──
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
                     child: Row(
                       children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text('Trending Facts 🔥',
-                              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                              style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                  color: AppColors.textPrimary(context))),
                         ),
                         Icon(CupertinoIcons.forward, size: 18, color: AppColors.textSecondary(context)),
                       ],
@@ -410,9 +442,30 @@ class _HomeTabState extends State<_HomeTab> {
                 // ── This Day in Space ──
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                    child: Text('This Day in Space 📅',
-                        style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text('This Day in Space 📅',
+                            style: GoogleFonts.spaceGrotesk(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                                color: AppColors.textPrimary(context))),
+                      ],
+                    ),
                   ).animate().fadeIn(duration: 500.ms, delay: 600.ms)
                       .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 600.ms),
                 ),
@@ -427,9 +480,30 @@ class _HomeTabState extends State<_HomeTab> {
                 // ── Quote of the Day ──
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                    child: Text('Quote of the Day \u2728',
-                        style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text('Quote of the Day \u2728',
+                            style: GoogleFonts.spaceGrotesk(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                                color: AppColors.textPrimary(context))),
+                      ],
+                    ),
                   ).animate().fadeIn(duration: 500.ms, delay: 800.ms)
                       .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 800.ms),
                 ),
@@ -480,6 +554,7 @@ class _HomeTabState extends State<_HomeTab> {
               CachedNetworkImage(
                 imageUrl: apod.imageUrl,
                 fit: BoxFit.cover,
+                memCacheWidth: 800,
                 placeholder: (_, _) => Container(color: AppColors.cardDark),
                 errorWidget: (_, _, _) => Container(
                   color: AppColors.cardDark,
@@ -582,11 +657,26 @@ class _QuoteOfDayCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
+          gradient: isDark
+              ? null
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.white, Color(0xFFF8F7FF)],
+                ),
           color: isDark
               ? AppColors.accentBlue.withValues(alpha: 0.08)
-              : AppColors.accentBlue.withValues(alpha: 0.06),
+              : null,
           border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.15)),
-          boxShadow: AppColors.cardShadow(context),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -715,6 +805,7 @@ class _LiveStoryCard extends StatelessWidget {
           CachedNetworkImage(
             imageUrl: article.imageUrl,
             fit: BoxFit.cover,
+            memCacheWidth: 600,
             placeholder: (_, _) => Container(color: AppColors.cardDark),
             errorWidget: (_, _, _) => Container(
               decoration: BoxDecoration(
@@ -1009,13 +1100,30 @@ class _TodayInSpaceCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
+        child: Builder(builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.glass(context),
+            gradient: isDark
+                ? null
+                : const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.white, Color(0xFFF8F7FF)],
+                  ),
+            color: isDark ? AppColors.glass(context) : null,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppColors.glassBorder(context)),
-            boxShadow: AppColors.cardShadow(context),
+            boxShadow: isDark
+                ? AppColors.cardShadow(context)
+                : [
+                    BoxShadow(
+                      color: const Color(0xFF6C63FF).withValues(alpha: 0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
           ),
           child: Row(
             children: [
@@ -1039,7 +1147,8 @@ class _TodayInSpaceCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
+        );
+        }),
       ),
     );
   }
