@@ -794,6 +794,20 @@ lib/
 - **SafeArea:** verified on every target screen (top-only on tabbed screens to avoid bottom-nav double-padding)
 - **`flutter analyze`:** 0 issues before, 0 issues after
 
+## 🔭 AR Sky Map — Scientific Grid Overlays
+
+- **Equatorial grid:** RA meridians every 2 hours + Dec parallels every 30° — drawn in cyan, with 0h/2h/4h… labels along the celestial equator
+- **Azimuthal grid:** altitude almucantars at 0°/30°/60° + azimuth meridians every 45° — drawn in green, with N/NE/E/SE/S/SW/W/NW cardinal labels
+- **Ecliptic line:** the Sun's annual path computed parametrically as `dec = 23.4° × sin(RA)` — drawn in gold/yellow with an "Ecliptic" label
+- All 3 grids toggle independently and have their own accent color
+- Bottom bar reorganized into 2 rows separated by a thin divider:
+  - **Row 1:** Lines / Labels / Planets (existing functionality preserved)
+  - **Row 2:** Ecliptic / Eq.Grid / Az.Grid (new)
+- Toggle pills are now horizontal pill-style with icon + label and per-toggle accent color
+- `_SkyOverlayPainter.shouldRepaint` now also tracks the new bools so toggling updates the canvas immediately even when sensor data hasn't changed
+
+---
+
 ## 🔭 Stargazing Visibility Forecast
 
 - Overall stargazing score 0–100, displayed as a hero card with color-coded grade (Excellent → Very Poor)

@@ -43,6 +43,9 @@ class _ArSkyMapScreenState extends State<ArSkyMapScreen>
   bool _showConstellations = true;
   bool _showLabels = true;
   bool _showPlanets = true;
+  bool _showEcliptic = false;
+  bool _showEquatorialGrid = false;
+  bool _showAzimuthalGrid = false;
 
   // Tapped object info
   Map<String, dynamic>? _tappedObject;
@@ -391,6 +394,9 @@ class _ArSkyMapScreenState extends State<ArSkyMapScreen>
           showConstellations: _showConstellations,
           showLabels: _showLabels,
           showPlanets: _showPlanets,
+          showEcliptic: _showEcliptic,
+          showEquatorialGrid: _showEquatorialGrid,
+          showAzimuthalGrid: _showAzimuthalGrid,
         ),
         size: Size.infinite,
       ),
@@ -475,27 +481,72 @@ class _ArSkyMapScreenState extends State<ArSkyMapScreen>
             ],
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _buildToggle(
-              icon: Icons.polyline,
-              label: 'Lines',
-              active: _showConstellations,
-              onTap: () =>
-                  setState(() => _showConstellations = !_showConstellations),
+            // Row 1 — existing toggles
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildToggleBtn(
+                  icon: Icons.polyline,
+                  label: 'Lines',
+                  active: _showConstellations,
+                  onTap: () => setState(
+                      () => _showConstellations = !_showConstellations),
+                ),
+                _buildToggleBtn(
+                  icon: Icons.label_outline,
+                  label: 'Labels',
+                  active: _showLabels,
+                  onTap: () =>
+                      setState(() => _showLabels = !_showLabels),
+                ),
+                _buildToggleBtn(
+                  icon: Icons.public,
+                  label: 'Planets',
+                  active: _showPlanets,
+                  onTap: () =>
+                      setState(() => _showPlanets = !_showPlanets),
+                ),
+              ],
             ),
-            _buildToggle(
-              icon: Icons.label_outline,
-              label: 'Labels',
-              active: _showLabels,
-              onTap: () => setState(() => _showLabels = !_showLabels),
+            const SizedBox(height: 8),
+            Container(
+              height: 0.5,
+              color: Colors.white.withValues(alpha: 0.15),
+              margin: const EdgeInsets.symmetric(horizontal: 8),
             ),
-            _buildToggle(
-              icon: Icons.public,
-              label: 'Planets',
-              active: _showPlanets,
-              onTap: () => setState(() => _showPlanets = !_showPlanets),
+            const SizedBox(height: 8),
+            // Row 2 — new scientific grid overlays
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildToggleBtn(
+                  icon: Icons.brightness_5_outlined,
+                  label: 'Ecliptic',
+                  active: _showEcliptic,
+                  onTap: () =>
+                      setState(() => _showEcliptic = !_showEcliptic),
+                  activeColor: const Color(0xFFFFB800),
+                ),
+                _buildToggleBtn(
+                  icon: Icons.grid_on,
+                  label: 'Eq.Grid',
+                  active: _showEquatorialGrid,
+                  onTap: () => setState(
+                      () => _showEquatorialGrid = !_showEquatorialGrid),
+                  activeColor: const Color(0xFF00E5FF),
+                ),
+                _buildToggleBtn(
+                  icon: Icons.explore_outlined,
+                  label: 'Az.Grid',
+                  active: _showAzimuthalGrid,
+                  onTap: () => setState(
+                      () => _showAzimuthalGrid = !_showAzimuthalGrid),
+                  activeColor: const Color(0xFF69F0AE),
+                ),
+              ],
             ),
           ],
         ),
@@ -503,23 +554,48 @@ class _ArSkyMapScreenState extends State<ArSkyMapScreen>
     );
   }
 
-  Widget _buildToggle({
+  Widget _buildToggleBtn({
     required IconData icon,
     required String label,
     required bool active,
     required VoidCallback onTap,
+    Color activeColor = const Color(0xFF6C63FF),
   }) {
-    final color = active ? const Color(0xFF6C63FF) : Colors.white38;
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(color: color, fontSize: 11)),
-        ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: active
+              ? activeColor.withValues(alpha: 0.25)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: active
+                ? activeColor
+                : Colors.white.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: active ? activeColor : Colors.white54,
+              size: 14,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                color: active ? activeColor : Colors.white54,
+                fontSize: 11,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -625,6 +701,9 @@ class _SkyOverlayPainter extends CustomPainter {
   final bool showConstellations;
   final bool showLabels;
   final bool showPlanets;
+  final bool showEcliptic;
+  final bool showEquatorialGrid;
+  final bool showAzimuthalGrid;
 
   _SkyOverlayPainter({
     required this.stars,
@@ -637,11 +716,29 @@ class _SkyOverlayPainter extends CustomPainter {
     required this.showConstellations,
     required this.showLabels,
     required this.showPlanets,
+    required this.showEcliptic,
+    required this.showEquatorialGrid,
+    required this.showAzimuthalGrid,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final now = time;
+
+    // ═══ EQUATORIAL GRID ═══
+    if (showEquatorialGrid) {
+      _drawEquatorialGrid(canvas, size);
+    }
+
+    // ═══ AZIMUTHAL GRID ═══
+    if (showAzimuthalGrid) {
+      _drawAzimuthalGrid(canvas, size);
+    }
+
+    // ═══ ECLIPTIC LINE ═══
+    if (showEcliptic) {
+      _drawEclipticLine(canvas, size);
+    }
 
     // Constellation lines (behind stars)
     if (showConstellations) {
@@ -782,6 +879,235 @@ class _SkyOverlayPainter extends CustomPainter {
     _drawHorizonLine(canvas, size);
   }
 
+  // ═══════════════════════════════════════════════════════
+  // SCIENTIFIC GRID OVERLAYS
+  // ═══════════════════════════════════════════════════════
+
+  /// Equatorial grid — RA / Dec lines (cyan).
+  void _drawEquatorialGrid(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF00E5FF).withValues(alpha: 0.18)
+      ..strokeWidth = 0.7
+      ..style = PaintingStyle.stroke;
+
+    // Declination parallels every 30° (-60° to +60°).
+    for (double dec = -60; dec <= 60; dec += 30) {
+      final points = <Offset>[];
+      for (double ra = 0; ra <= 24; ra += 0.5) {
+        final screenPos = AstronomyMath.toScreenPosition(
+          starAlt: dec,
+          starAz: ra * 15,
+          phoneAlt: pitch,
+          phoneAz: azimuth,
+          screenWidth: size.width,
+          screenHeight: size.height,
+        );
+        if (screenPos != null) points.add(screenPos);
+      }
+      if (points.length > 1) {
+        final path = Path()..moveTo(points.first.dx, points.first.dy);
+        for (final p in points.skip(1)) {
+          path.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(path, paint);
+      }
+    }
+
+    // Right Ascension meridians every 2 hours.
+    for (double ra = 0; ra < 24; ra += 2) {
+      final points = <Offset>[];
+      for (double dec = -80; dec <= 80; dec += 5) {
+        final screenPos = AstronomyMath.toScreenPosition(
+          starAlt: dec,
+          starAz: ra * 15,
+          phoneAlt: pitch,
+          phoneAz: azimuth,
+          screenWidth: size.width,
+          screenHeight: size.height,
+        );
+        if (screenPos != null) points.add(screenPos);
+      }
+      if (points.length > 1) {
+        final path = Path()..moveTo(points.first.dx, points.first.dy);
+        for (final p in points.skip(1)) {
+          path.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(path, paint);
+      }
+    }
+
+    // RA labels (0h, 2h, 4h, …) along the celestial equator.
+    for (double ra = 0; ra < 24; ra += 2) {
+      final screenPos = AstronomyMath.toScreenPosition(
+        starAlt: 0,
+        starAz: ra * 15,
+        phoneAlt: pitch,
+        phoneAz: azimuth,
+        screenWidth: size.width,
+        screenHeight: size.height,
+      );
+      if (screenPos != null) {
+        _drawGridLabel(
+          canvas,
+          screenPos,
+          '${ra.toInt()}h',
+          const Color(0xFF00E5FF).withValues(alpha: 0.6),
+        );
+      }
+    }
+  }
+
+  /// Azimuthal grid — Alt / Az lines (green).
+  void _drawAzimuthalGrid(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF69F0AE).withValues(alpha: 0.18)
+      ..strokeWidth = 0.7
+      ..style = PaintingStyle.stroke;
+
+    // Altitude almucantars every 30° (horizon, 30°, 60°).
+    for (double alt = 0; alt <= 60; alt += 30) {
+      final points = <Offset>[];
+      for (double az = 0; az < 360; az += 3) {
+        final screenPos = AstronomyMath.toScreenPosition(
+          starAlt: alt,
+          starAz: az,
+          phoneAlt: pitch,
+          phoneAz: azimuth,
+          screenWidth: size.width,
+          screenHeight: size.height,
+        );
+        if (screenPos != null) points.add(screenPos);
+      }
+      if (points.length > 1) {
+        final path = Path()..moveTo(points.first.dx, points.first.dy);
+        for (final p in points.skip(1)) {
+          path.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(path, paint);
+      }
+    }
+
+    // Azimuth meridians every 45° (8 cardinal/intercardinal).
+    for (double az = 0; az < 360; az += 45) {
+      final points = <Offset>[];
+      for (double alt = 0; alt <= 75; alt += 5) {
+        final screenPos = AstronomyMath.toScreenPosition(
+          starAlt: alt,
+          starAz: az,
+          phoneAlt: pitch,
+          phoneAz: azimuth,
+          screenWidth: size.width,
+          screenHeight: size.height,
+        );
+        if (screenPos != null) points.add(screenPos);
+      }
+      if (points.length > 1) {
+        final path = Path()..moveTo(points.first.dx, points.first.dy);
+        for (final p in points.skip(1)) {
+          path.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(path, paint);
+      }
+    }
+
+    // Cardinal direction labels (N/NE/E/SE/S/SW/W/NW).
+    final azLabels = <double, String>{
+      0.0: 'N',
+      45.0: 'NE',
+      90.0: 'E',
+      135.0: 'SE',
+      180.0: 'S',
+      225.0: 'SW',
+      270.0: 'W',
+      315.0: 'NW',
+    };
+    azLabels.forEach((az, label) {
+      final screenPos = AstronomyMath.toScreenPosition(
+        starAlt: 5,
+        starAz: az,
+        phoneAlt: pitch,
+        phoneAz: azimuth,
+        screenWidth: size.width,
+        screenHeight: size.height,
+      );
+      if (screenPos != null) {
+        _drawGridLabel(
+          canvas,
+          screenPos,
+          label,
+          const Color(0xFF69F0AE).withValues(alpha: 0.7),
+        );
+      }
+    });
+  }
+
+  /// Ecliptic line — the Sun's annual path, tilted 23.4° to the equator.
+  void _drawEclipticLine(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFFFB800).withValues(alpha: 0.55)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
+    const obliquity = 23.4;
+    final points = <Offset>[];
+
+    for (double ra = 0; ra <= 24; ra += 0.25) {
+      // Parametric ecliptic: dec = obliquity * sin(RA in radians).
+      final dec = obliquity * sin(ra * 15 * pi / 180);
+      final screenPos = AstronomyMath.toScreenPosition(
+        starAlt: dec,
+        starAz: ra * 15,
+        phoneAlt: pitch,
+        phoneAz: azimuth,
+        screenWidth: size.width,
+        screenHeight: size.height,
+      );
+      if (screenPos != null) points.add(screenPos);
+    }
+
+    if (points.length > 1) {
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
+      for (final p in points.skip(1)) {
+        path.lineTo(p.dx, p.dy);
+      }
+      canvas.drawPath(path, paint);
+    }
+
+    // "Ecliptic" label at the midpoint of whatever segment is on-screen.
+    if (points.isNotEmpty) {
+      final mid = points[points.length ~/ 2];
+      _drawGridLabel(
+        canvas,
+        mid,
+        'Ecliptic',
+        const Color(0xFFFFB800).withValues(alpha: 0.8),
+        fontSize: 10,
+      );
+    }
+  }
+
+  /// Small label helper for grid axes/cardinals.
+  void _drawGridLabel(
+    Canvas canvas,
+    Offset pos,
+    String text,
+    Color color, {
+    double fontSize = 9.0,
+  }) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: fontSize,
+          shadows: const [Shadow(color: Colors.black87, blurRadius: 4)],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, pos + Offset(3, -tp.height / 2));
+  }
+
   Offset? _getStarScreenPos(StarData star, Size size, DateTime now) {
     final pos = AstronomyMath.raDecToAltAz(
       ra: star.ra,
@@ -903,7 +1229,11 @@ class _SkyOverlayPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SkyOverlayPainter old) =>
-      old.azimuth != azimuth || old.pitch != pitch;
+      old.azimuth != azimuth ||
+      old.pitch != pitch ||
+      old.showEcliptic != showEcliptic ||
+      old.showEquatorialGrid != showEquatorialGrid ||
+      old.showAzimuthalGrid != showAzimuthalGrid;
 }
 
 // ═══════════════════════════════════════════════════════
