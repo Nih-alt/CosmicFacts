@@ -794,6 +794,28 @@ lib/
 - **SafeArea:** verified on every target screen (top-only on tabbed screens to avoid bottom-nav double-padding)
 - **`flutter analyze`:** 0 issues before, 0 issues after
 
+## 🔭 Stargazing Visibility Forecast
+
+- Overall stargazing score 0–100, displayed as a hero card with color-coded grade (Excellent → Very Poor)
+- 3 weighted components:
+  - **Weather (40 pts)** — average cloud cover for 19:00–05:00 local, with humidity penalty
+  - **Moon (30 pts)** — illumination % from a date-based lunar phase calculation
+  - **Light pollution (30 pts)** — Bortle scale (1–9) from nearest known city
+- Cloud cover from **Open-Meteo API** — fully open data, no API key, no quota
+- Hourly tonight forecast strip (7 PM → 5 AM) with cloud-tier emoji + percentage
+- Best observing window detection — finds the clearest hour automatically
+- "What to Observe Tonight" guide adapts to score (planets/clusters/Milky Way at high scores; bright planets/Moon/brightest stars at low scores)
+- Light pollution panel with Bortle label, description, and "drive 30–40 km out" tip when Bortle ≥ 6
+- Light + dark theme support throughout
+- Reuses existing `geolocator` package — no new dependencies
+- **Files created:**
+  - `lib/screens/tools/stargazing_forecast_screen.dart`
+  - `lib/services/weather_service.dart`
+  - `lib/data/light_pollution_data.dart` (40+ cities — full India coverage + major world cities + dark-sky destinations)
+- **Files modified:** `lib/screens/learn/learn_screen.dart` (added entry to `_toolData` + `screens` list in Tools & Discovery row)
+
+---
+
 ## ✨ UI Surgical Polish — Round 2
 
 - **Section headers — accent gradient bars** (4×20px purple→cyan) added to:

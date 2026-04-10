@@ -23,6 +23,7 @@ import '../explore/exoplanet_explorer_screen.dart';
 import '../research/space_research_screen.dart';
 import '../weather/space_weather_screen.dart';
 import '../quick_actions/space_calendar_screen.dart';
+import '../tools/stargazing_forecast_screen.dart';
 
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
@@ -367,6 +368,7 @@ class _LearnScreenState extends State<LearnScreen> {
     _ToolInfo(Icons.blur_circular_rounded, 'Exoplanets', '5,000+ worlds', [Color(0xFF00E676), Color(0xFF6C63FF)]),
     _ToolInfo(Icons.article_outlined, 'Research', 'Latest papers', [Color(0xFFFFB800), Color(0xFFFF8F00)]),
     _ToolInfo(Icons.wb_sunny_outlined, 'Weather', 'Live solar data', [Color(0xFFFFAB40), Color(0xFFFF5252)]),
+    _ToolInfo(Icons.nights_stay_outlined, 'Stargazing', "Tonight's sky", [Color(0xFF00B4D8), Color(0xFF6C63FF)]),
   ];
 
   Widget _buildToolsRow() {
@@ -383,6 +385,7 @@ class _LearnScreenState extends State<LearnScreen> {
       const ExoplanetExplorerScreen(),
       const SpaceResearchScreen(),
       const SpaceWeatherScreen(),
+      const StargazingForecastScreen(),
     ];
     return SizedBox(
       height: 108,
