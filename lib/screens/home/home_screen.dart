@@ -135,6 +135,8 @@ class _HomeTabState extends State<_HomeTab> {
   final _storyController = PageController(viewportFraction: 0.92);
   int _currentStory = 0;
   String _selectedStoryCategory = 'All';
+  bool _apodError = false;
+  int _apodLoadToken = 0;
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
@@ -144,6 +146,46 @@ class _HomeTabState extends State<_HomeTab> {
     ('India Space', '\u{1F1EE}\u{1F1F3}'),
     ('SpaceX', '\u{1F680}'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _startApodFallbackTimer(Get.find<HomeController>());
+    });
+  }
+
+  void _startApodFallbackTimer(HomeController ctrl) {
+    final token = ++_apodLoadToken;
+    if (mounted) {
+      setState(() => _apodError = false);
+    } else {
+      _apodError = false;
+    }
+
+    Future.delayed(const Duration(seconds: 6), () {
+      if (!mounted || token != _apodLoadToken) return;
+      if (ctrl.todayApod.value == null && ctrl.isLoadingApod.value) {
+        setState(() => _apodError = true);
+      }
+    });
+  }
+
+  Future<void> _loadApod() async {
+    final ctrl = Get.find<HomeController>();
+    _startApodFallbackTimer(ctrl);
+    await ctrl.loadApod();
+    if (!mounted || ctrl.todayApod.value != null) return;
+    setState(() => _apodError = ctrl.hasApodError.value);
+  }
+
+  Future<void> _refreshHome(HomeController ctrl) async {
+    _startApodFallbackTimer(ctrl);
+    await ctrl.refreshData();
+    if (!mounted || ctrl.todayApod.value != null) return;
+    setState(() => _apodError = ctrl.hasApodError.value);
+  }
 
   @override
   void dispose() {
@@ -164,7 +206,7 @@ class _HomeTabState extends State<_HomeTab> {
           }
 
           return RefreshIndicator(
-            onRefresh: ctrl.refreshData,
+            onRefresh: () => _refreshHome(ctrl),
             color: AppColors.accentBlue,
             backgroundColor: AppColors.surface(context),
             child: CustomScrollView(
@@ -526,12 +568,21 @@ class _HomeTabState extends State<_HomeTab> {
 
   Widget _buildApodCard(HomeController ctrl) {
     final apod = ctrl.todayApod.value;
-    if (ctrl.isLoading.value || apod == null) {
-      return _shimmerRect(160, context: context);
+    final showFallback =
+        apod == null && (_apodError || ctrl.hasApodError.value || !ctrl.isLoadingApod.value);
+
+    if (apod == null && ctrl.isLoadingApod.value && !showFallback) {
+      return _shimmerRect(200, context: context);
     }
+    if (showFallback) {
+      return _buildApodFallbackCard();
+    }
+
+    final apodData = apod!;
+
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        CupertinoPageRoute(builder: (_) => ApodArchiveScreen(initialDate: apod.date)),
+        CupertinoPageRoute(builder: (_) => ApodArchiveScreen(initialDate: apodData.date)),
       ),
       child: Container(
         height: 160,
@@ -550,9 +601,9 @@ class _HomeTabState extends State<_HomeTab> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (apod.mediaType == 'image')
+            if (apodData.mediaType == 'image')
               CachedNetworkImage(
-                imageUrl: apod.imageUrl,
+                imageUrl: apodData.imageUrl,
                 fit: BoxFit.cover,
                 memCacheWidth: 800,
                 placeholder: (_, _) => Container(color: AppColors.cardDark),
@@ -607,7 +658,7 @@ class _HomeTabState extends State<_HomeTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(apod.title,
+                            Text(apodData.title,
                                 style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
                                 maxLines: 1, overflow: TextOverflow.ellipsis),
                             const SizedBox(height: 4),
@@ -629,6 +680,65 @@ class _HomeTabState extends State<_HomeTab> {
                     ],
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApodFallbackCard() {
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A0A3A), Color(0xFF0A0A1A)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(CupertinoIcons.photo, color: Colors.white70, size: 32),
+            const SizedBox(height: 8),
+            const Text(
+              'Astronomy Picture',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tap to load today\'s image',
+              style: TextStyle(
+                color: Colors.white38,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _loadApod,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.5),
+                  ),
+                ),
+                child: const Text(
+                  'Retry',
+                  style: TextStyle(
+                    color: Color(0xFF6C63FF),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
@@ -1039,6 +1149,7 @@ class _TrendingFactsRow extends StatelessWidget {
   const _TrendingFactsRow();
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final facts = _getDailyFacts(_trendingFacts);
     return SizedBox(
       height: 120,
@@ -1058,10 +1169,23 @@ class _TrendingFactsRow extends StatelessWidget {
                 width: 160,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.glass(context),
+                  color: isDark ? const Color(0xFF141438) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.glassBorder(context)),
-                  boxShadow: AppColors.cardShadow(context),
+                  boxShadow: isDark
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: const Color(0xFF6C63FF).withValues(alpha: 0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                  border: isDark
+                      ? Border.all(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          width: 1,
+                        )
+                      : null,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1070,7 +1194,11 @@ class _TrendingFactsRow extends StatelessWidget {
                     const SizedBox(height: 8),
                     Expanded(
                       child: Text(fact.text,
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textPrimary(context), height: 1.35),
+                          style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                              height: 1.35),
                           maxLines: 3, overflow: TextOverflow.ellipsis),
                     ),
                   ],

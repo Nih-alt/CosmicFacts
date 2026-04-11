@@ -17,6 +17,17 @@ class ApiService {
   static const String _nasaBaseUrl = 'https://api.nasa.gov';
   static const String _nasaImagesUrl = 'https://images-api.nasa.gov';
 
+  static DateTime _getNasaDate() {
+    // NASA publishes APOD based on US Eastern time (UTC-5).
+    final utcNow = DateTime.now().toUtc();
+    final nasaTime = utcNow.subtract(const Duration(hours: 5));
+    return nasaTime;
+  }
+
+  static String _formatApodDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   /// HTTP GET with automatic retry (2 attempts, 8s timeout).
   static Future<http.Response?> _getWithRetry(String url) async {
     for (int attempt = 0; attempt < 2; attempt++) {
@@ -88,17 +99,47 @@ class ApiService {
 
   /// Fetch NASA Astronomy Picture of the Day.
   static Future<ApodModel?> getApod() async {
-    final response = await _getWithRetry(
-      '$_nasaBaseUrl/planetary/apod?api_key=${ApiKeys.nasaApiKey}',
-    );
-    if (response == null) return null;
+    final nasaDate = _formatApodDate(_getNasaDate());
 
     try {
+      final response = await http
+          .get(Uri.parse(
+              '$_nasaBaseUrl/planetary/apod?api_key=${ApiKeys.nasaApiKey}&date=$nasaDate'))
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return null;
+
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       return ApodModel.fromJson(data);
     } catch (_) {
       return null;
     }
+  }
+
+  static Future<ApodModel?> getApodByDate(String date) async {
+    try {
+      final response = await http
+          .get(Uri.parse(
+              '$_nasaBaseUrl/planetary/apod?api_key=${ApiKeys.nasaApiKey}&date=$date'))
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return null;
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApodModel.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<ApodModel?> getApodWithFallback() async {
+    final today = _getNasaDate();
+    final todayStr = _formatApodDate(today);
+
+    final todayResult = await getApodByDate(todayStr);
+    if (todayResult != null) return todayResult;
+
+    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterdayStr = _formatApodDate(yesterday);
+    return getApodByDate(yesterdayStr);
   }
 
   /// Search NASA Image & Video Library.

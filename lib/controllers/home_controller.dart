@@ -11,7 +11,9 @@ class HomeController extends GetxController {
   final stories = <SpaceArticle>[].obs;
   final todayApod = Rx<ApodModel?>(null);
   final isLoading = true.obs;
+  final isLoadingApod = true.obs;
   final isLoadingMore = false.obs;
+  final hasApodError = false.obs;
   final hasError = false.obs;
   final isOffline = false.obs;
 
@@ -28,6 +30,8 @@ class HomeController extends GetxController {
 
   Future<void> loadInitialData() async {
     isLoading.value = true;
+    isLoadingApod.value = true;
+    hasApodError.value = false;
     hasError.value = false;
     isOffline.value = false;
 
@@ -45,6 +49,7 @@ class HomeController extends GetxController {
       }
       if (cachedApod != null) {
         todayApod.value = ApodModel.fromJson(cachedApod);
+        isLoadingApod.value = false;
       }
     } catch (e) {
       debugPrint('Cache load error: $e');
@@ -55,14 +60,11 @@ class HomeController extends GetxController {
   }
 
   Future<void> _refreshFromApi() async {
-    try {
-      final results = await Future.wait<Object?>([
-        ApiService.getSpaceNews(limit: _pageSize, offset: 0),
-        ApiService.getApod(),
-      ]);
+    final apodFuture = loadApod(forceLoading: todayApod.value == null);
 
-      final newArticles = results[0] as List<SpaceArticle>?;
-      final newApod = results[1] as ApodModel?;
+    try {
+      final newArticles =
+          await ApiService.getSpaceNews(limit: _pageSize, offset: 0);
 
       if (newArticles != null && newArticles.isNotEmpty) {
         stories.assignAll(newArticles);
@@ -79,15 +81,6 @@ class HomeController extends GetxController {
       } else if (newArticles == null && stories.isNotEmpty) {
         isOffline.value = true;
       }
-
-      if (newApod != null) {
-        todayApod.value = newApod;
-        try {
-          CacheService.cacheApod(newApod.toJson());
-        } catch (e) {
-          debugPrint('APOD cache write error: $e');
-        }
-      }
     } catch (_) {
       if (stories.isEmpty) {
         hasError.value = true;
@@ -97,6 +90,35 @@ class HomeController extends GetxController {
     }
 
     isLoading.value = false;
+    await apodFuture;
+  }
+
+  Future<void> loadApod({bool forceLoading = true}) async {
+    if (forceLoading) {
+      isLoadingApod.value = true;
+    }
+    hasApodError.value = false;
+
+    try {
+      final newApod = await ApiService.getApodWithFallback();
+      if (newApod != null) {
+        todayApod.value = newApod;
+        try {
+          CacheService.cacheApod(newApod.toJson());
+        } catch (e) {
+          debugPrint('APOD cache write error: $e');
+        }
+      } else if (todayApod.value == null) {
+        hasApodError.value = true;
+      }
+    } catch (e) {
+      debugPrint('APOD load error: $e');
+      if (todayApod.value == null) {
+        hasApodError.value = true;
+      }
+    }
+
+    isLoadingApod.value = false;
   }
 
   Future<void> loadMoreStories() async {
