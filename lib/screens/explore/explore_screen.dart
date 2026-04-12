@@ -15,6 +15,7 @@ import 'ar_sky_map_screen.dart';
 import 'image_detail_screen.dart';
 import 'nasa_gallery_screen.dart';
 import 'solar_system_screen.dart';
+import 'missions_3d_screen.dart';
 import 'spacecraft_tracker_screen.dart';
 import 'wallpapers_screen.dart';
 
@@ -388,12 +389,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+          Flexible(
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
           if (trailing != null) ...[
@@ -412,31 +416,35 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(children: [
-            Container(
-              width: 4,
-              height: 18,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+          Expanded(
+            child: Row(children: [
+              Container(
+                width: 4,
+                height: 18,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                borderRadius: BorderRadius.circular(2),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '✨ James Webb Telescope',
-              style: TextStyle(
-                color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  '✨ James Webb Telescope',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
-            ),
-          ]),
+            ]),
+          ),
           TextButton(
             onPressed: () {
               _ctrl.filterByCategory('JWST');
@@ -664,6 +672,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
           ),
         ),
+
+        // 4. Historic Missions 3D
+        _buildExperienceCard(
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(
+                builder: (_) => const Missions3DScreen()),
+          ),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A0A0A), Color(0xFF0A1A2A)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderColor: const Color(0xFFFFB800).withValues(alpha: 0.4),
+          iconGradient: const LinearGradient(
+            colors: [Color(0xFFFFB800), Color(0xFFFF6D00)],
+          ),
+          icon: Icons.rocket_launch_outlined,
+          title: 'Historic Missions 3D',
+          subtitle: 'Voyager \u2022 Rovers \u2022 Cassini \u2022 Apollo',
+          badge: _buildPillBadge(
+            text: '3D',
+            color: const Color(0xFFFFB800),
+            bgAlpha: 0.15,
+          ),
+        ),
       ],
     );
   }
@@ -873,12 +907,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              '🖼️ Space Image Gallery',
-              style: TextStyle(
-                color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+            Flexible(
+              child: Text(
+                '🖼️ Space Image Gallery',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
             const Spacer(),

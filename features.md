@@ -861,8 +861,36 @@ These would require visual judgment / design approval and are deferred to a sepa
 
 ---
 
+## 🛸 Historic Missions 3D Explorer
+- 7 iconic spacecraft: Voyager 1&2, Perseverance,
+  Curiosity, Cassini, Apollo LM, New Horizons
+- All models built with Three.js geometry —
+  no copyrighted assets
+- Drag to rotate model, pinch to zoom
+- Auto-rotation toggle
+- Mission stats strip: launched/distance/status
+- Info card: description, 4 stats, key achievement
+- Accent color per mission
+- Light/dark theme via setTheme()
+- Landscape support
+- Files created: assets/missions_3d.html,
+  lib/screens/explore/missions_3d_screen.dart
+
 *Last updated: April 2026*
 *Developer: Nihal*
 *GitHub: https://github.com/Nih-alt/CosmicFacts*
 
 This file should be kept updated as new features are added. After every major change, update the relevant sections and changelog.
+
+## Sky Observation Log
+- Personal diary for logging stargazing sessions
+- Fields: object name, type, date/time, rating (1-5), equipment, sky conditions, location, notes
+- 8 object types: Planet, Star, Nebula, Galaxy, Constellation, Meteor, Comet, Other
+- Filter by object type + sort by date/rating
+- Full detail bottom sheet per observation
+- Swipe to delete (with confirm dialog)
+- Empty state with CTA to add first observation
+- Hive offline storage â€” no internet needed
+- Both light and dark theme throughout
+- Accessible from Profile screen
+- Files created: observation_log.dart, observation_log_screen.dart, add_observation_screen.dart

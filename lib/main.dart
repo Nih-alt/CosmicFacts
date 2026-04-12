@@ -14,6 +14,7 @@ import 'controllers/explore_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/launches_controller.dart';
 import 'controllers/theme_controller.dart';
+import 'models/observation_log.dart';
 import 'screens/splash_screen.dart';
 
 import 'services/firebase_notification_service.dart';
@@ -39,6 +40,9 @@ void main() async {
   // Initialize Hive
   try {
     await Hive.initFlutter();
+    if (!Hive.isAdapterRegistered(10)) {
+      Hive.registerAdapter(ObservationLogAdapter());
+    }
   } catch (e) {
     debugPrint('FATAL: Hive init failed: $e');
   }
@@ -52,6 +56,7 @@ void main() async {
   await _openBox('quiz_stats');
   await _openBox('bookmarks');
   await _openBox('achievements');
+  await _openTypedBox<ObservationLog>('observations');
 
   debugPrint('MAIN: All boxes opened');
 
@@ -155,6 +160,23 @@ Future<void> _openBox(String name) async {
       debugPrint('Recovered box $name after corruption');
     } catch (e2) {
       debugPrint('FATAL: Cannot recover box $name: $e2');
+    }
+  }
+}
+
+Future<void> _openTypedBox<T>(String name) async {
+  try {
+    if (!Hive.isBoxOpen(name)) {
+      await Hive.openBox<T>(name);
+    }
+  } catch (e) {
+    debugPrint('Failed to open typed box $name: $e');
+    try {
+      await Hive.deleteBoxFromDisk(name);
+      await Hive.openBox<T>(name);
+      debugPrint('Recovered typed box $name after corruption');
+    } catch (e2) {
+      debugPrint('FATAL: Cannot recover typed box $name: $e2');
     }
   }
 }

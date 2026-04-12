@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,
+  initial-scale=1.0, maximum-scale=1.0,
+  user-scalable=no">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000008; overflow:hidden;
+       width:100vw; height:100vh; }
+canvas { display:block; position:fixed;
+         top:0; left:0; z-index:0; }
+
+:root {
+  --accent: #FFB800;
+  --card: rgba(8,8,28,0.88);
+  --border: rgba(255,184,0,0.3);
+  --tp: rgba(255,255,255,0.92);
+  --ts: rgba(255,255,255,0.42);
+}
+:root.light {
+  --card: rgba(255,255,255,0.94);
+  --tp: rgba(15,15,40,0.92);
+  --ts: rgba(15,15,40,0.42);
+}
+
+/* ── LAYOUT: 3 zones ─────────────────────────
+   TOP   ~165px  : back + title + selector + stats
+   MID   flex    : 3D canvas (fills remainder)
+   BOT   ~220px  : info card
+   All stacked — NO overlap
+*/
+
+#top-zone {
+  position:fixed; top:0; left:0; right:0;
+  z-index:20;
+  overflow: hidden;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,12,0.98) 0%,
+    rgba(0,0,12,0.95) 80%,
+    transparent 100%);
+  padding-bottom:8px;
+}
+
+/* Back + Title */
+#header {
+  display:flex; align-items:center;
+  padding:10px 14px 6px;
+  gap:10px;
+}
+#back-btn {
+  width:36px; height:36px; flex-shrink:0;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:50%;
+  display:flex; align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+#back-btn svg { stroke:rgba(255,255,255,0.85); }
+#title {
+  flex:1; text-align:center;
+  color:rgba(255,255,255,0.92);
+  font-size:15px; font-weight:700;
+  font-family:-apple-system,sans-serif;
+}
+#auto-btn {
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.7);
+  border-radius:10px; padding:5px 10px;
+  font-size:10px; font-weight:600;
+  cursor:pointer;
+  font-family:-apple-system,sans-serif;
+}
+#auto-btn.on {
+  background:rgba(108,99,255,0.2);
+  border-color:rgba(108,99,255,0.6);
+  color:white;
+}
+
+/* Mission tabs */
+#mission-tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 4px;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+#mission-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-width: fit-content;
+  transition: all 0.2s;
+}
+.mtab.active {
+  background:rgba(255,255,255,0.12);
+  border-color:var(--accent);
+}
+.mtab-icon {
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center;
+  justify-content:center;
+  font-size:12px; flex-shrink:0;
+}
+.mtab-name {
+  color:rgba(255,255,255,0.55);
+  font-size:11px; font-weight:600;
+  font-family:-apple-system,sans-serif;
+  white-space:nowrap;
+}
+.mtab.active .mtab-name {
+  color:white;
+}
+
+/* Stats strip */
+#stats-strip {
+  display:flex; justify-content:space-around;
+  margin:8px 12px 0;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px; padding:8px 6px;
+}
+.st-item {
+  display:flex; flex-direction:column;
+  align-items:center; flex:1;
+}
+.st-lbl {
+  font-size:7px; color:rgba(255,255,255,0.35);
+  letter-spacing:0.8px; margin-bottom:3px;
+  font-family:-apple-system,sans-serif;
+  text-transform:uppercase;
+}
+.st-val {
+  font-size:12px; font-weight:700;
+  color:rgba(255,255,255,0.88);
+  font-family:-apple-system,sans-serif;
+  text-align:center;
+}
+.st-val.hi { color:var(--accent); }
+
+/* Bottom info panel */
+#bot-zone {
+  position:fixed; bottom:0; left:0; right:0;
+  z-index:20;
+  background:linear-gradient(
+    to top,
+    rgba(0,0,12,1) 0%,
+    rgba(0,0,12,0.97) 70%,
+    transparent 100%);
+  padding:16px 14px 20px;
+  max-height:42vh;
+  overflow-y:auto;
+}
+
+/* Mission name + badge row */
+#mn-row {
+  display:flex; align-items:flex-start;
+  justify-content:space-between;
+  margin-bottom:4px;
+}
+#mn-name {
+  font-size:20px; font-weight:800;
+  color:white; font-family:-apple-system,sans-serif;
+  letter-spacing:-0.3px; flex:1;
+}
+#mn-badge {
+  font-size:9px; font-weight:700;
+  letter-spacing:0.8px; padding:3px 8px;
+  border-radius:10px;
+  font-family:-apple-system,sans-serif;
+  margin-left:8px; margin-top:3px;
+  flex-shrink:0;
+}
+#mn-type {
+  font-size:9px; color:rgba(255,255,255,0.38);
+  letter-spacing:1px;
+  font-family:-apple-system,sans-serif;
+  margin-bottom:8px; text-transform:uppercase;
+}
+#mn-desc {
+  font-size:12px; color:rgba(255,255,255,0.6);
+  font-family:-apple-system,sans-serif;
+  line-height:1.6; margin-bottom:10px;
+}
+#mn-stats {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:6px; margin-bottom:8px;
+}
+.ms-box {
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:9px; padding:7px 9px;
+}
+.ms-lbl {
+  font-size:8px; color:rgba(255,255,255,0.32);
+  letter-spacing:0.7px; margin-bottom:2px;
+  font-family:-apple-system,sans-serif;
+  text-transform:uppercase;
+}
+.ms-val {
+  font-size:12px; font-weight:600;
+  color:rgba(255,255,255,0.88);
+  font-family:-apple-system,sans-serif;
+}
+#kf-wrap {
+  border-radius:11px; padding:9px 11px;
+  border-left:3px solid var(--accent);
+  background:rgba(255,255,255,0.04);
+}
+#kf-lbl {
+  font-size:8px; font-weight:700;
+  color:var(--accent); letter-spacing:0.8px;
+  margin-bottom:3px; text-transform:uppercase;
+  font-family:-apple-system,sans-serif;
+}
+#kf-text {
+  font-size:11px; color:rgba(255,255,255,0.7);
+  font-family:-apple-system,sans-serif;
+  line-height:1.55;
+}
+
+/* Reset btn */
+#reset-btn {
+  position:fixed; right:12px;
+  background:rgba(8,8,28,0.85);
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.65);
+  border-radius:10px; padding:6px 11px;
+  font-size:10px; font-weight:600;
+  cursor:pointer;
+  font-family:-apple-system,sans-serif;
+  z-index:20;
+}
+
+/* Loading */
+#loading {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  color:rgba(255,255,255,0.5);
+  font-family:-apple-system,sans-serif;
+  font-size:13px; text-align:center; z-index:50;
+}
+.spin {
+  width:32px; height:32px;
+  border:2px solid rgba(108,99,255,0.2);
+  border-top-color:#6C63FF; border-radius:50%;
+  animation:sp 0.8s linear infinite;
+  margin:0 auto 10px;
+}
+@keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spin"></div>Building Scene...
+</div>
+
+<div id="model-loading" style="
+  display:none;
+  position:fixed;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  z-index:25;
+  text-align:center;
+  pointer-events:none;">
+  <div style="
+    width:48px; height:48px;
+    border:2px solid rgba(255,255,255,0.1);
+    border-top-color:var(--accent,#FFB800);
+    border-radius:50%;
+    animation:sp 0.7s linear infinite;
+    margin:0 auto 8px;">
+  </div>
+  <div id="load-pct" style="
+    color:rgba(255,255,255,0.5);
+    font-size:11px;
+    font-family:-apple-system,sans-serif;">
+    Loading model...
+  </div>
+</div>
+
+<!-- TOP -->
+<div id="top-zone">
+  <div id="header">
+    <div id="back-btn" onclick="goBack()">
+      <svg width="16" height="16"
+        viewBox="0 0 24 24" fill="none"
+        stroke-width="2.5" stroke-linecap="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </div>
+    <div id="title">Historic Missions 3D</div>
+    <button id="auto-btn" class="on"
+      onclick="toggleAuto()">⟳ Auto</button>
+  </div>
+  <div id="mission-tabs"></div>
+  <div id="stats-strip">
+    <div class="st-item">
+      <div class="st-lbl">Launched</div>
+      <div class="st-val" id="sv-year">—</div>
+    </div>
+    <div class="st-item">
+      <div class="st-lbl">Distance</div>
+      <div class="st-val hi" id="sv-dist">—</div>
+    </div>
+    <div class="st-item">
+      <div class="st-lbl">Status</div>
+      <div class="st-val" id="sv-status">—</div>
+    </div>
+    <div class="st-item">
+      <div class="st-lbl">Agency</div>
+      <div class="st-val" id="sv-agency">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- Reset button — positioned dynamically -->
+<button id="reset-btn" onclick="resetView()">
+  Reset
+</button>
+
+<!-- BOTTOM -->
+<div id="bot-zone">
+  <div id="mn-row">
+    <div id="mn-name">—</div>
+    <div id="mn-badge"></div>
+  </div>
+  <div id="mn-type"></div>
+  <div id="mn-desc"></div>
+  <div id="mn-stats"></div>
+  <div id="kf-wrap">
+    <div id="kf-lbl">Key Achievement</div>
+    <div id="kf-text"></div>
+  </div>
+  <div id="attribution" style="
+    margin-top:8px;
+    font-size:9px;
+    color:rgba(255,255,255,0.2);
+    font-family:-apple-system,sans-serif;
+    text-align:center;">
+    3D models: NASA 3D Resources (Public Domain)
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────
+// MISSIONS DATA
+// ─────────────────────────────────────────────
+const MISSIONS = [
+  {
+    id:'voyager1', name:'Voyager 1',
+    abbr:'V1', type:'DEEP SPACE PROBE',
+    accent:'#FFB800', hex:0xFFB800,
+    badge:'INTERSTELLAR', badgeColor:'#FFB800',
+    launched:'1977', distance:'24B km',
+    status:'Active', agency:'NASA',
+    desc:'The most distant human-made object, now traveling through interstellar space beyond the heliopause.',
+    stats:{'Speed':'17 km/s','Signal Delay':'22+ hrs','Power':'~4 Watts','Mission Age':'47 yrs'},
+    fact:'First human-made object to enter interstellar space (2012). Carries the Golden Record — a message to the cosmos.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/voyager.glb',
+    postProcess:null,
+    build:buildVoyager,
+  },
+  {
+    id:'perseverance', name:'Perseverance',
+    abbr:'Rover', type:'MARS ROVER',
+    accent:'#E87060', hex:0xE87060,
+    badge:'ON MARS', badgeColor:'#E87060',
+    launched:'2020', distance:'225M km',
+    status:'Active', agency:'NASA',
+    desc:'Most advanced Mars rover, searching for biosignatures in Jezero Crater — an ancient lake bed.',
+    stats:{'Weight':'1,025 kg','Samples':'23 cached','Power':'Nuclear RTG','Location':'Jezero'},
+    fact:'Produced oxygen from Martian CO₂ using MOXIE — first in-situ resource utilization on another planet.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/perseverance.glb',
+    build:buildPerseverance,
+  },
+  {
+    id:'curiosity', name:'Curiosity',
+    abbr:'MSL', type:'MARS ROVER',
+    accent:'#C86040', hex:0xC86040,
+    badge:'ON MARS', badgeColor:'#C86040',
+    launched:'2011', distance:'225M km',
+    status:'Active', agency:'NASA',
+    desc:'Climbing Mount Sharp for 13+ years, analyzing ancient lake bed sediments for signs of habitability.',
+    stats:{'Weight':'899 kg','Distance':'32+ km driven','Power':'Nuclear RTG','Location':'Mt. Sharp'},
+    fact:'Confirmed Mars had liquid water and organic chemistry — conditions suitable for microbial life — 3.5 billion years ago.',
+    glbUrl:null,
+    build:buildCuriosity,
+  },
+  {
+    id:'apollo', name:'Apollo LM',
+    abbr:'Moon', type:'LUNAR MODULE',
+    accent:'#CCCCCC', hex:0xCCCCCC,
+    badge:'HISTORIC', badgeColor:'#888888',
+    launched:'1969', distance:'384K km',
+    status:'Historic', agency:'NASA',
+    desc:'The vehicle that carried 12 humans to the Moon — humanity\'s greatest engineering achievement.',
+    stats:{'Landings':'6 missions','Crew':'12 moonwalkers','Weight':'14,696 kg','Height':'6.4 m'},
+    fact:'On July 20, 1969, Eagle landed in the Sea of Tranquility. Neil Armstrong took humanity\'s first steps on another world.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/apollo_lm.glb',
+    build:buildApolloLM,
+  },
+  {
+    id:'newhorizons', name:'New Horizons',
+    abbr:'NH', type:'KUIPER BELT PROBE',
+    accent:'#80DEEA', hex:0x80DEEA,
+    badge:'KUIPER BELT', badgeColor:'#80DEEA',
+    launched:'2006', distance:'8B km',
+    status:'Extended', agency:'NASA',
+    desc:'First spacecraft to explore Pluto, revealing a geologically active world with mountains, glaciers, and a complex atmosphere.',
+    stats:{'Speed':'14.5 km/s','Pluto Flyby':'Jul 2015','Power':'Nuclear RTG','Distance':'8B km'},
+    fact:'Revealed Pluto has mountains as tall as the Rockies, a vast nitrogen glacier shaped like a heart, and blue atmospheric haze.',
+    glbUrl:null,
+    build:buildNewHorizons,
+  },
+];
+
+// ─────────────────────────────────────────────
+// GLOBALS
+// ─────────────────────────────────────────────
+let scene, cam, renderer, clock;
+let craft = null;        // current model group
+let particles = null;   // star particles
+let autoRot = true;
+let camR = 7.5, camTheta = 0.0, camPhi = Math.PI/2;
+let lastTouch = null, pinchD = 0,
+    didMove = false, t0 = 0;
+let vRot = 0;
+let topH = 0, botH = 0;
+let lastT = 0;
+let loadGeneration = 0; // increments each load
+
+// ─────────────────────────────────────────────
+// MEASURE UI ZONES — set canvas viewport
+// ─────────────────────────────────────────────
+function measureZones() {
+  topH = document.getElementById('top-zone')
+    .getBoundingClientRect().height;
+  botH = document.getElementById('bot-zone')
+    .getBoundingClientRect().height;
+
+  // Reset button just below top zone
+  document.getElementById('reset-btn')
+    .style.top = (topH + 8) + 'px';
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function init() {
+  scene = new THREE.Scene();
+  clock  = new THREE.Clock();
+
+  cam = new THREE.PerspectiveCamera(
+    50, window.innerWidth/window.innerHeight,
+    0.05, 500);
+  moveCam();
+
+  renderer = new THREE.WebGLRenderer({
+    antialias:true, alpha:false});
+  renderer.setSize(
+    window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2.5));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
+  renderer.toneMapping =
+    THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  renderer.setClearColor(0x000008, 1);
+  document.body.insertBefore(
+    renderer.domElement,
+    document.getElementById('loading'));
+
+  addLights();
+  addStarfield();
+  buildTabs();
+  setupTouch();
+  window.addEventListener('resize', onResize);
+
+  setTimeout(() => {
+    measureZones();
+    scene.userData.targetY = 0;
+    document.getElementById('loading')
+      .style.display = 'none';
+    select(MISSIONS[0]);
+    requestAnimationFrame(loop);
+  }, 100);
+}
+
+// ─────────────────────────────────────────────
+// LIGHTS
+// ─────────────────────────────────────────────
+function addLights() {
+  // Strong key light from top-right
+  const key = new THREE.DirectionalLight(
+    0xFFFDE7, 2.0);
+  key.position.set(5, 8, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.bias = -0.001;
+  scene.add(key);
+
+  // Cool rim light from behind-left
+  const rim = new THREE.DirectionalLight(
+    0x6688FF, 1.4);
+  rim.position.set(-6, -2, -5);
+  scene.add(rim);
+
+  // Warm bottom bounce (simulates
+  // reflected light from below)
+  const bounce = new THREE.DirectionalLight(
+    0xFF9944, 0.4);
+  bounce.position.set(0, -8, 3);
+  scene.add(bounce);
+
+  // Very soft ambient
+  scene.add(new THREE.AmbientLight(
+    0xFFFFFF, 1.2));
+
+  // Environment light for GLB materials
+  // (helps NASA models look correct)
+  const envLight = new THREE.HemisphereLight(
+    0x334466,   // sky color
+    0x110022,   // ground color
+    1.5);
+  scene.add(envLight);
+}
+
+// ─────────────────────────────────────────────
+// STARFIELD (3 sizes for parallax feel)
+// ─────────────────────────────────────────────
+function addStarfield() {
+  [[3000,0.5,0.8],[500,1.2,0.6],
+   [100,2.2,0.5]].forEach(
+    ([count,size,opacity]) => {
+    const pos=[], col=[];
+    const pal=[
+      [1,1,1],[1,1,1],[1,1,1],
+      [0.7,0.8,1],[1,0.9,0.7],[1,0.5,0.3]];
+    for(let i=0;i<count;i++){
+      const t=Math.random()*Math.PI*2;
+      const p=Math.acos(2*Math.random()-1);
+      const r=80+Math.random()*120;
+      pos.push(
+        r*Math.sin(p)*Math.cos(t),
+        r*Math.sin(p)*Math.sin(t),
+        r*Math.cos(p));
+      const c=pal[
+        Math.floor(Math.random()*pal.length)];
+      col.push(c[0],c[1],c[2]);
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',
+      new THREE.Float32BufferAttribute(pos,3));
+    g.setAttribute('color',
+      new THREE.Float32BufferAttribute(col,3));
+    scene.add(new THREE.Points(g,
+      new THREE.PointsMaterial({
+        size, vertexColors:true,
+        transparent:true, opacity})));
+  });
+}
+
+// ─────────────────────────────────────────────
+// TABS UI
+// ─────────────────────────────────────────────
+function buildTabs() {
+  const bar = document.getElementById(
+    'mission-tabs');
+
+  // Force inline-block scroll behavior
+  bar.style.cssText = `
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding: 6px 12px 4px;
+    width: 100%;
+    box-sizing: border-box;
+  `;
+
+  MISSIONS.forEach(m => {
+    const t = document.createElement('div');
+    t.id = 'tab-' + m.id;
+
+    // Inline styles — no CSS class dependency
+    t.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+      min-width: max-content;
+    `;
+
+    t.innerHTML =
+      `<div style="width:22px;height:22px;
+        border-radius:50%;
+        background:${m.accent}22;
+        border:1px solid ${m.accent}55;
+        color:${m.accent};
+        font-size:11px;
+        display:flex;align-items:center;
+        justify-content:center;
+        font-weight:700;flex-shrink:0;">
+        ${m.abbr[0]}
+       </div>
+       <span style="color:rgba(255,255,255,0.55);
+         font-size:11px;font-weight:600;
+         font-family:-apple-system,sans-serif;
+         white-space:nowrap;">
+         ${m.name}
+       </span>`;
+
+    t.onclick = () => select(m);
+    bar.appendChild(t);
+  });
+}
+
+// ─────────────────────────────────────────────
+// SELECT MISSION
+// ─────────────────────────────────────────────
+function select(m) {
+  // Tabs — reset all, then highlight active
+  document.querySelectorAll('[id^="tab-"]')
+    .forEach(t => {
+      t.style.background = 'rgba(255,255,255,0.06)';
+      t.style.borderColor = 'rgba(255,255,255,0.1)';
+      const sp = t.querySelector('span');
+      if (sp) sp.style.color =
+        'rgba(255,255,255,0.55)';
+    });
+  const tab = document.getElementById(
+    'tab-' + m.id);
+  if (tab) {
+    tab.style.borderColor = m.accent;
+    tab.style.background = 'rgba(255,255,255,0.12)';
+    const sp = tab.querySelector('span');
+    if (sp) sp.style.color = 'white';
+    tab.scrollIntoView({
+      behavior:'smooth', inline:'center',
+      block:'nearest'});
+  }
+
+  // CSS accent
+  document.documentElement.style
+    .setProperty('--accent', m.accent);
+  document.documentElement.style
+    .setProperty('--border', m.accent + '44');
+
+  // Stats strip
+  document.getElementById('sv-year')
+    .textContent = m.launched;
+  const distEl =
+    document.getElementById('sv-dist');
+  distEl.textContent = m.distance;
+  distEl.style.color = m.accent;
+  document.getElementById('sv-status')
+    .textContent = m.status;
+  document.getElementById('sv-agency')
+    .textContent = m.agency;
+
+  // Info card
+  document.getElementById('mn-name')
+    .textContent = m.name;
+  const badge =
+    document.getElementById('mn-badge');
+  badge.textContent = m.badge;
+  badge.style.background =
+    m.badgeColor + '22';
+  badge.style.color = m.badgeColor;
+  badge.style.border =
+    '1px solid ' + m.badgeColor + '55';
+  document.getElementById('mn-type')
+    .textContent = m.type;
+  document.getElementById('mn-desc')
+    .textContent = m.desc;
+  document.getElementById('kf-text')
+    .textContent = m.fact;
+  document.getElementById('kf-wrap')
+    .style.borderColor = m.accent;
+  document.getElementById('kf-lbl')
+    .style.color = m.accent;
+
+  const st = document.getElementById(
+    'mn-stats');
+  st.innerHTML = '';
+  Object.entries(m.stats).forEach(([k,v])=>{
+    st.innerHTML +=
+      `<div class="ms-box">
+        <div class="ms-lbl">${k}</div>
+        <div class="ms-val">${v}</div>
+      </div>`;
+  });
+
+  // Build model (handles camera positioning)
+  buildModel(m);
+}
+
+// ─────────────────────────────────────────────
+// BUILD 3D MODEL
+// ─────────────────────────────────────────────
+
+function buildModel(m) {
+  // Increment generation — cancels any
+  // in-flight GLB loads
+  loadGeneration++;
+  const myGen = loadGeneration;
+
+  // Remove ALL craft from scene
+  clearScene();
+
+  showModelLoading(true);
+
+  if (m.glbUrl) {
+    loadGLBModel(m, myGen);
+  } else {
+    buildThreeJS(m, myGen);
+  }
+}
+
+// Clear current craft model
+function clearScene() {
+  if (craft) {
+    scene.remove(craft);
+    craft.traverse(o => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) {
+        const mats = Array.isArray(o.material)
+          ? o.material : [o.material];
+        mats.forEach(mm => mm.dispose());
+      }
+    });
+    craft = null;
+  }
+}
+
+// Three.js builder extracted to function
+function buildThreeJS(m, gen) {
+  if (gen !== loadGeneration) return;
+
+  craft = new THREE.Group();
+  m.build(craft, m.hex, m.accent);
+  scene.add(craft);
+
+  // Wait one frame for bbox to be accurate
+  requestAnimationFrame(() => {
+    if (gen !== loadGeneration || !craft) return;
+    centerAndScaleModel(craft);
+    addModelGlow(m);
+    showModelLoading(false);
+    camR = 7.0; camTheta = 0.3; camPhi = 1.1;
+    moveCam();
+  });
+}
+
+// GLB loader with generation check
+function loadGLBModel(m, gen) {
+  const dracoLoader = new THREE.DRACOLoader();
+  dracoLoader.setDecoderPath(
+    'https://cdn.jsdelivr.net/npm/' +
+    'three@0.128.0/examples/js/libs/draco/');
+
+  const loader = new THREE.GLTFLoader();
+  loader.setDRACOLoader(dracoLoader);
+
+  loader.load(
+    m.glbUrl,
+    function(gltf) {
+      // Stale load — discard
+      if (gen !== loadGeneration) {
+        console.log('Discarding stale GLB load');
+        return;
+      }
+
+      craft = gltf.scene;
+      scene.add(craft);
+
+      // Wait 2 frames for scene graph
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (gen !== loadGeneration || !craft)
+            return;
+
+          centerAndScaleModel(craft);
+          enhanceMaterials(craft,
+            m.postProcess || null);
+          addModelGlow(m);
+          showModelLoading(false);
+
+          camR = 7.5;
+          camTheta = 0.0;
+          camPhi = Math.PI/2;
+          moveCam();
+        });
+      });
+    },
+    function(xhr) {
+      if (gen !== loadGeneration) return;
+      if (xhr.total > 0) {
+        const pct = Math.round(
+          xhr.loaded / xhr.total * 100);
+        updateLoadingProgress(pct);
+      }
+    },
+    function(error) {
+      if (gen !== loadGeneration) return;
+      console.warn('GLB failed:', m.glbUrl, error);
+      buildThreeJS(m, gen);
+    }
+  );
+}
+
+function centerAndScaleModel(obj) {
+  // Compute bounding box in world space
+  const bbox = new THREE.Box3()
+    .setFromObject(obj);
+
+  if (bbox.isEmpty()) {
+    console.warn('Empty bbox — skip centering');
+    return;
+  }
+
+  const center = new THREE.Vector3();
+  const size   = new THREE.Vector3();
+  bbox.getCenter(center);
+  bbox.getSize(size);
+
+  console.log('Pre-center size:', size,
+    'center:', center);
+
+  // Translate to origin
+  obj.position.x -= center.x;
+  obj.position.y -= center.y;
+  obj.position.z -= center.z;
+
+  // Scale: target 3 units max dimension
+  const maxDim = Math.max(
+    size.x, size.y, size.z);
+  if (maxDim > 0.001) {
+    const scale = 1.2 / maxDim;
+    obj.scale.multiplyScalar(scale);
+    console.log('Scale applied:', scale);
+  }
+
+  // Re-center after scale
+  const bbox2 = new THREE.Box3()
+    .setFromObject(obj);
+  const center2 = new THREE.Vector3();
+  bbox2.getCenter(center2);
+  obj.position.sub(center2);
+
+  console.log('Final position:', obj.position);
+}
+
+function enhanceMaterials(obj, postProcess) {
+  obj.traverse(child => {
+    if (!child.isMesh) return;
+    child.castShadow = true;
+    child.receiveShadow = true;
+    if (!child.material) return;
+
+    const mats = Array.isArray(child.material)
+      ? child.material : [child.material];
+    mats.forEach(mat => {
+      if (mat.isMeshStandardMaterial ||
+          mat.isMeshPhysicalMaterial) {
+        mat.side = THREE.DoubleSide;
+      }
+      if (mat.metalness !== undefined)
+        mat.metalness = Math.min(
+          1.0, (mat.metalness||0) + 0.05);
+
+      // Voyager 2 — subtle blue tint
+      if (postProcess === 'voyager2tint') {
+        mat.color.lerp(
+          new THREE.Color(0x8888FF), 0.15);
+        mat.emissive = new THREE.Color(
+          0x111133);
+        mat.emissiveIntensity = 0.1;
+      }
+      mat.needsUpdate = true;
+    });
+  });
+}
+
+function addModelGlow(m) {
+  if (!craft) return;
+
+  // Remove any existing glow first
+  const existing = craft.getObjectByName(
+    'modelGlow');
+  if (existing) craft.remove(existing);
+
+  const glowGeo = new THREE.SphereGeometry(
+    3.5, 12, 12);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: m.hex,
+    transparent: true, opacity: 0.03,
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.name = 'modelGlow';
+  craft.add(glow);
+}
+
+// ─────────────────────────────────────────────
+// MATERIAL HELPERS
+// ─────────────────────────────────────────────
+function stdMat(color, rough=0.55,
+    metal=0.35, emissiveI=0.04) {
+  return new THREE.MeshStandardMaterial({
+    color, roughness:rough, metalness:metal,
+    emissive:color, emissiveIntensity:emissiveI,
+  });
+}
+function shinyMat(color, rough=0.2,
+    metal=0.85) {
+  return new THREE.MeshStandardMaterial({
+    color, roughness:rough, metalness:metal,
+    emissive:color, emissiveIntensity:0.06,
+  });
+}
+function goldFoil() {
+  return new THREE.MeshStandardMaterial({
+    color:0xFFCC44, roughness:0.25,
+    metalness:0.9, emissive:0xFFCC44,
+    emissiveIntensity:0.08,
+  });
+}
+function darkMat(color=0x111122) {
+  return new THREE.MeshStandardMaterial({
+    color, roughness:0.85, metalness:0.05,
+  });
+}
+
+function box(w,h,d,mat,px=0,py=0,pz=0,
+    rx=0,ry=0,rz=0,g) {
+  const m=new THREE.Mesh(
+    new THREE.BoxGeometry(w,h,d),mat);
+  m.position.set(px,py,pz);
+  m.rotation.set(rx,ry,rz);
+  m.castShadow=true;
+  if(g) g.add(m);
+  return m;
+}
+function cyl(rt,rb,h,seg,mat,
+    px=0,py=0,pz=0,rx=0,ry=0,rz=0,g) {
+  const m=new THREE.Mesh(
+    new THREE.CylinderGeometry(rt,rb,h,seg),
+    mat);
+  m.position.set(px,py,pz);
+  m.rotation.set(rx,ry,rz);
+  m.castShadow=true;
+  if(g) g.add(m);
+  return m;
+}
+function sph(r,seg,mat,
+    px=0,py=0,pz=0,g) {
+  const m=new THREE.Mesh(
+    new THREE.SphereGeometry(r,seg,seg),mat);
+  m.position.set(px,py,pz);
+  m.castShadow=true;
+  if(g) g.add(m);
+  return m;
+}
+
+// Solar panel helper
+function solarPanel(g, x,y,z, w,h,
+    rotY=0, rotZ=0) {
+  const frame = stdMat(0x334455,0.6,0.3);
+  const cell  = new THREE.MeshStandardMaterial({
+    color:0x1A3A6A, roughness:0.3,
+    metalness:0.7, emissive:0x0A1A3A,
+    emissiveIntensity:0.15,
+  });
+  const panel = new THREE.Group();
+  // Cell surface
+  const surf = box(w,0.025,h,cell);
+  panel.add(surf);
+  // Frame border
+  const fTop  = box(w+0.04,0.035,0.04,frame,
+    0,0,h/2+0.02);
+  const fBot  = box(w+0.04,0.035,0.04,frame,
+    0,0,-h/2-0.02);
+  const fL    = box(0.04,0.035,h,frame,
+    -w/2-0.02,0,0);
+  const fR    = box(0.04,0.035,h,frame,
+    w/2+0.02,0,0);
+  [fTop,fBot,fL,fR].forEach(f=>panel.add(f));
+  // Grid lines
+  const lineMat = new THREE.MeshBasicMaterial({
+    color:0x2244AA, transparent:true,
+    opacity:0.4});
+  for(let i=-1;i<=1;i+=1){
+    const lv=box(0.008,0.03,h,lineMat,
+      i*w/3,0,0);
+    const lh=box(w,0.03,0.008,lineMat,
+      0,0,i*h/3);
+    panel.add(lv); panel.add(lh);
+  }
+  panel.position.set(x,y,z);
+  panel.rotation.y = rotY;
+  panel.rotation.z = rotZ;
+  g.add(panel);
+  return panel;
+}
+
+// ─────────────────────────────────────────────
+// ═══ SPACECRAFT BUILDERS (DETAILED) ══════════
+// ─────────────────────────────────────────────
+
+function buildVoyager(g, accent) {
+  const silver=shinyMat(0xCCCCCC);
+  const gf=goldFoil();
+  const dk=darkMat();
+  const white=stdMat(0xDDDDDD,0.6,0.2);
+
+  // Main bus — decagonal
+  cyl(0.42,0.42,0.28,10,silver,0,0,0,
+    0,0,0,g);
+  // Gold wrap
+  cyl(0.44,0.44,0.10,10,gf,0,0.04,0,
+    0,0,0,g);
+
+  // Large dish — parabolic shape
+  const dishGrp = new THREE.Group();
+  // Main bowl
+  const dsh=new THREE.Mesh(
+    new THREE.SphereGeometry(
+      1.35,32,16,0,Math.PI*2,0,0.58),
+    silver);
+  dsh.rotation.x=Math.PI;
+  dishGrp.add(dsh);
+  // Dish inner reflective surface
+  const dsh2=new THREE.Mesh(
+    new THREE.SphereGeometry(
+      1.30,24,12,0,Math.PI*2,0,0.55),
+    shinyMat(0xDDDDEE,0.1,0.9));
+  dsh2.rotation.x=Math.PI;
+  dishGrp.add(dsh2);
+  // Rim ring
+  dishGrp.add(new THREE.Mesh(
+    new THREE.TorusGeometry(1.35,0.018,8,48),
+    silver));
+  // Feed horn center
+  cyl(0.05,0.035,0.2,8,dk,0,0.12,0,
+    0,0,0,dishGrp);
+  // 4 struts holding feed
+  for(let i=0;i<4;i++){
+    const a=(i/4)*Math.PI*2;
+    cyl(0.012,0.012,0.45,6,white,
+      Math.cos(a)*0.28,0.16,
+      Math.sin(a)*0.28,
+      Math.PI/8*Math.cos(a),0,
+      -Math.PI/8*Math.sin(a),dishGrp);
+  }
+  dishGrp.position.set(0,0.4,0);
+  g.add(dishGrp);
+
+  // 3 RTG booms (angled out)
+  for(let i=0;i<3;i++){
+    const a=(i/3)*Math.PI*2;
+    const bgrp=new THREE.Group();
+    // Boom strut
+    cyl(0.018,0.018,1.1,6,white,0,0,0,
+      0,0,Math.PI/2,bgrp);
+    // RTG cylinder (ribbed)
+    const rtg=new THREE.Group();
+    cyl(0.075,0.075,0.45,10,
+      stdMat(0x777788,0.55,0.45),
+      0,0,0,0,0,Math.PI/2,rtg);
+    for(let r=0;r<5;r++){
+      cyl(0.085,0.085,0.04,10,
+        stdMat(0x666677,0.6,0.4),
+        0,0,(r-2)*0.1,0,0,Math.PI/2,rtg);
+    }
+    rtg.position.set(0.65,0,0);
+    bgrp.add(rtg);
+    bgrp.position.set(
+      Math.cos(a)*0.38,-0.14,
+      Math.sin(a)*0.38);
+    bgrp.rotation.y = -a;
+    bgrp.rotation.x = 0.45;
+    g.add(bgrp);
+  }
+
+  // Science boom — long diagonal
+  const sboom=new THREE.Group();
+  cyl(0.01,0.01,2.2,4,white,0,0,0,
+    0,0,Math.PI/2,sboom);
+  sph(0.06,8,stdMat(accent,0.3,0.7),
+    1.1,0,0,sboom);
+  // Magnetometer sensor
+  sph(0.04,8,shinyMat(0xDDDDFF),
+    1.4,0,0,sboom);
+  sboom.position.set(-0.3,0.1,-0.15);
+  sboom.rotation.y = -0.5;
+  sboom.rotation.z = -0.35;
+  g.add(sboom);
+
+  // Magnetometer boom (opposite direction)
+  const mboom=new THREE.Group();
+  cyl(0.008,0.008,2.8,4,
+    stdMat(0xDDDDDD,0.55,0.2),
+    0,0,0,0,0,Math.PI/2,mboom);
+  sph(0.035,6,shinyMat(0xCCCCFF),
+    1.4,0,0,mboom);
+  mboom.position.set(0.35,-0.08,0.2);
+  mboom.rotation.y = 0.45;
+  mboom.rotation.z = 0.3;
+  g.add(mboom);
+
+  // Gold insulation patches
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2;
+    box(0.12,0.04,0.08,gf,
+      Math.cos(a)*0.38,0.06,
+      Math.sin(a)*0.38,
+      0,-a,0,g);
+  }
+
+  // Instrument platform (bottom)
+  cyl(0.35,0.38,0.06,10,
+    stdMat(0xBBBBCC,0.5,0.4),
+    0,-0.2,0,0,0,0,g);
+}
+
+function buildPerseverance(g, accent) {
+  const body=stdMat(0xB0B0B8,0.6,0.25);
+  const gf=goldFoil();
+  const dk=darkMat();
+  const wheel=stdMat(0x333344,0.75,0.35);
+  const arm=stdMat(0x888899,0.55,0.4);
+
+  // ── Body ──
+  box(1.5,0.62,1.05,body,0,0,0,0,0,0,g);
+  // Gold thermal blanket top
+  box(1.4,0.07,0.95,gf,0,0.34,0,0,0,0,g);
+  // Side panels
+  box(0.06,0.04,0.8,gf,-0.78,0.32,0,0,0,0,g);
+  box(0.06,0.04,0.8,gf, 0.78,0.32,0,0,0,0,g);
+
+  // Front-left instrument bump
+  box(0.25,0.18,0.15,
+    stdMat(0x888899,0.5,0.4),
+    -0.65,0.2,0.55,0,0,0,g);
+
+  // MOXIE instrument (gold box right-back)
+  box(0.22,0.16,0.18,
+    stdMat(accent,0.4,0.4),
+    -0.6,0.18,-0.35,0,0,0,g);
+
+  // RTG (back left — cylindrical)
+  const rtgGrp=new THREE.Group();
+  cyl(0.12,0.12,0.52,12,
+    stdMat(0x777788,0.5,0.45),
+    0,0,0,0,0,0,rtgGrp);
+  for(let r=0;r<6;r++){
+    cyl(0.135,0.135,0.04,12,
+      stdMat(0x666677,0.6,0.4),
+      0,(r-2.5)*0.088,0,0,0,0,rtgGrp);
+  }
+  rtgGrp.position.set(-0.78,0.05,-0.4);
+  rtgGrp.rotation.z=Math.PI/2;
+  g.add(rtgGrp);
+
+  // ── Wheels (6) ──
+  const wpos=[
+    [-0.85,-0.42, 0.55],[-0.85,-0.42, 0.0],
+    [-0.85,-0.42,-0.55],
+    [ 0.85,-0.42, 0.55],[ 0.85,-0.42, 0.0],
+    [ 0.85,-0.42,-0.55],
+  ];
+  wpos.forEach(([x,y,z])=>{
+    const wg=new THREE.Group();
+    // Wheel cylinder
+    cyl(0.23,0.23,0.11,20,wheel,0,0,0,
+      0,0,Math.PI/2,wg);
+    // Cleats (12 raised ribs)
+    for(let c=0;c<12;c++){
+      const a=(c/12)*Math.PI*2;
+      const cleat=box(0.115,0.018,0.04,
+        stdMat(0x222233,0.85,0.1));
+      cleat.position.set(
+        0,Math.cos(a)*0.23,
+        Math.sin(a)*0.23);
+      cleat.rotation.x=a;
+      wg.add(cleat);
+    }
+    // Hub cap
+    sph(0.06,10,shinyMat(0xCCCCDD),
+      0,0,0,wg);
+    wg.position.set(x,y,z);
+    g.add(wg);
+
+    // Rocker-bogie arm
+    const ra=cyl(0.022,0.022,0.5,6,arm,
+      x*0.48,y+0.22,z);
+    ra.rotation.z=Math.PI/2;
+    g.add(ra);
+  });
+
+  // ── Mast ──
+  cyl(0.038,0.038,0.95,8,
+    stdMat(0xAAAAAA,0.55,0.35),
+    0.38,0.73,0.28,0,0,0,g);
+  // Mast head (Mastcam-Z)
+  const head=box(0.2,0.15,0.15,dk,
+    0.38,1.24,0.28,0,0,0,g);
+  // Camera lenses (2)
+  cyl(0.028,0.028,0.07,10,
+    darkMat(0x112244),
+    0.38-0.05,1.24,0.355,
+    Math.PI/2,0,0,g);
+  cyl(0.028,0.028,0.07,10,
+    darkMat(0x112244),
+    0.38+0.05,1.24,0.355,
+    Math.PI/2,0,0,g);
+  // MEDA weather sensor on mast
+  sph(0.04,8,stdMat(0xCCCCCC,0.4,0.5),
+    0.38,1.38,0.28,g);
+
+  // ── Robot arm ──
+  const armGrp=new THREE.Group();
+  cyl(0.03,0.03,0.6,6,arm,0,0,0,
+    0,0,0,armGrp);
+  cyl(0.025,0.025,0.5,6,arm,0,-0.55,0,
+    Math.PI/8,0,0,armGrp);
+  // Drill/SHERLOC head
+  const drill=new THREE.Group();
+  cyl(0.055,0.04,0.18,8,
+    stdMat(0x555566,0.5,0.6),
+    0,0,0,0,0,0,drill);
+  cyl(0.02,0.008,0.12,6,
+    shinyMat(0x888899),
+    0,-0.15,0,0,0,0,drill);
+  drill.position.set(0,-1.1,0);
+  armGrp.add(drill);
+  armGrp.position.set(0.62,0.05,0.52);
+  armGrp.rotation.z=-Math.PI/5;
+  g.add(armGrp);
+
+  // ── Ingenuity helicopter (belly) ──
+  const heli=new THREE.Group();
+  cyl(0.065,0.065,0.09,8,
+    stdMat(0xCCCCDD,0.4,0.4),0,0,0,
+    0,0,0,heli);
+  // Legs (4 thin)
+  for(let i=0;i<4;i++){
+    const a=(i/4)*Math.PI*2;
+    cyl(0.008,0.008,0.22,4,
+      stdMat(0xAAAAAA,0.6,0.3),
+      Math.cos(a)*0.08,0,
+      Math.sin(a)*0.08,
+      0,0,Math.PI/2.5,heli);
+  }
+  // Rotors (2 counter-rotating)
+  const rotMat=shinyMat(0xCCCCCC,0.25,0.6);
+  [-1,1].forEach(s=>{
+    const r=box(0.42,0.008,0.04,
+      rotMat,0,0.05*s,0,0,s*Math.PI/4,0,heli);
+  });
+  heli.position.set(0,-0.36,0.1);
+  g.add(heli);
+}
+
+function buildCuriosity(g, accent) {
+  const body=stdMat(0xD4C9A0,0.65,0.2);
+  const gf=goldFoil();
+  const dk=darkMat();
+  const wheel=stdMat(0x333344,0.78,0.3);
+  const arm=stdMat(0x909099,0.6,0.35);
+
+  // Body (warm tan/khaki)
+  box(1.3,0.58,0.95,body,0,0,0,0,0,0,g);
+  box(1.2,0.07,0.85,gf,0,0.32,0,0,0,0,g);
+
+  // RTG (prominent, back)
+  const rtgG=new THREE.Group();
+  cyl(0.13,0.13,0.56,12,
+    stdMat(0x777788,0.5,0.45),
+    0,0,0,0,0,Math.PI/2,rtgG);
+  for(let r=0;r<6;r++){
+    cyl(0.145,0.145,0.04,12,
+      stdMat(0x666677,0.6,0.4),
+      (r-2.5)*0.095,0,0,
+      0,0,Math.PI/2,rtgG);
+  }
+  rtgG.position.set(-0.72,0.08,0);
+  g.add(rtgG);
+
+  // Wheels (6) with cleats
+  [
+    [-0.78,-0.38, 0.5],[-0.78,-0.38, 0.0],
+    [-0.78,-0.38,-0.5],
+    [ 0.78,-0.38, 0.5],[ 0.78,-0.38, 0.0],
+    [ 0.78,-0.38,-0.5],
+  ].forEach(([x,y,z])=>{
+    const wg=new THREE.Group();
+    cyl(0.21,0.21,0.1,20,wheel,
+      0,0,0,0,0,Math.PI/2,wg);
+    for(let c=0;c<10;c++){
+      const a=(c/10)*Math.PI*2;
+      const cl=box(0.105,0.015,0.04,
+        stdMat(0x222233,0.85,0.1));
+      cl.position.set(
+        0,Math.cos(a)*0.21,
+        Math.sin(a)*0.21);
+      cl.rotation.x=a;
+      wg.add(cl);
+    }
+    sph(0.055,8,shinyMat(0xBBBBCC),
+      0,0,0,wg);
+    wg.position.set(x,y,z);
+    g.add(wg);
+  });
+
+  // Robot arm with turret
+  cyl(0.028,0.028,0.68,6,arm,
+    0.58,0.06,0.48,0,0,-Math.PI/4,g);
+  cyl(0.024,0.024,0.46,6,arm,
+    0.92,-0.42,0.52,0,0,-Math.PI/5,g);
+  // Turret head
+  cyl(0.07,0.055,0.16,8,
+    stdMat(0x555566,0.5,0.55),
+    1.12,-0.76,0.5,0,0,0,g);
+
+  // Distinctive mast with REMS sensor tower
+  const sensGrp=new THREE.Group();
+  cyl(0.028,0.028,0.7,8,
+    stdMat(0xAAAAAA,0.55,0.35),
+    0,0.35,0,0,0,0,sensGrp);
+  // Sensor head — distinctive T-shape
+  box(0.22,0.06,0.06,
+    stdMat(0x333344,0.7,0.3),
+    0,0.72,0,0,0,0,sensGrp);
+  // Camera eyes on T (very distinctive)
+  cyl(0.03,0.03,0.06,8,
+    darkMat(0x112244),
+    -0.08,0.72,0.04,
+    Math.PI/2,0,0,sensGrp);
+  cyl(0.03,0.03,0.06,8,
+    darkMat(0x112244),
+    0.08,0.72,0.04,
+    Math.PI/2,0,0,sensGrp);
+  // Orange accent on camera head
+  box(0.2,0.04,0.055,
+    stdMat(0xFF6633,0.5,0.3),
+    0,0.72,-0.03,0,0,0,sensGrp);
+  sensGrp.position.set(0.32,0.3,0.2);
+  g.add(sensGrp);
+
+  // ChemCam laser on mast
+  cyl(0.014,0.014,0.14,6,
+    stdMat(accent,0.3,0.7),
+    0.32,1.12,0.26,Math.PI/2,0,0,g);
+}
+
+function buildCassini(g, accent) {
+  const silver=shinyMat(0xCCCCCC);
+  const gf=goldFoil();
+  const dk=darkMat();
+  const white=stdMat(0xDDDDDD,0.6,0.2);
+
+  // Main bus cylinder (12-sided)
+  cyl(0.46,0.46,1.85,12,silver,
+    0,0,0,0,0,0,g);
+  // Gold band
+  cyl(0.48,0.48,0.45,12,gf,
+    0,0.18,0,0,0,0,g);
+  // Second gold band
+  cyl(0.48,0.48,0.1,12,gf,
+    0,-0.55,0,0,0,0,g);
+
+  // High-Gain Antenna
+  const hgaGrp=new THREE.Group();
+  const bowl=new THREE.Mesh(
+    new THREE.SphereGeometry(
+      1.38,32,16,0,Math.PI*2,0,0.56),
+    silver);
+  bowl.rotation.x=Math.PI;
+  hgaGrp.add(bowl);
+  // Dish inner
+  const bowl2=new THREE.Mesh(
+    new THREE.SphereGeometry(
+      1.33,24,12,0,Math.PI*2,0,0.53),
+    shinyMat(0xDDDDEE,0.1,0.92));
+  bowl2.rotation.x=Math.PI;
+  hgaGrp.add(bowl2);
+  // Rim
+  hgaGrp.add(new THREE.Mesh(
+    new THREE.TorusGeometry(1.38,0.02,8,48),
+    silver));
+  // Feed
+  cyl(0.045,0.03,0.22,8,dk,
+    0,0.14,0,0,0,0,hgaGrp);
+  // 4 feed struts
+  for(let i=0;i<4;i++){
+    const a=(i/4)*Math.PI*2;
+    cyl(0.012,0.012,0.48,4,white,
+      Math.cos(a)*0.3,0.12,
+      Math.sin(a)*0.3,
+      Math.PI/9*Math.cos(a),0,
+      -Math.PI/9*Math.sin(a),hgaGrp);
+  }
+  hgaGrp.position.y=1.14;
+  g.add(hgaGrp);
+
+  // Low-Gain Antenna (small dish, bottom)
+  const lgaGrp=new THREE.Group();
+  const lgaDish=new THREE.Mesh(
+    new THREE.SphereGeometry(
+      0.3,16,8,0,Math.PI*2,0,0.5),
+    silver);
+  lgaDish.rotation.x=Math.PI;
+  lgaGrp.add(lgaDish);
+  cyl(0.02,0.02,0.3,6,white,
+    0,-0.18,0,0,0,0,lgaGrp);
+  lgaGrp.position.set(0,-1.15,0);
+  lgaGrp.rotation.x=Math.PI/6;
+  g.add(lgaGrp);
+
+  // Magnetometer boom (long)
+  const magGrp=new THREE.Group();
+  cyl(0.014,0.014,2.8,4,white,
+    0,0,0,0,0,Math.PI/2,magGrp);
+  sph(0.045,8,shinyMat(0xCCCCFF),
+    1.4,0,0,magGrp);
+  magGrp.position.set(0.5,0.2,0.15);
+  magGrp.rotation.y=0.3;
+  magGrp.rotation.z=0.2;
+  g.add(magGrp);
+
+  // 2 RTG sets
+  [-1,1].forEach((s,i)=>{
+    const rtgGrp=new THREE.Group();
+    // Boom
+    cyl(0.018,0.018,0.9,4,white,
+      0,0,0,0,0,Math.PI/2,rtgGrp);
+    // 3 stacked RTGs
+    for(let r=0;r<3;r++){
+      const rr=new THREE.Group();
+      cyl(0.09,0.09,0.38,10,
+        stdMat(0x666677,0.5,0.45),
+        0,0,0,0,0,Math.PI/2,rr);
+      for(let rb=0;rb<5;rb++){
+        cyl(0.1,0.1,0.04,10,
+          stdMat(0x555566,0.6,0.4),
+          (rb-2)*0.08,0,0,
+          0,0,Math.PI/2,rr);
+      }
+      rr.position.set(0.5+r*0.42,0,0);
+      rtgGrp.add(rr);
+    }
+    rtgGrp.position.set(s*0.42,-0.65,0.3+i*0.1);
+    rtgGrp.rotation.y = s*0.3;
+    rtgGrp.rotation.x = -0.45;
+    g.add(rtgGrp);
+  });
+
+  // Huygens probe (disc on side)
+  const huGrp=new THREE.Group();
+  cyl(0.26,0.26,0.1,16,
+    stdMat(0xDDDD88,0.45,0.4),
+    0,0,0,0,0,0,huGrp);
+  // Heatshield rim
+  huGrp.add(new THREE.Mesh(
+    new THREE.TorusGeometry(0.26,0.025,8,24),
+    stdMat(0xBB9900,0.3,0.6)));
+  // Accent ring
+  huGrp.add(new THREE.Mesh(
+    new THREE.TorusGeometry(0.22,0.014,6,20),
+    stdMat(accent,0.3,0.7)));
+  huGrp.position.set(-0.52,0.4,-0.18);
+  huGrp.rotation.y=0.4;
+  g.add(huGrp);
+
+  // Science instruments on top
+  for(let i=0;i<4;i++){
+    const a=(i/4)*Math.PI*2;
+    box(0.08,0.12,0.08,
+      stdMat(0x888899,0.5,0.4),
+      Math.cos(a)*0.32,1.04,
+      Math.sin(a)*0.32,0,0,0,g);
+  }
+}
+
+function buildApolloLM(g, accent) {
+  const gf=goldFoil();
+  const silver=shinyMat(0xCCCCCC);
+  const dk=darkMat();
+
+  // ── Descent Stage ──
+  // Octagonal base
+  cyl(0.8,0.8,0.62,8,gf,
+    0,-0.56,0,0,0,0,g);
+  // Gold foil panels (8 faces)
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2+Math.PI/8;
+    box(0.55,0.6,0.045,
+      stdMat(0xFFDD22,0.25,0.75),
+      Math.cos(a)*0.76,-0.56,
+      Math.sin(a)*0.76,0,-a,0,g);
+  }
+  // Descent engine skirt
+  cyl(0.3,0.18,0.38,12,dk,
+    0,-1.08,0,0,0,0,g);
+  // Engine bell
+  cyl(0.18,0.32,0.22,12,
+    stdMat(0x444455,0.5,0.5),
+    0,-1.3,0,0,0,0,g);
+
+  // ── 4 Landing Legs ──
+  for(let i=0;i<4;i++){
+    const a=(i/4)*Math.PI*2+Math.PI/4;
+    const legGrp=new THREE.Group();
+    // Primary strut
+    cyl(0.025,0.025,1.0,6,silver,
+      0,0,0,0,0,Math.PI/2,legGrp);
+    // Secondary strut
+    cyl(0.018,0.018,0.65,4,silver,
+      0.2,-0.15,0.12,
+      Math.PI/8,Math.PI/4,0,legGrp);
+    // Footpad
+    cyl(0.14,0.14,0.04,8,silver,
+      0.52,-0.02,0,0,0,0,legGrp);
+    legGrp.position.set(
+      Math.cos(a)*0.55,-0.88,
+      Math.sin(a)*0.55);
+    legGrp.rotation.y=-a;
+    legGrp.rotation.z=Math.PI/5;
+    g.add(legGrp);
+  }
+
+  // ── Ascent Stage ──
+  // Cabin (octagonal)
+  cyl(0.52,0.52,0.72,8,silver,
+    0,0.25,0,0,0,0,g);
+  // Front face (flat panel)
+  box(0.7,0.7,0.06,silver,
+    0,0.25,0.53,0,0,0,g);
+  // Ascent engine
+  cyl(0.14,0.11,0.28,8,dk,
+    0,-0.18,0,0,0,0,g);
+
+  // Windows (2)
+  [-0.14,0.14].forEach(ox=>{
+    const win=new THREE.Mesh(
+      new THREE.CircleGeometry(0.1,8),
+      new THREE.MeshStandardMaterial({
+        color:0x334455,
+        roughness:0.1, metalness:0.9,
+        emissive:0x112233,
+        emissiveIntensity:0.3,
+      }));
+    win.position.set(ox,0.3,0.56);
+    g.add(win);
+    // Window frame
+    g.add(new THREE.Mesh(
+      new THREE.TorusGeometry(0.1,0.012,6,12),
+      shinyMat(0xCCCCCC)));
+    g.children[g.children.length-1]
+      .position.set(ox,0.3,0.56);
+  });
+
+  // Docking hatch (top)
+  cyl(0.13,0.13,0.16,8,dk,
+    0,0.62,0,0,0,0,g);
+  cyl(0.18,0.18,0.04,8,silver,
+    0,0.72,0,0,0,0,g);
+
+  // S-band antenna
+  const ant=new THREE.Mesh(
+    new THREE.SphereGeometry(
+      0.18,12,8,0,Math.PI*2,0,0.45),
+    shinyMat(0xDDDDDD));
+  ant.rotation.x=Math.PI;
+  ant.position.set(0.42,0.65,-0.15);
+  g.add(ant);
+  cyl(0.012,0.012,0.3,4,silver,
+    0.42,0.52,-0.15,0,0,0,g);
+
+  // VHF antennas (2 thin rods)
+  [-0.28,0.28].forEach(ox=>{
+    cyl(0.008,0.008,0.52,4,silver,
+      ox,0.7+0.26,0,
+      0,0,ox>0?0.3:-0.3,g);
+  });
+
+  // Accent color accent on rim
+  g.add(new THREE.Mesh(
+    new THREE.TorusGeometry(0.52,0.015,6,20),
+    stdMat(accent,0.3,0.6)));
+  g.children[g.children.length-1]
+    .position.set(0,0.25,0);
+}
+
+function buildNewHorizons(g, accent) {
+  const silver = shinyMat(0xCCCCCC);
+  const gf     = goldFoil();
+  const dk     = darkMat();
+  const white  = stdMat(0xDDDDDD,0.6,0.2);
+
+  // ── Piano-lid shaped main body ──
+  // New Horizons is a roughly triangular
+  // flat body — NOT a rover
+
+  // Main deck (flat, wide)
+  box(1.4, 0.18, 1.6, silver,
+    0, 0, 0, 0, 0, 0, g);
+
+  // Gold MLI thermal blanket
+  box(1.3, 0.06, 1.5, gf,
+    0, 0.12, 0, 0, 0, 0, g);
+
+  // Equipment deck (bottom)
+  box(1.2, 0.22, 1.4,
+    stdMat(0xAAAAAA,0.55,0.3),
+    0, -0.2, 0, 0, 0, 0, g);
+
+  // ── LORRI telescope (prominent) ──
+  // Pointing forward (-Z direction)
+  const lorGrp = new THREE.Group();
+  // Outer baffle cylinder
+  cyl(0.18, 0.18, 0.72, 12,
+    stdMat(0x111122, 0.85, 0.05),
+    0, 0, 0, 0, 0, 0, lorGrp);
+  // Inner tube
+  cyl(0.14, 0.14, 0.75, 10, dk,
+    0, 0, 0, 0, 0, 0, lorGrp);
+  // Lens cap (front)
+  const lens = new THREE.Mesh(
+    new THREE.CircleGeometry(0.13, 12),
+    new THREE.MeshStandardMaterial({
+      color: 0x001144,
+      roughness: 0.05, metalness: 0.95,
+      emissive: 0x001155,
+      emissiveIntensity: 0.4,
+    }));
+  lens.rotation.x = Math.PI / 2;
+  lens.position.y = 0.37;
+  lorGrp.add(lens);
+  lorGrp.position.set(0.1, 0.0, -0.7);
+  lorGrp.rotation.x = -Math.PI / 2;
+  g.add(lorGrp);
+
+  // ── Large HGA dish (2.1m diameter) ──
+  const hgaGrp = new THREE.Group();
+  // Bowl
+  const bowl = new THREE.Mesh(
+    new THREE.SphereGeometry(
+      1.1, 28, 14, 0, Math.PI*2, 0, 0.52),
+    new THREE.MeshStandardMaterial({
+      color: 0xDDDDEE,
+      roughness: 0.12, metalness: 0.88,
+      side: THREE.DoubleSide,
+    }));
+  bowl.rotation.x = Math.PI;
+  hgaGrp.add(bowl);
+  // Rim ring
+  hgaGrp.add(new THREE.Mesh(
+    new THREE.TorusGeometry(1.1, 0.018, 8, 48),
+    shinyMat(0xCCCCCC, 0.15, 0.88)));
+  // Feed horn
+  cyl(0.04, 0.03, 0.18, 8, dk,
+    0, 0.1, 0, 0, 0, 0, hgaGrp);
+  // 3 support struts
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2;
+    cyl(0.01, 0.01, 0.44, 4, white,
+      Math.cos(a)*0.28, 0.08,
+      Math.sin(a)*0.28,
+      Math.PI/10*Math.cos(a), 0,
+      -Math.PI/10*Math.sin(a), hgaGrp);
+  }
+  hgaGrp.position.set(0.05, 0.72, 0.18);
+  hgaGrp.rotation.x = -0.22;
+  g.add(hgaGrp);
+
+  // ── RTG on boom (left side) ──
+  const rtgGrp = new THREE.Group();
+  cyl(0.014, 0.014, 1.1, 4, white,
+    0, 0, 0, 0, 0, Math.PI/2, rtgGrp);
+  cyl(0.075, 0.075, 0.42, 10,
+    stdMat(0x555566, 0.5, 0.5),
+    0.56, 0, 0, 0, 0, Math.PI/2, rtgGrp);
+  for (let r = 0; r < 5; r++) {
+    cyl(0.085, 0.085, 0.035, 10,
+      stdMat(0x444455, 0.6, 0.4),
+      0.56 + (r-2)*0.085, 0, 0,
+      0, 0, Math.PI/2, rtgGrp);
+  }
+  rtgGrp.position.set(-0.7, -0.06, 0.2);
+  g.add(rtgGrp);
+
+  // ── Ralph + Alice instruments ──
+  box(0.18, 0.1, 0.2,
+    stdMat(accent, 0.4, 0.4),
+    0.4, 0.13, 0.25, 0, 0, 0, g);
+  box(0.14, 0.08, 0.18,
+    stdMat(0x888899, 0.5, 0.4),
+    0.4, 0.13, -0.2, 0, 0, 0, g);
+
+  // ── PEPSSI detector ──
+  box(0.2, 0.06, 0.14,
+    stdMat(0x777788, 0.5, 0.4),
+    -0.08, 0.1, 0.72, 0, 0.3, 0, g);
+
+  // ── Star trackers (2) ──
+  cyl(0.038, 0.038, 0.1, 8,
+    stdMat(0x222233, 0.7, 0.3),
+    -0.5, 0.1, 0.25, Math.PI/2, 0, 0, g);
+  cyl(0.038, 0.038, 0.1, 8,
+    stdMat(0x222233, 0.7, 0.3),
+    0.5, 0.1, -0.3, Math.PI/2, 0, 0.4, g);
+
+  // ── SWAP/PEPSSI boom ──
+  cyl(0.01, 0.01, 0.5, 4, white,
+    0, 0.05, 0.8, 0, 0, 0, g);
+  sph(0.04, 8, stdMat(accent, 0.3, 0.6),
+    0, 0.05, 1.07, g);
+}
+
+// ─────────────────────────────────────────────
+// ANIMATION LOOP
+// ─────────────────────────────────────────────
+function loop(t=0) {
+  requestAnimationFrame(loop);
+  const dt=Math.min((t-lastT)/16.667,3);
+  lastT=t;
+
+  if (autoRot && craft && !lastTouch) {
+    craft.rotation.y += 0.006 * dt;
+  }
+
+  renderer.render(scene, cam);
+}
+
+// ─────────────────────────────────────────────
+// CAMERA
+// ─────────────────────────────────────────────
+function moveCam() {
+  cam.position.set(
+    camR*Math.sin(camPhi)*Math.sin(camTheta),
+    camR*Math.cos(camPhi),
+    camR*Math.sin(camPhi)*Math.cos(camTheta));
+  cam.lookAt(0,0,0);
+}
+
+// ─────────────────────────────────────────────
+// TOUCH
+// ─────────────────────────────────────────────
+function setupTouch() {
+  const el=renderer.domElement;
+
+  el.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    didMove=false; t0=Date.now();
+    if(e.touches.length===1)
+      lastTouch={x:e.touches[0].clientX,
+                 y:e.touches[0].clientY};
+    else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-
+               e.touches[1].clientX;
+      const dy=e.touches[0].clientY-
+               e.touches[1].clientY;
+      pinchD=Math.sqrt(dx*dx+dy*dy);
+    }
+  },{passive:false});
+
+  el.addEventListener('touchmove',e=>{
+    e.preventDefault(); didMove=true;
+    if(e.touches.length===1&&lastTouch){
+      const dx=e.touches[0].clientX-
+               lastTouch.x;
+      const dy=e.touches[0].clientY-
+               lastTouch.y;
+      if(craft){
+        craft.rotation.y-=dx*0.009;
+        craft.rotation.x-=dy*0.009;
+        craft.rotation.x=Math.max(
+          -Math.PI/2,Math.min(
+          Math.PI/2,craft.rotation.x));
+      }
+      lastTouch={x:e.touches[0].clientX,
+                 y:e.touches[0].clientY};
+    } else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-
+               e.touches[1].clientX;
+      const dy=e.touches[0].clientY-
+               e.touches[1].clientY;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      const f=1+(pinchD/d-1)*0.65;
+      camR=Math.max(2.5,Math.min(18,camR*f));
+      pinchD=d; moveCam();
+    }
+  },{passive:false});
+
+  el.addEventListener('touchend',e=>{
+    e.preventDefault(); lastTouch=null;
+  },{passive:false});
+}
+
+// ─────────────────────────────────────────────
+// UI CONTROLS
+// ─────────────────────────────────────────────
+function toggleAuto(){
+  autoRot=!autoRot;
+  const b=document.getElementById('auto-btn');
+  b.textContent=autoRot?'⟳ Auto':'❙❙ Pause';
+  b.classList.toggle('on',autoRot);
+}
+
+function resetView(){
+  camR=7.5; camTheta=0.0; camPhi=Math.PI/2;
+  moveCam();
+  if(craft) craft.rotation.set(0,0,0);
+}
+
+function goBack(){
+  if(window.flutter_inappwebview)
+    window.flutter_inappwebview
+      .callHandler('goBack');
+  else history.back();
+}
+
+function onResize(){
+  cam.aspect=
+    window.innerWidth/window.innerHeight;
+  cam.updateProjectionMatrix();
+  renderer.setSize(
+    window.innerWidth,window.innerHeight);
+  measureZones();
+}
+
+function setTheme(isDark){
+  if(isDark){
+    document.documentElement
+      .classList.remove('light');
+    renderer.setClearColor(0x000008,1);
+  } else {
+    document.documentElement
+      .classList.add('light');
+    renderer.setClearColor(0x080820,1);
+  }
+}
+
+function showModelLoading(show) {
+  document.getElementById('model-loading')
+    .style.display = show ? 'block' : 'none';
+  if (!show) {
+    document.getElementById('load-pct')
+      .textContent = 'Loading model...';
+  }
+}
+
+function updateLoadingProgress(pct) {
+  document.getElementById('load-pct')
+    .textContent = pct + '%';
+}
+
+window.onload=init;
+</script>
+</body>
+</html>

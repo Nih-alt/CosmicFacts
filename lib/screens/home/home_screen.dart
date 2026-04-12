@@ -500,12 +500,15 @@ class _HomeTabState extends State<_HomeTab> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Text('This Day in Space 📅',
-                            style: GoogleFonts.spaceGrotesk(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.3,
-                                color: AppColors.textPrimary(context))),
+                        Expanded(
+                          child: Text('This Day in Space 📅',
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                  color: AppColors.textPrimary(context))),
+                        ),
                       ],
                     ),
                   ).animate().fadeIn(duration: 500.ms, delay: 600.ms)
@@ -538,12 +541,15 @@ class _HomeTabState extends State<_HomeTab> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Text('Quote of the Day \u2728',
-                            style: GoogleFonts.spaceGrotesk(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.3,
-                                color: AppColors.textPrimary(context))),
+                        Expanded(
+                          child: Text('Quote of the Day \u2728',
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                  color: AppColors.textPrimary(context))),
+                        ),
                       ],
                     ),
                   ).animate().fadeIn(duration: 500.ms, delay: 800.ms)
