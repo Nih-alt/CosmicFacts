@@ -873,6 +873,10 @@ These would require visual judgment / design approval and are deferred to a sepa
 - Accent color per mission
 - Light/dark theme via setTheme()
 - Landscape support
+- Fixed zoom button visibility and chip scroll
+- Repositioned zoom controls to right-center to avoid info panel overlap
+- 10 missions total, all using genuine NASA 3D Resources GLB models. Added: Hubble, JWST, Cassini, Space Shuttle, NEAR Shoemaker, Chandra X-ray Observatory, EVA Space Suit. Removed procedural: Curiosity, New Horizons. Models hosted: github.com/Nih-alt/cosmic-facts-3d-models
+- Fixed: 3D models now rotate in all directions (horizontal + vertical drag)
 - Files created: assets/missions_3d.html,
   lib/screens/explore/missions_3d_screen.dart
 

@@ -37,8 +37,8 @@ class _Missions3DScreenState extends State<Missions3DScreen> {
         initialSettings: InAppWebViewSettings(
           javaScriptEnabled: true,
           transparentBackground: false,
-          disableHorizontalScroll: true,
-          disableVerticalScroll: true,
+          disableHorizontalScroll: false,
+          disableVerticalScroll: false,
           supportZoom: false,
           useHybridComposition: true,
           cacheEnabled: false,

@@ -9,7 +9,8 @@
 body { background:#000008; overflow:hidden;
        width:100vw; height:100vh; }
 canvas { display:block; position:fixed;
-         top:0; left:0; z-index:0; }
+         top:0; left:0; z-index:0;
+         touch-action:none; }
 
 :root {
   --accent: #FFB800;
@@ -239,17 +240,36 @@ canvas { display:block; position:fixed;
   line-height:1.55;
 }
 
-/* Reset btn */
-#reset-btn {
-  position:fixed; right:12px;
-  background:rgba(8,8,28,0.85);
-  border:1px solid rgba(255,255,255,0.12);
-  color:rgba(255,255,255,0.65);
-  border-radius:10px; padding:6px 11px;
-  font-size:10px; font-weight:600;
-  cursor:pointer;
-  font-family:-apple-system,sans-serif;
-  z-index:20;
+/* Controls */
+#controls {
+  position: fixed;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-70%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  z-index: 100;
+  pointer-events: all;
+}
+.ctrl-btn {
+  background: rgba(8,8,24,0.85);
+  border: 1px solid rgba(108,99,255,0.4);
+  color: rgba(255,255,255,0.9);
+  font-size: 18px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: all;
+  min-width: 52px;
+  text-align: center;
+}
+.ctrl-btn:active {
+  background: rgba(108,99,255,0.3);
+  border-color: rgba(108,99,255,0.6);
 }
 
 /* Loading */
@@ -335,10 +355,14 @@ canvas { display:block; position:fixed;
   </div>
 </div>
 
-<!-- Reset button — positioned dynamically -->
-<button id="reset-btn" onclick="resetView()">
-  Reset
-</button>
+<div id="controls">
+  <button class="ctrl-btn"
+    onclick="zoomIn()">＋</button>
+  <button class="ctrl-btn"
+    onclick="zoomOut()">－</button>
+  <button class="ctrl-btn"
+    onclick="resetView()">↺</button>
+</div>
 
 <!-- BOTTOM -->
 <div id="bot-zone">
@@ -401,19 +425,6 @@ const MISSIONS = [
     build:buildPerseverance,
   },
   {
-    id:'curiosity', name:'Curiosity',
-    abbr:'MSL', type:'MARS ROVER',
-    accent:'#C86040', hex:0xC86040,
-    badge:'ON MARS', badgeColor:'#C86040',
-    launched:'2011', distance:'225M km',
-    status:'Active', agency:'NASA',
-    desc:'Climbing Mount Sharp for 13+ years, analyzing ancient lake bed sediments for signs of habitability.',
-    stats:{'Weight':'899 kg','Distance':'32+ km driven','Power':'Nuclear RTG','Location':'Mt. Sharp'},
-    fact:'Confirmed Mars had liquid water and organic chemistry — conditions suitable for microbial life — 3.5 billion years ago.',
-    glbUrl:null,
-    build:buildCuriosity,
-  },
-  {
     id:'apollo', name:'Apollo LM',
     abbr:'Moon', type:'LUNAR MODULE',
     accent:'#CCCCCC', hex:0xCCCCCC,
@@ -427,17 +438,95 @@ const MISSIONS = [
     build:buildApolloLM,
   },
   {
-    id:'newhorizons', name:'New Horizons',
-    abbr:'NH', type:'KUIPER BELT PROBE',
-    accent:'#80DEEA', hex:0x80DEEA,
-    badge:'KUIPER BELT', badgeColor:'#80DEEA',
-    launched:'2006', distance:'8B km',
-    status:'Extended', agency:'NASA',
-    desc:'First spacecraft to explore Pluto, revealing a geologically active world with mountains, glaciers, and a complex atmosphere.',
-    stats:{'Speed':'14.5 km/s','Pluto Flyby':'Jul 2015','Power':'Nuclear RTG','Distance':'8B km'},
-    fact:'Revealed Pluto has mountains as tall as the Rockies, a vast nitrogen glacier shaped like a heart, and blue atmospheric haze.',
-    glbUrl:null,
-    build:buildNewHorizons,
+    id:'hubble', name:'Hubble',
+    abbr:'H', type:'SPACE TELESCOPE',
+    accent:'#7B5BFF', hex:0x7B5BFF,
+    badge:'IN EARTH ORBIT', badgeColor:'#7B5BFF',
+    launched:'1990', distance:'547 km',
+    status:'Active', agency:'NASA/ESA',
+    desc:'Revolutionized astronomy for 35+ years, capturing iconic deep-field images and proving the universe is expanding at an accelerating rate.',
+    stats:{'ALTITUDE':'547 km','ORBIT TIME':'95 min','MIRROR':'2.4m primary','MISSION AGE':'35 yrs'},
+    fact:'Proved the universe is accelerating its expansion — leading to the discovery of dark energy.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/hubble.glb',
+    build:null,
+  },
+  {
+    id:'jwst', name:'James Webb',
+    abbr:'J', type:'SPACE TELESCOPE',
+    accent:'#FFB800', hex:0xFFB800,
+    badge:'AT L2 POINT', badgeColor:'#FFB800',
+    launched:'2021', distance:'1.5M km',
+    status:'Active', agency:'NASA/ESA/CSA',
+    desc:'The most powerful space telescope ever built, observing the earliest galaxies formed after the Big Bang in infrared light.',
+    stats:{'MIRROR SIZE':'6.5 meters','SUNSHIELD':'Tennis court','WAVELENGTH':'Infrared','ORBIT':'L2 Halo'},
+    fact:'Captured the deepest infrared image of the universe, revealing galaxies formed 13+ billion years ago.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/jwst.glb',
+    build:null,
+  },
+  {
+    id:'cassini', name:'Cassini',
+    abbr:'CA', type:'SATURN ORBITER',
+    accent:'#FF7043', hex:0xFF7043,
+    badge:'MISSION COMPLETE', badgeColor:'#FF7043',
+    launched:'1997', distance:'1.2B km',
+    status:'Completed', agency:'NASA/ESA/ASI',
+    desc:'Orbited Saturn for 13 years, discovered ocean worlds on Enceladus and methane lakes on Titan before its grand finale dive.',
+    stats:{'SATURN ORBITS':'294','TITAN FLYBYS':'127','IMAGES':'453,000+','MISSION YEARS':'20 yrs'},
+    fact:'Discovered water-ice geysers erupting from Enceladus — making it a top candidate for extraterrestrial life.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/cassini.glb',
+    build:buildCassini,
+  },
+  {
+    id:'shuttle', name:'Space Shuttle',
+    abbr:'S', type:'CREWED SPACECRAFT',
+    accent:'#FFFFFF', hex:0xFFFFFF,
+    badge:'PROGRAM COMPLETE', badgeColor:'#90A4AE',
+    launched:'1981', distance:'LEO',
+    status:'Retired', agency:'NASA',
+    desc:'The world\'s first reusable spacecraft. Flew 135 missions over 30 years, built the ISS, launched Hubble, and defined an era of human spaceflight.',
+    stats:{'MISSIONS':'135','CREW CAPACITY':'7 astronauts','YEARS ACTIVE':'1981–2011','ORBITERS BUILT':'5'},
+    fact:'First reusable orbital spacecraft — launched Hubble, built the ISS, and carried 355 different astronauts to space.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/space_shuttle.glb',
+    build:null,
+  },
+  {
+    id:'near', name:'NEAR Shoemaker',
+    abbr:'N', type:'ASTEROID PROBE',
+    accent:'#8D6E63', hex:0x8D6E63,
+    badge:'MISSION COMPLETE', badgeColor:'#8D6E63',
+    launched:'1996', distance:'316M km',
+    status:'Completed', agency:'NASA',
+    desc:'First spacecraft to orbit and land on an asteroid (433 Eros). Revealed asteroids are not just rubble piles but complex worlds.',
+    stats:{'ASTEROID':'433 Eros','ORBIT TIME':'1 year','IMAGES':'160,000+','LANDED':'Feb 2001'},
+    fact:'First spacecraft to successfully orbit and soft-land on an asteroid — paving the way for asteroid sample-return missions.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/shoemaker.glb',
+    build:null,
+  },
+  {
+    id:'chandra', name:'Chandra',
+    abbr:'X', type:'X-RAY TELESCOPE',
+    accent:'#26C6DA', hex:0x26C6DA,
+    badge:'IN EARTH ORBIT', badgeColor:'#26C6DA',
+    launched:'1999', distance:'139,000 km',
+    status:'Active', agency:'NASA',
+    desc:'The most powerful X-ray telescope ever launched. Observes black holes, supernovae, and dark matter from a highly elliptical orbit.',
+    stats:{'ORBIT ALTITUDE':'139,000 km','ORBIT PERIOD':'64 hrs','WAVELENGTH':'X-ray','MISSION AGE':'26 yrs'},
+    fact:'Provided first direct proof of dark matter\'s existence through observations of the Bullet Cluster galaxy collision.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/chandrax.glb',
+    build:null,
+  },
+  {
+    id:'evasuit', name:'EVA Suit',
+    abbr:'E', type:'EXTRAVEHICULAR SUIT',
+    accent:'#E0E0E0', hex:0xE0E0E0,
+    badge:'SPACEWALK GEAR', badgeColor:'#E0E0E0',
+    launched:'1983', distance:'LEO/ISS',
+    status:'Active', agency:'NASA',
+    desc:'The Extravehicular Mobility Unit (EMU) — a miniature spacecraft worn by astronauts. Provides life support, communication, and mobility in the vacuum of space.',
+    stats:{'WEIGHT':'127 kg','OXYGEN':'8.5 hrs','LAYERS':'14','COST':'$12M each'},
+    fact:'Enabled every spacewalk in history — from Hubble repairs to ISS construction, totaling 260+ EVAs.',
+    glbUrl:'https://raw.githubusercontent.com/Nih-alt/cosmic-facts-3d-models/main/space_suit.glb',
+    build:null,
   },
 ];
 
@@ -465,9 +554,7 @@ function measureZones() {
   botH = document.getElementById('bot-zone')
     .getBoundingClientRect().height;
 
-  // Reset button just below top zone
-  document.getElementById('reset-btn')
-    .style.top = (topH + 8) + 'px';
+  // Controls are bottom-fixed via CSS
 }
 
 // ─────────────────────────────────────────────
@@ -502,6 +589,7 @@ function init() {
   addLights();
   addStarfield();
   buildTabs();
+  fixTabsScroll();
   setupTouch();
   window.addEventListener('resize', onResize);
 
@@ -587,6 +675,33 @@ function addStarfield() {
         size, vertexColors:true,
         transparent:true, opacity})));
   });
+}
+
+// ─────────────────────────────────────────────
+// FIX TABS SCROLL
+// ─────────────────────────────────────────────
+function fixTabsScroll() {
+  const tabs = document.getElementById(
+    'mission-tabs');
+
+  // Force scroll styles via JS
+  tabs.style.overflowX = 'scroll';
+  tabs.style.overflowY = 'hidden';
+  tabs.style.display = 'flex';
+  tabs.style.flexWrap = 'nowrap';
+  tabs.style.webkitOverflowScrolling = 'touch';
+
+  // Prevent canvas touch events
+  // from blocking tab scroll
+  tabs.addEventListener('touchstart',
+    function(e) {
+      e.stopPropagation();
+    }, {passive: true});
+
+  tabs.addEventListener('touchmove',
+    function(e) {
+      e.stopPropagation();
+    }, {passive: true});
 }
 
 // ─────────────────────────────────────────────
@@ -773,6 +888,10 @@ function clearScene() {
 // Three.js builder extracted to function
 function buildThreeJS(m, gen) {
   if (gen !== loadGeneration) return;
+  if (!m.build) {
+    showModelLoading(false);
+    return;
+  }
 
   craft = new THREE.Group();
   m.build(craft, m.hex, m.accent);
@@ -1300,99 +1419,6 @@ function buildPerseverance(g, accent) {
   heli.position.set(0,-0.36,0.1);
   g.add(heli);
 }
-
-function buildCuriosity(g, accent) {
-  const body=stdMat(0xD4C9A0,0.65,0.2);
-  const gf=goldFoil();
-  const dk=darkMat();
-  const wheel=stdMat(0x333344,0.78,0.3);
-  const arm=stdMat(0x909099,0.6,0.35);
-
-  // Body (warm tan/khaki)
-  box(1.3,0.58,0.95,body,0,0,0,0,0,0,g);
-  box(1.2,0.07,0.85,gf,0,0.32,0,0,0,0,g);
-
-  // RTG (prominent, back)
-  const rtgG=new THREE.Group();
-  cyl(0.13,0.13,0.56,12,
-    stdMat(0x777788,0.5,0.45),
-    0,0,0,0,0,Math.PI/2,rtgG);
-  for(let r=0;r<6;r++){
-    cyl(0.145,0.145,0.04,12,
-      stdMat(0x666677,0.6,0.4),
-      (r-2.5)*0.095,0,0,
-      0,0,Math.PI/2,rtgG);
-  }
-  rtgG.position.set(-0.72,0.08,0);
-  g.add(rtgG);
-
-  // Wheels (6) with cleats
-  [
-    [-0.78,-0.38, 0.5],[-0.78,-0.38, 0.0],
-    [-0.78,-0.38,-0.5],
-    [ 0.78,-0.38, 0.5],[ 0.78,-0.38, 0.0],
-    [ 0.78,-0.38,-0.5],
-  ].forEach(([x,y,z])=>{
-    const wg=new THREE.Group();
-    cyl(0.21,0.21,0.1,20,wheel,
-      0,0,0,0,0,Math.PI/2,wg);
-    for(let c=0;c<10;c++){
-      const a=(c/10)*Math.PI*2;
-      const cl=box(0.105,0.015,0.04,
-        stdMat(0x222233,0.85,0.1));
-      cl.position.set(
-        0,Math.cos(a)*0.21,
-        Math.sin(a)*0.21);
-      cl.rotation.x=a;
-      wg.add(cl);
-    }
-    sph(0.055,8,shinyMat(0xBBBBCC),
-      0,0,0,wg);
-    wg.position.set(x,y,z);
-    g.add(wg);
-  });
-
-  // Robot arm with turret
-  cyl(0.028,0.028,0.68,6,arm,
-    0.58,0.06,0.48,0,0,-Math.PI/4,g);
-  cyl(0.024,0.024,0.46,6,arm,
-    0.92,-0.42,0.52,0,0,-Math.PI/5,g);
-  // Turret head
-  cyl(0.07,0.055,0.16,8,
-    stdMat(0x555566,0.5,0.55),
-    1.12,-0.76,0.5,0,0,0,g);
-
-  // Distinctive mast with REMS sensor tower
-  const sensGrp=new THREE.Group();
-  cyl(0.028,0.028,0.7,8,
-    stdMat(0xAAAAAA,0.55,0.35),
-    0,0.35,0,0,0,0,sensGrp);
-  // Sensor head — distinctive T-shape
-  box(0.22,0.06,0.06,
-    stdMat(0x333344,0.7,0.3),
-    0,0.72,0,0,0,0,sensGrp);
-  // Camera eyes on T (very distinctive)
-  cyl(0.03,0.03,0.06,8,
-    darkMat(0x112244),
-    -0.08,0.72,0.04,
-    Math.PI/2,0,0,sensGrp);
-  cyl(0.03,0.03,0.06,8,
-    darkMat(0x112244),
-    0.08,0.72,0.04,
-    Math.PI/2,0,0,sensGrp);
-  // Orange accent on camera head
-  box(0.2,0.04,0.055,
-    stdMat(0xFF6633,0.5,0.3),
-    0,0.72,-0.03,0,0,0,sensGrp);
-  sensGrp.position.set(0.32,0.3,0.2);
-  g.add(sensGrp);
-
-  // ChemCam laser on mast
-  cyl(0.014,0.014,0.14,6,
-    stdMat(accent,0.3,0.7),
-    0.32,1.12,0.26,Math.PI/2,0,0,g);
-}
-
 function buildCassini(g, accent) {
   const silver=shinyMat(0xCCCCCC);
   const gf=goldFoil();
@@ -1632,131 +1658,6 @@ function buildApolloLM(g, accent) {
     .position.set(0,0.25,0);
 }
 
-function buildNewHorizons(g, accent) {
-  const silver = shinyMat(0xCCCCCC);
-  const gf     = goldFoil();
-  const dk     = darkMat();
-  const white  = stdMat(0xDDDDDD,0.6,0.2);
-
-  // ── Piano-lid shaped main body ──
-  // New Horizons is a roughly triangular
-  // flat body — NOT a rover
-
-  // Main deck (flat, wide)
-  box(1.4, 0.18, 1.6, silver,
-    0, 0, 0, 0, 0, 0, g);
-
-  // Gold MLI thermal blanket
-  box(1.3, 0.06, 1.5, gf,
-    0, 0.12, 0, 0, 0, 0, g);
-
-  // Equipment deck (bottom)
-  box(1.2, 0.22, 1.4,
-    stdMat(0xAAAAAA,0.55,0.3),
-    0, -0.2, 0, 0, 0, 0, g);
-
-  // ── LORRI telescope (prominent) ──
-  // Pointing forward (-Z direction)
-  const lorGrp = new THREE.Group();
-  // Outer baffle cylinder
-  cyl(0.18, 0.18, 0.72, 12,
-    stdMat(0x111122, 0.85, 0.05),
-    0, 0, 0, 0, 0, 0, lorGrp);
-  // Inner tube
-  cyl(0.14, 0.14, 0.75, 10, dk,
-    0, 0, 0, 0, 0, 0, lorGrp);
-  // Lens cap (front)
-  const lens = new THREE.Mesh(
-    new THREE.CircleGeometry(0.13, 12),
-    new THREE.MeshStandardMaterial({
-      color: 0x001144,
-      roughness: 0.05, metalness: 0.95,
-      emissive: 0x001155,
-      emissiveIntensity: 0.4,
-    }));
-  lens.rotation.x = Math.PI / 2;
-  lens.position.y = 0.37;
-  lorGrp.add(lens);
-  lorGrp.position.set(0.1, 0.0, -0.7);
-  lorGrp.rotation.x = -Math.PI / 2;
-  g.add(lorGrp);
-
-  // ── Large HGA dish (2.1m diameter) ──
-  const hgaGrp = new THREE.Group();
-  // Bowl
-  const bowl = new THREE.Mesh(
-    new THREE.SphereGeometry(
-      1.1, 28, 14, 0, Math.PI*2, 0, 0.52),
-    new THREE.MeshStandardMaterial({
-      color: 0xDDDDEE,
-      roughness: 0.12, metalness: 0.88,
-      side: THREE.DoubleSide,
-    }));
-  bowl.rotation.x = Math.PI;
-  hgaGrp.add(bowl);
-  // Rim ring
-  hgaGrp.add(new THREE.Mesh(
-    new THREE.TorusGeometry(1.1, 0.018, 8, 48),
-    shinyMat(0xCCCCCC, 0.15, 0.88)));
-  // Feed horn
-  cyl(0.04, 0.03, 0.18, 8, dk,
-    0, 0.1, 0, 0, 0, 0, hgaGrp);
-  // 3 support struts
-  for (let i = 0; i < 3; i++) {
-    const a = (i / 3) * Math.PI * 2;
-    cyl(0.01, 0.01, 0.44, 4, white,
-      Math.cos(a)*0.28, 0.08,
-      Math.sin(a)*0.28,
-      Math.PI/10*Math.cos(a), 0,
-      -Math.PI/10*Math.sin(a), hgaGrp);
-  }
-  hgaGrp.position.set(0.05, 0.72, 0.18);
-  hgaGrp.rotation.x = -0.22;
-  g.add(hgaGrp);
-
-  // ── RTG on boom (left side) ──
-  const rtgGrp = new THREE.Group();
-  cyl(0.014, 0.014, 1.1, 4, white,
-    0, 0, 0, 0, 0, Math.PI/2, rtgGrp);
-  cyl(0.075, 0.075, 0.42, 10,
-    stdMat(0x555566, 0.5, 0.5),
-    0.56, 0, 0, 0, 0, Math.PI/2, rtgGrp);
-  for (let r = 0; r < 5; r++) {
-    cyl(0.085, 0.085, 0.035, 10,
-      stdMat(0x444455, 0.6, 0.4),
-      0.56 + (r-2)*0.085, 0, 0,
-      0, 0, Math.PI/2, rtgGrp);
-  }
-  rtgGrp.position.set(-0.7, -0.06, 0.2);
-  g.add(rtgGrp);
-
-  // ── Ralph + Alice instruments ──
-  box(0.18, 0.1, 0.2,
-    stdMat(accent, 0.4, 0.4),
-    0.4, 0.13, 0.25, 0, 0, 0, g);
-  box(0.14, 0.08, 0.18,
-    stdMat(0x888899, 0.5, 0.4),
-    0.4, 0.13, -0.2, 0, 0, 0, g);
-
-  // ── PEPSSI detector ──
-  box(0.2, 0.06, 0.14,
-    stdMat(0x777788, 0.5, 0.4),
-    -0.08, 0.1, 0.72, 0, 0.3, 0, g);
-
-  // ── Star trackers (2) ──
-  cyl(0.038, 0.038, 0.1, 8,
-    stdMat(0x222233, 0.7, 0.3),
-    -0.5, 0.1, 0.25, Math.PI/2, 0, 0, g);
-  cyl(0.038, 0.038, 0.1, 8,
-    stdMat(0x222233, 0.7, 0.3),
-    0.5, 0.1, -0.3, Math.PI/2, 0, 0.4, g);
-
-  // ── SWAP/PEPSSI boom ──
-  cyl(0.01, 0.01, 0.5, 4, white,
-    0, 0.05, 0.8, 0, 0, 0, g);
-  sph(0.04, 8, stdMat(accent, 0.3, 0.6),
-    0, 0.05, 1.07, g);
-}
 
 // ─────────────────────────────────────────────
 // ANIMATION LOOP
@@ -1767,7 +1668,8 @@ function loop(t=0) {
   lastT=t;
 
   if (autoRot && craft && !lastTouch) {
-    craft.rotation.y += 0.006 * dt;
+    camTheta += 0.006 * dt;
+    moveCam();
   }
 
   renderer.render(scene, cam);
@@ -1812,13 +1714,10 @@ function setupTouch() {
                lastTouch.x;
       const dy=e.touches[0].clientY-
                lastTouch.y;
-      if(craft){
-        craft.rotation.y-=dx*0.009;
-        craft.rotation.x-=dy*0.009;
-        craft.rotation.x=Math.max(
-          -Math.PI/2,Math.min(
-          Math.PI/2,craft.rotation.x));
-      }
+      camTheta-=dx*0.009;
+      camPhi=Math.max(0.15,Math.min(
+        Math.PI-0.15,camPhi+dy*0.009));
+      moveCam();
       lastTouch={x:e.touches[0].clientX,
                  y:e.touches[0].clientY};
     } else if(e.touches.length===2){
@@ -1846,6 +1745,15 @@ function toggleAuto(){
   const b=document.getElementById('auto-btn');
   b.textContent=autoRot?'⟳ Auto':'❙❙ Pause';
   b.classList.toggle('on',autoRot);
+}
+
+function zoomIn() {
+  camR = Math.max(2.0, camR - 0.6);
+  moveCam();
+}
+function zoomOut() {
+  camR = Math.min(15.0, camR + 0.6);
+  moveCam();
 }
 
 function resetView(){
