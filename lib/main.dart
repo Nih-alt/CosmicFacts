@@ -133,7 +133,8 @@ void main() async {
     debugPrint('Smart notification error: $e');
   }
 
-  // Prefer edge-to-edge, immersive status bar
+  // Enable edge-to-edge display mode (SDK 36+ compliance)
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

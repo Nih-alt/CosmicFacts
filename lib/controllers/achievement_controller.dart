@@ -116,6 +116,13 @@ class AchievementController extends GetxController {
     }
   }
 
+  @override
+  void onClose() {
+    progress.close();
+    unlocked.close();
+    super.onClose();
+  }
+
   static void showAchievementUnlocked(Achievement achievement) {
     Get.snackbar(
       '\u{1F3C6} Achievement Unlocked!',

@@ -149,4 +149,11 @@ class HomeController extends GetxController {
   }
 
   void dismissOfflineBanner() => isOffline.value = false;
+
+  @override
+  void onClose() {
+    // No timers/streams to dispose — kept for controller lifecycle consistency.
+    isOffline.close();
+    super.onClose();
+  }
 }

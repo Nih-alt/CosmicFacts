@@ -132,6 +132,12 @@ class _FeedController extends GetxController {
     }
     isCategoryLoading.value = false;
   }
+
+  @override
+  void onClose() {
+    categoryArticles.close();
+    super.onClose();
+  }
 }
 
 // ═════════════════════════════════════════════

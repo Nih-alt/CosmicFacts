@@ -37,7 +37,9 @@ class _AsteroidsScreenState extends State<AsteroidsScreen> {
 
     // Check cache first (6 hours)
     try {
-      final box = await Hive.openBox('asteroids_cache');
+      final box = Hive.isBoxOpen('asteroids_cache')
+          ? Hive.box('asteroids_cache')
+          : await Hive.openBox('asteroids_cache');
       final cachedAt = box.get('cached_at') as int?;
       if (cachedAt != null) {
         final age = DateTime.now().millisecondsSinceEpoch - cachedAt;
@@ -76,7 +78,9 @@ class _AsteroidsScreenState extends State<AsteroidsScreen> {
 
     // Cache
     try {
-      final box = await Hive.openBox('asteroids_cache');
+      final box = Hive.isBoxOpen('asteroids_cache')
+          ? Hive.box('asteroids_cache')
+          : await Hive.openBox('asteroids_cache');
       await box.put('data', data);
       await box.put('cached_at', DateTime.now().millisecondsSinceEpoch);
     } catch (_) {}

@@ -42,6 +42,12 @@ class ThemeController extends GetxController {
     }
   }
 
+  @override
+  void onClose() {
+    themeMode.close();
+    super.onClose();
+  }
+
   static ThemeMode initialFromHive() {
     try {
       final box = Hive.box('settings');

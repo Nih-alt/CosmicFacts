@@ -1,111 +1,91 @@
-# ─────────────────────────────────────────
-# Flutter core
-# ─────────────────────────────────────────
+## Flutter
+-keep class io.flutter.app.** { *; }
+-keep class io.flutter.plugin.** { *; }
+-keep class io.flutter.util.** { *; }
+-keep class io.flutter.view.** { *; }
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 -dontwarn io.flutter.embedding.**
 
-# ─────────────────────────────────────────
-# Hive (key-value storage)
-# ─────────────────────────────────────────
--keep class hive.** { *; }
--keep class com.hivedb.** { *; }
--keepattributes *Annotation*
--keepclassmembers class * {
-    @com.google.gson.annotations.SerializedName <fields>;
-}
-
-# ─────────────────────────────────────────
-# Firebase (future use)
-# ─────────────────────────────────────────
--keep class com.google.firebase.** { *; }
--dontwarn com.google.firebase.**
-
-# ─────────────────────────────────────────
-# Google Mobile Ads (future use)
-# ─────────────────────────────────────────
--keep class com.google.android.gms.ads.** { *; }
-
-# ─────────────────────────────────────────
-# OkHttp / Okio (used by http package)
-# ─────────────────────────────────────────
--dontwarn okhttp3.**
--dontwarn okio.**
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
-
-# ─────────────────────────────────────────
-# CachedNetworkImage / Glide
-# ─────────────────────────────────────────
--keep public class * implements com.bumptech.glide.module.GlideModule
--keep class * extends com.bumptech.glide.module.AppGlideModule { *; }
--keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
-    **[] $VALUES;
-    public *;
-}
-
-# ─────────────────────────────────────────
-# App model classes (Hive serialization)
-# ─────────────────────────────────────────
--keep class com.cosmicfacts.app.** { *; }
--keepclassmembers class ** {
-    @com.google.gson.annotations.Expose *;
-}
-
-# ─────────────────────────────────────────
-# Plugin: AudioPlayers
-# ─────────────────────────────────────────
--keep class xyz.luan.audioplayers.** { *; }
-
-# ─────────────────────────────────────────
-# Plugin: Share Plus
-# ─────────────────────────────────────────
--keep class dev.fluttercommunity.plus.share.** { *; }
-
-# ─────────────────────────────────────────
-# Plugin: URL Launcher
-# ─────────────────────────────────────────
--keep class io.flutter.plugins.urllauncher.** { *; }
-
-# ─────────────────────────────────────────
-# Plugin: Flutter Local Notifications
-# ─────────────────────────────────────────
--keep class com.dexterous.flutterlocalnotifications.** { *; }
-
-# ─────────────────────────────────────────
-# WebView
-# ─────────────────────────────────────────
+## Flutter InAppWebView
+-keep class com.pichillilorenzo.flutter_inappwebview.** { *; }
+-dontwarn com.pichillilorenzo.flutter_inappwebview.**
 -keep class android.webkit.** { *; }
 
-# ─────────────────────────────────────────
-# Attribute preservation
-# ─────────────────────────────────────────
--keepattributes Signature
+## OkHttp & Okio (used by InAppWebView & http)
+-keep class okhttp3.** { *; }
+-dontwarn okhttp3.**
+-keep class okio.** { *; }
+-dontwarn okio.**
+
+## Firebase & Google Services
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+## Hive
+-keep class ** extends com.google.protobuf.** { *; }
+-keep class hive.** { *; }
+
+## Google Fonts
+-keep class com.google.android.** { *; }
+
+## Cached Network Image
+-keep class com.bumptech.glide.** { *; }
+-dontwarn com.bumptech.glide.**
+
+## URL Launcher
+-keep class android.content.Intent { *; }
+
+## Gson (if used internally by any plugin)
+-keep class com.google.gson.** { *; }
+-dontwarn com.google.gson.**
+
+## General Android
+-keep class androidx.** { *; }
+-dontwarn androidx.**
+-keep class android.** { *; }
+-dontwarn android.**
+
+## Keep annotations
 -keepattributes *Annotation*
--keepattributes EnclosingMethod
--keepattributes InnerClasses
+-keepattributes SourceFile,LineNumberTable
+-keepattributes Signature
+-keepattributes Exceptions
 
-# ─────────────────────────────────────────
-# fl_chart
-# ─────────────────────────────────────────
--keep class com.github.mikephil.** { *; }
+## Keep native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
 
-# ─────────────────────────────────────────
-# XML parser
-# ─────────────────────────────────────────
--dontwarn org.xmlpull.**
--dontwarn org.w3c.**
+## Keep enums
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
 
-# ─────────────────────────────────────────
-# Timezone
-# ─────────────────────────────────────────
--keep class com.timezone.** { *; }
--dontwarn com.timezone.**
+## Keep Parcelable
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final ** CREATOR;
+}
 
-# ─────────────────────────────────────────
-# General optimisation
-# ─────────────────────────────────────────
--optimizationpasses 5
--dontusemixedcaseclassnames
--dontskipnonpubliclibraryclasses
--verbose
+## Keep Serializable
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    !static !transient <fields>;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
+## Suppress warnings
+-dontwarn javax.**
+-dontwarn sun.misc.**
+-dontwarn java.lang.invoke.**
+
+## R8 compatibility
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**

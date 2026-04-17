@@ -88,4 +88,11 @@ class LaunchesController extends GetxController {
 
     isLoading.value = false;
   }
+
+  @override
+  void onClose() {
+    upcomingLaunches.close();
+    pastLaunches.close();
+    super.onClose();
+  }
 }

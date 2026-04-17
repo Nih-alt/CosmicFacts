@@ -60,4 +60,10 @@ class BookmarkController extends GetxController {
     final data = jsonEncode(bookmarks.map((b) => b.toJson()).toList());
     _box.put('all_bookmarks', data);
   }
+
+  @override
+  void onClose() {
+    bookmarks.close();
+    super.onClose();
+  }
 }
