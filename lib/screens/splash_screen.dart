@@ -58,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
     _navigateAfterSplash();
 
     // Safety net — if splash hangs for any reason, force navigate after 6 seconds
-    _safetyTimer = Timer(const Duration(seconds: 6), () {
+    _safetyTimer = Timer(const Duration(seconds: 3), () {
       if (mounted && !_hasNavigated) {
         debugPrint('SAFETY: Splash timeout — forcing navigation');
         _doNavigate(const HomeScreen());
@@ -74,7 +74,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _navigateAfterSplash() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 2500));
+      await Future.delayed(const Duration(milliseconds: 800));
 
       if (!mounted || _hasNavigated) return;
       _safetyTimer?.cancel();

@@ -2,6 +2,8 @@
 // Use CupertinoButton, CupertinoSwitch, CupertinoAlertDialog, CupertinoActivityIndicator,
 // CupertinoActionSheet, CupertinoPageRoute, CupertinoTabBar, CupertinoSliverNavigationBar.
 
+import 'dart:async' show unawaited;
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,9 +27,6 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Clear any stale cached images from previous sessions, then set an 80 MB cap.
-  PaintingBinding.instance.imageCache.clear();
-  PaintingBinding.instance.imageCache.clearLiveImages();
   PaintingBinding.instance.imageCache.maximumSizeBytes =
       80 * 1024 * 1024; // 80 MB
 
@@ -47,16 +46,18 @@ void main() async {
     debugPrint('FATAL: Hive init failed: $e');
   }
 
-  // Open each box individually with recovery
-  await _openBox('settings');
-  await _openBox('news_cache');
-  await _openBox('apod_cache');
-  await _openBox('launches_cache');
-  await _openBox('learn_progress');
-  await _openBox('quiz_stats');
-  await _openBox('bookmarks');
-  await _openBox('achievements');
-  await _openTypedBox<ObservationLog>('observations');
+  // Open all boxes in parallel (each one has its own error recovery).
+  await Future.wait([
+    _openBox('settings'),
+    _openBox('news_cache'),
+    _openBox('apod_cache'),
+    _openBox('launches_cache'),
+    _openBox('learn_progress'),
+    _openBox('quiz_stats'),
+    _openBox('bookmarks'),
+    _openBox('achievements'),
+    _openTypedBox<ObservationLog>('observations'),
+  ]);
 
   debugPrint('MAIN: All boxes opened');
 
@@ -83,12 +84,12 @@ void main() async {
     debugPrint('Home ctrl error: $e');
   }
   try {
-    Get.put(ExploreController(), permanent: true);
+    Get.lazyPut(() => ExploreController(), fenix: true);
   } catch (e) {
     debugPrint('Explore ctrl error: $e');
   }
   try {
-    Get.put(LaunchesController(), permanent: true);
+    Get.lazyPut(() => LaunchesController(), fenix: true);
   } catch (e) {
     debugPrint('Launches ctrl error: $e');
   }
@@ -105,26 +106,21 @@ void main() async {
 
   debugPrint('MAIN: Controllers ready');
 
-  // Init notifications safely
-  try {
-    await NotificationService.init();
-  } catch (e) {
-    debugPrint('Notification init error: $e');
-  }
+  // Non-blocking — run notification init in background so it doesn't delay first frame.
+  unawaited(NotificationService.init().then((_) {
+    return NotificationService.scheduleFromPrefs();
+  }).catchError((e) {
+    debugPrint('Notification init/schedule error: $e');
+  }));
 
-  // Schedule notifications if enabled
-  try {
-    await NotificationService.scheduleFromPrefs();
-  } catch (e) {
-    debugPrint('Notification schedule error: $e');
-  }
-
-  // Initialize Firebase Cloud Messaging
-  try {
-    await FirebaseNotificationService.init();
-  } catch (e) {
-    debugPrint('Firebase notification init error: $e');
-  }
+  // FCM setup (token fetch hits the network) — also non-blocking.
+  unawaited(Future(() async {
+    try {
+      await FirebaseNotificationService.init();
+    } catch (e) {
+      debugPrint('Firebase notification init error: $e');
+    }
+  }));
 
   // Smart notifications — launch alerts, asteroid warnings, event reminders
   try {
@@ -135,13 +131,13 @@ void main() async {
 
   // Enable edge-to-edge display mode (SDK 36+ compliance)
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.transparent,
-    ),
-  );
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
 
   debugPrint('MAIN: Running app');
   runApp(const CosmicFactsApp());

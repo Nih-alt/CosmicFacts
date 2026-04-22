@@ -1,7 +1,7 @@
 name: cosmic_facts
 description: "Cosmic Facts — Premium Space Knowledge & Discovery"
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.11.0
@@ -43,19 +43,28 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.0
+  flutter_native_splash: ^2.4.4
   build_runner: 2.4.13
   hive_generator: ^2.0.1
 
 flutter_launcher_icons:
   android: true
-  adaptive_icon_background: "#F3F0FF"
-  adaptive_icon_foreground: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#0a1628"
+  adaptive_icon_foreground: "assets/icon/app_icon.jpg"
   ios: true
-  image_path: "assets/icon/app_icon.png"
+  image_path: "assets/icon/app_icon.jpg"
   min_sdk_android: 21
   remove_alpha_ios: true
   web:
     generate: false
+
+flutter_native_splash:
+  color: "#05051A"
+  image: "assets/icon/app_icon.jpg"
+  android_12:
+    color: "#05051A"
+    icon_background_color: "#05051A"
+    image: "assets/icon/app_icon.jpg"
 
 flutter:
   uses-material-design: true
