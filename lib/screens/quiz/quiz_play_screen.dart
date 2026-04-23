@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -6,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../controllers/quiz_controller.dart';
 import '../../data/quiz_questions.dart';
+import '../../services/analytics_service.dart';
 import '../../theme/app_colors.dart';
 import 'quiz_results_screen.dart';
 
@@ -36,6 +39,7 @@ class _QuizPlayScreenState extends State<QuizPlayScreen>
   @override
   void initState() {
     super.initState();
+    unawaited(AnalyticsService.logFeatureUsed('quiz'));
     _ctrl = Get.put(QuizController(), tag: 'quiz_play');
     _ctrl.startQuiz(widget.questions, widget.mode);
 

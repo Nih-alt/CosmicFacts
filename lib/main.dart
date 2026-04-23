@@ -3,8 +3,11 @@
 // CupertinoActionSheet, CupertinoPageRoute, CupertinoTabBar, CupertinoSliverNavigationBar.
 
 import 'dart:async' show unawaited;
+import 'dart:ui' show PlatformDispatcher;
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -30,7 +33,9 @@ void main() async {
   PaintingBinding.instance.imageCache.maximumSizeBytes =
       80 * 1024 * 1024; // 80 MB
 
-  // Catch unhandled Flutter errors
+  // Early diagnostic error handler — replaced below with Crashlytics once
+  // Firebase is initialized. Until then we still want some visibility into
+  // errors that occur during startup (Hive / box opening).
   FlutterError.onError = (details) {
     debugPrint('Flutter Error: ${details.exception}');
     debugPrint('Stack: ${details.stack}');
@@ -61,10 +66,45 @@ void main() async {
 
   debugPrint('MAIN: All boxes opened');
 
-  // Initialize Firebase
+  // Initialize Firebase + Crashlytics + Analytics
   try {
     await Firebase.initializeApp();
     debugPrint('Firebase initialized successfully');
+
+    // Crashlytics — forward uncaught errors.
+    await FirebaseCrashlytics.instance
+        .setCrashlyticsCollectionEnabled(true);
+
+    // Pass all uncaught Flutter (framework) errors to Crashlytics.
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+
+    // Pass all uncaught async errors that aren't handled by Flutter.
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+
+    // Anonymous install-based user identifier so crash reports group by
+    // device (no PII). Persisted in the `settings` Hive box.
+    try {
+      final settings = Hive.box('settings');
+      final existingId =
+          settings.get('install_id', defaultValue: '') as String;
+      if (existingId.isEmpty) {
+        final newId = DateTime.now().millisecondsSinceEpoch.toString();
+        await settings.put('install_id', newId);
+        await FirebaseCrashlytics.instance.setUserIdentifier(newId);
+      } else {
+        await FirebaseCrashlytics.instance.setUserIdentifier(existingId);
+      }
+    } catch (e) {
+      debugPrint('Crashlytics user-id error: $e');
+    }
+
+    // Analytics — touch the singleton so it initializes early.
+    FirebaseAnalytics.instance;
   } catch (e) {
     debugPrint('Firebase init error: $e');
   }
@@ -183,6 +223,11 @@ class CosmicFactsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Single observer instance — auto-logs screen_view on every push/pop.
+    final analyticsObserver = FirebaseAnalyticsObserver(
+      analytics: FirebaseAnalytics.instance,
+    );
+
     return Obx(() {
       try {
         final themeCtrl = Get.find<ThemeController>();
@@ -192,6 +237,7 @@ class CosmicFactsApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: themeCtrl.themeMode.value,
+          navigatorObservers: [analyticsObserver],
           home: const SplashScreen(),
         );
       } catch (e) {
@@ -201,6 +247,7 @@ class CosmicFactsApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           darkTheme: AppTheme.dark,
           themeMode: ThemeMode.dark,
+          navigatorObservers: [analyticsObserver],
           home: const SplashScreen(),
         );
       }

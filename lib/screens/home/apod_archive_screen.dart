@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:convert';
 import 'dart:math';
 
@@ -17,6 +18,7 @@ import 'package:get/get.dart';
 import '../../constants/api_keys.dart';
 import '../../controllers/bookmark_controller.dart';
 import '../../models/bookmark_model.dart';
+import '../../services/analytics_service.dart';
 import '../../theme/app_colors.dart';
 
 class ApodArchiveScreen extends StatefulWidget {
@@ -53,6 +55,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(AnalyticsService.logFeatureUsed('apod'));
     if (widget.initialDate != null) {
       _date = DateTime.tryParse(widget.initialDate!) ?? _nasaCurrentDate();
     } else {

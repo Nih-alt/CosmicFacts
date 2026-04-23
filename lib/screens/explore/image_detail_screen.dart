@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,18 @@ import '../../models/bookmark_model.dart';
 import '../../models/nasa_image.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+
+// ═════════════════════════════════════════════
+// DESIGN TOKENS
+// ═════════════════════════════════════════════
+// Explore section keeps the older purple→cyan accent language (the
+// rest of the app uses blue→cyan). This detail screen matches its
+// parent surface so transitions feel coherent.
+const _accentPurple = Color(0xFF6C63FF);
+const _accentCyan = Color(0xFF00B4D8);
+const _purpleCyanGradient = LinearGradient(
+  colors: [_accentPurple, _accentCyan],
+);
 
 // ═════════════════════════════════════════════
 // HELPERS
@@ -116,6 +129,7 @@ class _DetailPageState extends State<_DetailPage> {
 
   bool _hintVisible = true;
   bool _descExpanded = false;
+  bool _detailsExpanded = false;
   List<NasaImage> _related = [];
   bool _relatedLoading = true;
   late String _currentImageUrl;
@@ -125,21 +139,24 @@ class _DetailPageState extends State<_DetailPage> {
   // Theme shortcuts used throughout
   Color get _textPrimary => AppColors.textPrimary(context);
   Color get _textSecondary => AppColors.textSecondary(context);
-  Color get _cardColor => AppColors.card(context);
-  Color get _borderColor => AppColors.cardBorder(context);
   Color get _contentBg => AppColors.background(context);
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _glassFill => _isDark
+      ? Colors.white.withValues(alpha: 0.06)
+      : Colors.black.withValues(alpha: 0.04);
+  Color get _glassBorder => _isDark
+      ? Colors.white.withValues(alpha: 0.1)
+      : Colors.black.withValues(alpha: 0.08);
 
   @override
   void initState() {
     super.initState();
-    // Show medium URL immediately — hero appears without delay
     _currentImageUrl = img.imageUrl;
     _hintTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) setState(() => _hintVisible = false);
     });
-    // Delay related load so hero image gets bandwidth first
     Future.delayed(const Duration(milliseconds: 700), _loadRelated);
-    // Silently pre-cache the large URL, then swap when ready
     _upgradeToLarge();
   }
 
@@ -173,16 +190,12 @@ class _DetailPageState extends State<_DetailPage> {
   }
 
   /// Upgrades the hero image to the highest available quality URL.
-  /// 1. HEAD ~large.jpg to confirm it exists on CDN.
-  /// 2. If not, query the NASA asset manifest for the best available variant.
-  /// 3. Pre-cache the confirmed URL, then swap the hero seamlessly.
   Future<void> _upgradeToLarge() async {
     final largeUrl = img.largeImageUrl;
     if (largeUrl.isEmpty) return;
 
     String? confirmedUrl;
 
-    // Step 1: Verify ~large.jpg exists via HEAD request
     try {
       final resp = await http
           .head(Uri.parse(largeUrl))
@@ -190,11 +203,8 @@ class _DetailPageState extends State<_DetailPage> {
       if (resp.statusCode == 200) {
         confirmedUrl = largeUrl;
       }
-    } catch (_) {
-      // Network error or timeout — fall through to manifest lookup
-    }
+    } catch (_) {}
 
-    // Step 2: Asset manifest fallback — find best available URL
     if (confirmedUrl == null && img.nasaId.isNotEmpty) {
       try {
         final manifestResp = await http
@@ -213,7 +223,6 @@ class _DetailPageState extends State<_DetailPage> {
                   u.endsWith('.jpeg') ||
                   u.endsWith('.png'))
               .toList();
-          // Prefer ~large, then ~orig, then any image URL
           final found = urls.firstWhere(
             (u) => u.contains('~large'),
             orElse: () => urls.firstWhere(
@@ -223,14 +232,11 @@ class _DetailPageState extends State<_DetailPage> {
           );
           if (found.isNotEmpty) confirmedUrl = found;
         }
-      } catch (_) {
-        // Manifest unavailable — keep thumb
-      }
+      } catch (_) {}
     }
 
     if (confirmedUrl == null || confirmedUrl == img.imageUrl) return;
 
-    // Step 3: Pre-cache before swapping so the hero never shows a blank frame
     try {
       await precacheImage(
         CachedNetworkImageProvider(confirmedUrl),
@@ -240,12 +246,9 @@ class _DetailPageState extends State<_DetailPage> {
       if (mounted) {
         setState(() => _currentImageUrl = confirmedUrl!);
       }
-    } catch (_) {
-      // Keep thumb if caching fails
-    }
+    } catch (_) {}
   }
 
-  /// Current hero URL: starts as medium, upgrades to large once cached.
   String get _displayUrl => _currentImageUrl;
 
   void _onDoubleTapDown(TapDownDetails d) {
@@ -274,7 +277,12 @@ class _DetailPageState extends State<_DetailPage> {
 
   Future<void> _openInBrowser() async {
     try {
-      await launchUrl(Uri.parse(img.imageUrl),
+      final url = img.hdUrl.isNotEmpty
+          ? img.hdUrl
+          : (img.largeImageUrl.isNotEmpty
+              ? img.largeImageUrl
+              : img.imageUrl);
+      await launchUrl(Uri.parse(url),
           mode: LaunchMode.externalApplication);
     } catch (_) {}
   }
@@ -313,7 +321,8 @@ class _DetailPageState extends State<_DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final imageHeight = MediaQuery.sizeOf(context).height * 0.55;
+    // CHANGE 1 — hero takes 45% of screen height
+    final imageHeight = MediaQuery.sizeOf(context).height * 0.45;
     return Scaffold(
       backgroundColor: _contentBg,
       body: CustomScrollView(
@@ -332,7 +341,7 @@ class _DetailPageState extends State<_DetailPage> {
   }
 
   // ─────────────────────────────────────────
-  // HERO — 55% height, zoom, overlay buttons
+  // HERO — 45% height, zoom, frosted overlay buttons, gradient fade
   // ─────────────────────────────────────────
 
   Widget _buildHero(double imageHeight) {
@@ -379,7 +388,7 @@ class _DetailPageState extends State<_DetailPage> {
                           Text('Image unavailable',
                               style: GoogleFonts.inter(
                                   fontSize: 13,
-                                  color: AppColors.textSecondaryDark)),
+                                  color: AppColors.textSecondary(ctx))),
                         ],
                       ),
                     ),
@@ -389,27 +398,45 @@ class _DetailPageState extends State<_DetailPage> {
             ),
           ),
 
-          // Bottom gradient — last 30%
+          // Seamless gradient fade: transparent → AppColors.background(context)
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            height: imageHeight * 0.32,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.82),
-                  ],
+            height: imageHeight * 0.5,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.55, 1.0],
+                    colors: [
+                      Colors.transparent,
+                      _contentBg.withValues(alpha: 0.6),
+                      _contentBg,
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
 
-          // Top bar (back + share + bookmark)
+          // Pinch hint — fades out after 2s, top-center
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 68,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: AnimatedOpacity(
+                opacity: _hintVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 500),
+                child: Center(child: _buildFrostedPillHint()),
+              ),
+            ),
+          ),
+
+          // Top bar (frosted back + share + bookmark)
           Positioned(
             top: 0,
             left: 0,
@@ -421,15 +448,17 @@ class _DetailPageState extends State<_DetailPage> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
-                    _CircleButton(
+                    _FrostedCircleButton(
                       icon: CupertinoIcons.back,
                       onTap: () => Navigator.of(context).pop(),
                     ),
                     const Spacer(),
-                    _CircleButton(
-                        icon: CupertinoIcons.share, onTap: _share),
+                    _FrostedCircleButton(
+                      icon: CupertinoIcons.share,
+                      onTap: _share,
+                    ),
                     const SizedBox(width: 10),
-                    _CircleButton(
+                    _FrostedCircleButton(
                       icon: _isBookmarked
                           ? CupertinoIcons.bookmark_fill
                           : CupertinoIcons.bookmark,
@@ -442,7 +471,7 @@ class _DetailPageState extends State<_DetailPage> {
             ),
           ),
 
-          // Bottom overlay — counter + dots + hint
+          // Bottom bar: floating source chip + counter/dots on the fade zone
           Positioned(
             left: 16,
             right: 16,
@@ -450,74 +479,163 @@ class _DetailPageState extends State<_DetailPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Pinch hint fades out
-                AnimatedOpacity(
-                  opacity: _hintVisible ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 500),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.52),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.pinch_outlined,
-                            color: Colors.white, size: 14),
-                        const SizedBox(width: 5),
-                        Text('Pinch to zoom',
-                            style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color:
-                                    Colors.white.withValues(alpha: 0.9))),
-                      ],
-                    ),
-                  ),
-                ),
+                Flexible(child: _buildSourceChip()),
                 const Spacer(),
-                // Counter + dots
-                if (widget.totalCount > 1)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.52),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${widget.pageIndex + 1} of ${widget.totalCount}',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      if (widget.totalCount <= 15)
-                        SmoothPageIndicator(
-                          controller: widget.pageController,
-                          count: widget.totalCount,
-                          effect: const WormEffect(
-                            dotHeight: 6,
-                            dotWidth: 6,
-                            spacing: 6,
-                            activeDotColor: Colors.white,
-                            dotColor: Color(0x55FFFFFF),
-                          ),
-                        ),
-                    ],
-                  ),
+                if (widget.totalCount > 1) _buildCounterBar(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFrostedPillHint() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.pinch_outlined,
+                  color: Colors.white, size: 14),
+              const SizedBox(width: 6),
+              Text('Pinch to zoom',
+                  style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: Colors.white.withValues(alpha: 0.9))),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // CHANGE 2 — floating glass source chip + date
+  Widget _buildSourceChip() {
+    final date = _formatNasaDate(img.dateCreated);
+    final source = img.center.isNotEmpty
+        ? 'Source: NASA / ${img.center}'
+        : 'Source: NASA Image Library';
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: _isDark
+                  ? Colors.white.withValues(alpha: 0.18)
+                  : Colors.black.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ShaderMask(
+                shaderCallback: (r) =>
+                    _purpleCyanGradient.createShader(r),
+                child: const Icon(Icons.auto_awesome,
+                    size: 13, color: Colors.white),
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  source,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _textPrimary,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+              if (date.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Container(
+                  width: 3,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: _textSecondary.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  date,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: _textSecondary.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCounterBar() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 4),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15)),
+              ),
+              child: Text(
+                '${widget.pageIndex + 1} of ${widget.totalCount}',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            if (widget.totalCount <= 15)
+              SmoothPageIndicator(
+                controller: widget.pageController,
+                count: widget.totalCount,
+                effect: const WormEffect(
+                  dotHeight: 6,
+                  dotWidth: 6,
+                  spacing: 6,
+                  activeDotColor: Colors.white,
+                  dotColor: Color(0x55FFFFFF),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -529,15 +647,11 @@ class _DetailPageState extends State<_DetailPage> {
   Widget _buildContent() {
     return Container(
       color: _contentBg,
-      padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // A) Source row
-          _buildSourceRow(),
-          const SizedBox(height: 14),
-
-          // B) Title
+          // Title
           Text(
             img.title,
             style: GoogleFonts.spaceGrotesk(
@@ -549,122 +663,106 @@ class _DetailPageState extends State<_DetailPage> {
           ),
           const SizedBox(height: 22),
 
-          // C) 3 stat cards
-          _buildStatsRow(),
-          const SizedBox(height: 24),
+          // CHANGE 3 — glass stat pills
+          _buildStatPills(),
+          const SizedBox(height: 28),
 
-          // D) Gradient divider
-          _gradientDivider(),
-          const SizedBox(height: 24),
-
-          // E) Description
+          // CHANGE 4 — description with decorative gradient line
           if (img.description.isNotEmpty) ...[
+            _gradientAccentLine(),
+            const SizedBox(height: 16),
             _buildDescription(),
             const SizedBox(height: 28),
           ],
 
-          // F) More Like This
+          // CHANGE 5 — More Like This: horizontal, 160px cards
           _buildMoreLikeThis(),
           if (!_relatedLoading && _related.isNotEmpty)
             const SizedBox(height: 28),
 
-          // G) Keywords
+          // CHANGE 6 — tappable hashtag chips
           if (img.keywords.isNotEmpty) ...[
             _buildKeywords(),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
           ],
 
-          // H) Image info card
-          _buildInfoCard(),
+          // CHANGE 7 — collapsible Image Details
+          _buildCollapsibleInfoCard(),
           const SizedBox(height: 24),
 
-          // I) Action buttons
-          _buildActionButtons(),
-          const SizedBox(height: 48),
+          // CHANGE 8 — primary action + two icon circles
+          _buildActionStack(),
+
+          // Safe-area padding for gesture-nav devices
+          SizedBox(
+            height: 24 + MediaQuery.of(context).padding.bottom,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSourceRow() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            img.center.isNotEmpty ? 'Source: NASA / ${img.center}' : 'Source: NASA Image Library',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Container(
-          width: 4,
-          height: 4,
-          decoration: BoxDecoration(
-              color: _textSecondary, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          _formatNasaDate(img.dateCreated),
-          style: GoogleFonts.inter(fontSize: 13, color: _textSecondary),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsRow() {
+  // ─────────────────────────────────────────
+  // CHANGE 3 — Glass stat pills
+  // ─────────────────────────────────────────
+  Widget _buildStatPills() {
     final year =
         DateTime.tryParse(img.dateCreated)?.year.toString() ?? '—';
     final stats = [
       (Icons.camera_alt_outlined,
-          img.center.isNotEmpty ? img.center : 'NASA Image Library', 'Source'),
+          img.center.isNotEmpty ? img.center : 'NASA', 'Source'),
       (Icons.calendar_today_outlined, year, 'Year'),
-      (Icons.label_outline_rounded, '${img.keywords.length} tags', 'Tags'),
+      (Icons.label_outline_rounded, '${img.keywords.length}', 'Tags'),
     ];
 
     return Row(
       children: List.generate(stats.length, (i) {
         final s = stats[i];
         return Expanded(
-          child: Container(
-            height: 68,
-            margin: EdgeInsets.only(right: i < stats.length - 1 ? 10 : 0),
-            decoration: BoxDecoration(
-              color: _cardColor,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _borderColor),
-              boxShadow: AppColors.cardShadow(context),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(s.$1, size: 16, color: AppColors.accentBlue),
-                const SizedBox(height: 5),
-                Text(
-                  s.$2,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _textPrimary,
+          child: Padding(
+            padding: EdgeInsets.only(right: i < stats.length - 1 ? 10 : 0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  height: 86,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _glassFill,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _glassBorder),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(s.$1, size: 18, color: _accentPurple),
+                      const SizedBox(height: 6),
+                      Text(
+                        s.$2,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        s.$3,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: _textSecondary,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  s.$3,
-                  style: GoogleFonts.inter(
-                      fontSize: 10, color: _textSecondary),
-                ),
-              ],
+              ),
             ),
           )
               .animate(delay: Duration(milliseconds: 80 * i))
@@ -675,17 +773,16 @@ class _DetailPageState extends State<_DetailPage> {
     );
   }
 
-  Widget _gradientDivider() {
+  // ─────────────────────────────────────────
+  // CHANGE 4 — Decorative gradient line + description
+  // ─────────────────────────────────────────
+  Widget _gradientAccentLine() {
     return Container(
-      height: 1,
+      width: 40,
+      height: 3,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.transparent,
-            AppColors.accentBlue.withValues(alpha: 0.45),
-            Colors.transparent,
-          ],
-        ),
+        gradient: _purpleCyanGradient,
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }
@@ -701,24 +798,43 @@ class _DetailPageState extends State<_DetailPage> {
             img.description,
             style: GoogleFonts.inter(
               fontSize: 15,
-              color: _textPrimary.withValues(alpha: 0.78),
-              height: 1.75,
+              color: _textPrimary.withValues(alpha: 0.85),
+              height: 1.6,
             ),
             maxLines: _descExpanded ? 999 : 4,
             overflow: TextOverflow.ellipsis,
           ),
         ),
         if (img.description.length > 200)
-          GestureDetector(
-            onTap: () => setState(() => _descExpanded = !_descExpanded),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _descExpanded ? 'Show Less' : 'Read More',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.accentBlue,
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: GestureDetector(
+              onTap: () => setState(() => _descExpanded = !_descExpanded),
+              child: ShaderMask(
+                shaderCallback: (bounds) =>
+                    _purpleCyanGradient.createShader(bounds),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _descExpanded ? 'Show Less' : 'Read More',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    AnimatedRotation(
+                      turns: _descExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 250),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -727,32 +843,40 @@ class _DetailPageState extends State<_DetailPage> {
     );
   }
 
+  // ─────────────────────────────────────────
+  // CHANGE 5 — More Like This, horizontal row, 160 wide
+  // ─────────────────────────────────────────
   Widget _buildMoreLikeThis() {
-    // Don't show section if no keywords or nothing loaded and done loading
     if (img.keywords.isEmpty) return const SizedBox.shrink();
     if (!_relatedLoading && _related.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'More Like This',
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: _textPrimary,
-          ),
+        Row(
+          children: [
+            _gradientAccentLine(),
+            const SizedBox(width: 10),
+            Text(
+              'More Like This',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 14),
         SizedBox(
-          height: 162,
-          child: _relatedLoading ? _relatedShimmer() : _relatedGrid(),
+          height: 200,
+          child: _relatedLoading ? _relatedShimmer() : _relatedList(),
         ),
       ],
     );
   }
 
-  Widget _relatedGrid() {
+  Widget _relatedList() {
     return ListView.separated(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
@@ -766,40 +890,55 @@ class _DetailPageState extends State<_DetailPage> {
                 images: _related, initialIndex: i),
           )),
           child: SizedBox(
-            width: 120,
+            width: 160,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: CachedNetworkImage(
-                    imageUrl: rel.imageUrl,
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.cover,
-                    placeholder: (ctx, url) =>
-                        _shimmerBox(120, 120, radius: 14),
-                    errorWidget: (ctx, url, err) => Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: AppColors.card(ctx),
-                        borderRadius: BorderRadius.circular(14),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: _isDark
+                        ? const []
+                        : [
+                            BoxShadow(
+                              color:
+                                  Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: CachedNetworkImage(
+                      imageUrl: rel.imageUrl,
+                      width: 160,
+                      height: 140,
+                      fit: BoxFit.cover,
+                      placeholder: (ctx, url) =>
+                          _shimmerBox(160, 140, radius: 14),
+                      errorWidget: (ctx, url, err) => Container(
+                        width: 160,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: AppColors.card(ctx),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.star_border,
+                            color: AppColors.accentBlue),
                       ),
-                      child: const Icon(Icons.star_border,
-                          color: AppColors.accentBlue),
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   rel.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: _textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
                     height: 1.3,
                   ),
                 ),
@@ -824,11 +963,11 @@ class _DetailPageState extends State<_DetailPage> {
       itemBuilder: (context, index) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _shimmerBox(120, 120, radius: 14),
-          const SizedBox(height: 6),
-          _shimmerBox(110, 14, radius: 4),
+          _shimmerBox(160, 140, radius: 14),
+          const SizedBox(height: 8),
+          _shimmerBox(150, 12, radius: 4),
           const SizedBox(height: 4),
-          _shimmerBox(80, 12, radius: 4),
+          _shimmerBox(110, 12, radius: 4),
         ],
       ),
     );
@@ -851,49 +990,41 @@ class _DetailPageState extends State<_DetailPage> {
     );
   }
 
+  // ─────────────────────────────────────────
+  // CHANGE 6 — Hashtag chips
+  // ─────────────────────────────────────────
   Widget _buildKeywords() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'TAGS',
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: _textSecondary,
-            letterSpacing: 1.4,
-          ),
+        Row(
+          children: [
+            _gradientAccentLine(),
+            const SizedBox(width: 10),
+            Text(
+              'Tags',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: img.keywords.take(12).map((k) {
-            return GestureDetector(
+            return _HashtagChip(
+              label: k,
+              isDark: _isDark,
               onTap: () {
                 try {
                   Get.find<ExploreController>().searchImages(k);
                 } catch (_) {}
                 Navigator.of(context).pop();
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: AppColors.card(context),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: AppColors.accentBlue.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  k,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.accentBlue,
-                  ),
-                ),
-              ),
             );
           }).toList(),
         ),
@@ -901,81 +1032,101 @@ class _DetailPageState extends State<_DetailPage> {
     );
   }
 
-  Widget _buildInfoCard() {
+  // ─────────────────────────────────────────
+  // CHANGE 7 — Collapsible Image Details
+  // ─────────────────────────────────────────
+  Widget _buildCollapsibleInfoCard() {
     final dateStr = _formatNasaDate(img.dateCreated);
     final nasaIdShort = img.nasaId.length > 22
         ? '${img.nasaId.substring(0, 22)}…'
         : img.nasaId;
+    final keywordsStr =
+        img.keywords.isEmpty ? '—' : '${img.keywords.length}';
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _cardColor,
+        color: _glassFill,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _borderColor),
-        boxShadow: AppColors.cardShadow(context),
+        border: Border.all(color: _glassBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
-            child: Text(
-              'Image Details',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: _textPrimary,
+          // Header — tappable to toggle
+          InkWell(
+            onTap: () =>
+                setState(() => _detailsExpanded = !_detailsExpanded),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline,
+                      size: 18, color: _accentPurple),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Image Details',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: _textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  AnimatedRotation(
+                    turns: _detailsExpanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 250),
+                    child: Icon(Icons.keyboard_arrow_down_rounded,
+                        color: _textSecondary),
+                  ),
+                ],
               ),
             ),
           ),
-          _infoRow(
-            Icons.explore_outlined,
-            'Source',
-            img.center.isNotEmpty ? img.center : 'NASA Image Library',
-          ),
-          _infoRow(
-            Icons.photo_camera_outlined,
-            'NASA ID',
-            nasaIdShort,
-            trailing: GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: img.nasaId));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('NASA ID copied',
-                        style: GoogleFonts.inter(fontSize: 13)),
-                    backgroundColor: AppColors.accentBlue,
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.accentBlue.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity, height: 0),
+            secondChild: Column(
+              children: [
+                _infoRow(
+                  Icons.explore_outlined,
+                  'Source',
+                  img.center.isNotEmpty ? img.center : 'NASA Image Library',
                 ),
-                child: Text(
-                  'Copy',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.accentBlue,
+                _infoRow(
+                  Icons.photo_camera_outlined,
+                  'NASA ID',
+                  nasaIdShort,
+                  trailing: _CopyChip(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: img.nasaId));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('NASA ID copied',
+                              style: GoogleFonts.inter(fontSize: 13)),
+                          backgroundColor: _accentPurple,
+                          duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
+                _infoRow(Icons.calendar_today_outlined, 'Date', dateStr),
+                _infoRow(
+                  Icons.label_outline_rounded,
+                  'Keywords',
+                  keywordsStr,
+                  isLast: true,
+                ),
+              ],
             ),
-          ),
-          _infoRow(Icons.calendar_today_outlined, 'Date', dateStr),
-          _infoRow(
-            Icons.label_outline_rounded,
-            'Keywords',
-            '${img.keywords.length}',
-            isLast: true,
+            crossFadeState: _detailsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 260),
           ),
         ],
       ),
@@ -991,7 +1142,7 @@ class _DetailPageState extends State<_DetailPage> {
   }) {
     return Column(
       children: [
-        Container(height: 1, color: _borderColor),
+        Container(height: 1, color: AppColors.divider(context)),
         Padding(
           padding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
@@ -999,7 +1150,7 @@ class _DetailPageState extends State<_DetailPage> {
             children: [
               Icon(icon,
                   size: 16,
-                  color: AppColors.accentBlue.withValues(alpha: 0.7)),
+                  color: _accentPurple.withValues(alpha: 0.85)),
               const SizedBox(width: 10),
               Text(label,
                   style: GoogleFonts.inter(
@@ -1022,47 +1173,45 @@ class _DetailPageState extends State<_DetailPage> {
             ],
           ),
         ),
+        if (isLast) const SizedBox(height: 4),
       ],
     );
   }
 
-  Widget _buildActionButtons() {
+  // ─────────────────────────────────────────
+  // CHANGE 8 — Primary button + two icon circles
+  // ─────────────────────────────────────────
+  Widget _buildActionStack() {
     final bookmarked = _isBookmarked;
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _ActionButton(
-            icon: Icons.open_in_browser_rounded,
-            label: 'Open Image',
-            onTap: _openInBrowser,
-            gradient: AppColors.primaryGradient,
-            foreground: Colors.white,
-          ),
+        _PrimaryActionButton(
+          icon: Icons.download_rounded,
+          label: 'Open Full HD',
+          gradient: _purpleCyanGradient,
+          onTap: _openInBrowser,
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionButton(
-            icon: CupertinoIcons.share,
-            label: 'Share',
-            onTap: _share,
-            cardColor: _cardColor,
-            borderColor: _borderColor,
-            foreground: _textPrimary,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionButton(
-            icon: bookmarked
-                ? CupertinoIcons.bookmark_fill
-                : CupertinoIcons.bookmark,
-            label: bookmarked ? 'Saved' : 'Bookmark',
-            onTap: _toggleBookmark,
-            gradient: bookmarked ? AppColors.primaryGradient : null,
-            cardColor: bookmarked ? null : _cardColor,
-            borderColor: bookmarked ? null : _borderColor,
-            foreground: bookmarked ? Colors.white : _textPrimary,
-          ),
+        const SizedBox(height: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _IconCircleButton(
+              icon: CupertinoIcons.share,
+              label: 'Share',
+              isDark: _isDark,
+              onTap: _share,
+            ),
+            const SizedBox(width: 22),
+            _IconCircleButton(
+              icon: bookmarked
+                  ? CupertinoIcons.bookmark_fill
+                  : CupertinoIcons.bookmark,
+              label: bookmarked ? 'Saved' : 'Bookmark',
+              isDark: _isDark,
+              highlighted: bookmarked,
+              onTap: _toggleBookmark,
+            ),
+          ],
         ),
       ],
     );
@@ -1070,15 +1219,15 @@ class _DetailPageState extends State<_DetailPage> {
 }
 
 // ═════════════════════════════════════════════
-// CIRCLE BUTTON — top bar overlay
+// FROSTED CIRCLE BUTTON — top bar overlay
 // ═════════════════════════════════════════════
 
-class _CircleButton extends StatelessWidget {
+class _FrostedCircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final bool filled;
 
-  const _CircleButton({
+  const _FrostedCircleButton({
     required this.icon,
     required this.onTap,
     this.filled = false,
@@ -1088,44 +1237,137 @@ class _CircleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: filled
-              ? AppColors.accentBlue
-              : Colors.black.withValues(alpha: 0.45),
-          shape: BoxShape.circle,
-          border:
-              Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      child: ClipOval(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: filled
+                  ? _accentPurple.withValues(alpha: 0.9)
+                  : Colors.black.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Icon(icon, color: Colors.white, size: 19),
+          ),
         ),
-        child: Icon(icon, color: Colors.white, size: 19),
       ),
     );
   }
 }
 
 // ═════════════════════════════════════════════
-// ACTION BUTTON — bottom row
+// HASHTAG CHIP
 // ═════════════════════════════════════════════
 
-class _ActionButton extends StatelessWidget {
+class _HashtagChip extends StatelessWidget {
+  final String label;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _HashtagChip({
+    required this.label,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fill = isDark
+        ? _accentPurple.withValues(alpha: 0.18)
+        : _accentPurple.withValues(alpha: 0.1);
+    final border = isDark
+        ? _accentPurple.withValues(alpha: 0.35)
+        : _accentPurple.withValues(alpha: 0.25);
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: border),
+            ),
+            child: Text(
+              '#$label',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _accentPurple,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// COPY CHIP (outlined)
+// ═════════════════════════════════════════════
+
+class _CopyChip extends StatelessWidget {
+  final VoidCallback onTap;
+  const _CopyChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: _accentPurple.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.copy, size: 11, color: _accentPurple),
+            const SizedBox(width: 4),
+            Text(
+              'Copy',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _accentPurple,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// PRIMARY ACTION BUTTON (full width, gradient)
+// ═════════════════════════════════════════════
+
+class _PrimaryActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
+  final LinearGradient gradient;
   final VoidCallback onTap;
-  final LinearGradient? gradient;
-  final Color? cardColor;
-  final Color? borderColor;
-  final Color foreground;
 
-  const _ActionButton({
+  const _PrimaryActionButton({
     required this.icon,
     required this.label,
+    required this.gradient,
     required this.onTap,
-    required this.foreground,
-    this.gradient,
-    this.cardColor,
-    this.borderColor,
   });
 
   @override
@@ -1133,39 +1375,104 @@ class _ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 62,
+        width: double.infinity,
+        height: 58,
         decoration: BoxDecoration(
           gradient: gradient,
-          color: gradient == null ? cardColor : null,
-          borderRadius: BorderRadius.circular(16),
-          border: gradient == null && borderColor != null
-              ? Border.all(color: borderColor!)
-              : null,
-          boxShadow: gradient != null
-              ? [
-                  BoxShadow(
-                    color: AppColors.accentBlue.withValues(alpha: 0.28),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : AppColors.cardShadow(context),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: _accentPurple.withValues(alpha: 0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        child: Column(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: foreground, size: 20),
-            const SizedBox(height: 4),
+            Icon(icon, color: Colors.white, size: 22),
+            const SizedBox(width: 10),
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: foreground,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.3,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// SMALL ICON-CIRCLE BUTTON (Share / Bookmark)
+// ═════════════════════════════════════════════
+
+class _IconCircleButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isDark;
+  final bool highlighted;
+  final VoidCallback onTap;
+
+  const _IconCircleButton({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+    required this.onTap,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = highlighted
+        ? _accentPurple.withValues(alpha: 0.18)
+        : (isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.05));
+    final border = highlighted
+        ? _accentPurple.withValues(alpha: 0.5)
+        : (isDark
+            ? Colors.white.withValues(alpha: 0.1)
+            : Colors.black.withValues(alpha: 0.08));
+    final fg = highlighted
+        ? _accentPurple
+        : AppColors.textPrimary(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: bg,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: border),
+                ),
+                child: Icon(icon, size: 22, color: fg),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,9 +1,11 @@
+import 'dart:async' show unawaited;
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
+import '../../services/analytics_service.dart';
 import '../../services/tle_service.dart';
 
 class SpacecraftTrackerScreen extends StatefulWidget {
@@ -23,6 +25,7 @@ class _SpacecraftTrackerScreenState extends State<SpacecraftTrackerScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(AnalyticsService.logFeatureUsed('iss_tracker'));
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _fetchAndInjectTle();
   }

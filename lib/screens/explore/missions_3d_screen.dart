@@ -1,6 +1,10 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
+import '../../services/analytics_service.dart';
 
 class Missions3DScreen extends StatefulWidget {
   const Missions3DScreen({super.key});
@@ -13,6 +17,7 @@ class _Missions3DScreenState extends State<Missions3DScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(AnalyticsService.logFeatureUsed('missions_3d'));
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,

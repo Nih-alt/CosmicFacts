@@ -1,6 +1,10 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
+import '../../services/analytics_service.dart';
 
 class SolarSystemScreen extends StatefulWidget {
   const SolarSystemScreen({super.key});
@@ -15,6 +19,7 @@ class _SolarSystemScreenState extends State<SolarSystemScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(AnalyticsService.logFeatureUsed('solar_system_3d'));
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,

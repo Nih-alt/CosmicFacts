@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/launch_model.dart';
+import '../../services/analytics_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/launch_branding.dart';
 
@@ -32,6 +33,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(AnalyticsService.logFeatureUsed('launch_detail'));
     if (_isUpcoming) {
       _remaining = launch.launchDate.difference(DateTime.now());
       _countdownTimer = Timer.periodic(
