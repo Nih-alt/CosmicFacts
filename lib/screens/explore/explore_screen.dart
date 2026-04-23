@@ -29,6 +29,8 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen> {
   final _scrollController = ScrollController();
   final _searchFocusNode = FocusNode();
+  // Anchors the category-pills row so "See All →" can scroll it into view.
+  final _galleryKey = GlobalKey();
   bool _searchFocused = false;
 
   ExploreController get _ctrl => Get.find<ExploreController>();
@@ -172,7 +174,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
               // SECTION 4 — Category pills
               // ══════════════════════════════════════
               SliverToBoxAdapter(
-                child: _buildCategoryPills(isDark, selectedCat),
+                child: KeyedSubtree(
+                  key: _galleryKey,
+                  child: _buildCategoryPills(isDark, selectedCat),
+                ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 18)),
 
@@ -448,6 +453,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
           TextButton(
             onPressed: () {
               _ctrl.filterByCategory('JWST');
+              // Selecting the pill is reactive (controller's selectedCategory
+              // drives the pill highlight via Obx). Scroll down after a short
+              // delay so the filter has a chance to apply first.
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (!mounted) return;
+                final ctx = _galleryKey.currentContext;
+                if (ctx == null || !ctx.mounted) return;
+                Scrollable.ensureVisible(
+                  ctx,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOutCubic,
+                  alignment: 0.0,
+                );
+              });
             },
             child: const Text(
               'See All →',

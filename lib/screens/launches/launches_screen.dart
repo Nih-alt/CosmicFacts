@@ -12,6 +12,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../controllers/launches_controller.dart';
 import '../../models/launch_model.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/launch_branding.dart';
 import 'launch_detail_screen.dart';
 
 class LaunchesScreen extends StatefulWidget {
@@ -48,8 +49,37 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                       ),
                     ),
                   ),
-                  Icon(CupertinoIcons.slider_horizontal_3,
-                      size: 22, color: AppColors.textSecondary(context)),
+                  Obx(() {
+                    final hasFilter = _ctrl.selectedProvider.value !=
+                        LaunchesController.allProvidersLabel;
+                    return GestureDetector(
+                      onTap: _openFilterSheet,
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: hasFilter
+                              ? AppColors.accentBlue.withValues(alpha: 0.15)
+                              : AppColors.surface(context),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: hasFilter
+                                ? AppColors.accentBlue
+                                    .withValues(alpha: 0.5)
+                                : AppColors.cardBorder(context),
+                          ),
+                          boxShadow: AppColors.cardShadow(context),
+                        ),
+                        child: Icon(
+                          CupertinoIcons.slider_horizontal_3,
+                          size: 18,
+                          color: hasFilter
+                              ? AppColors.accentBlue
+                              : AppColors.textSecondary(context),
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -104,7 +134,24 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
               }),
             ),
 
-            const SizedBox(height: 16),
+            // Active filter chip (only when a provider filter is active)
+            Obx(() {
+              if (_ctrl.selectedProvider.value ==
+                  LaunchesController.allProvidersLabel) {
+                return const SizedBox(height: 16);
+              }
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: Row(
+                  children: [
+                    _ActiveFilterChip(
+                      provider: _ctrl.selectedProvider.value,
+                      onClear: _ctrl.clearProviderFilter,
+                    ),
+                  ],
+                ),
+              );
+            }),
 
             // Content
             Expanded(child: _buildContent()),
@@ -128,11 +175,15 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
       }
 
       final isUpcoming = _ctrl.selectedTab.value == 0;
+      // Touch selectedProvider so Obx rebuilds when the filter changes.
+      final _ = _ctrl.selectedProvider.value;
       final launches =
-          isUpcoming ? _ctrl.upcomingLaunches : _ctrl.pastLaunches;
+          isUpcoming ? _ctrl.filteredUpcoming : _ctrl.filteredPast;
 
       if (launches.isEmpty) {
-        return _buildEmpty(isUpcoming);
+        final isFiltered = _ctrl.selectedProvider.value !=
+            LaunchesController.allProvidersLabel;
+        return _buildEmpty(isUpcoming, isFiltered: isFiltered);
       }
 
       return RefreshIndicator(
@@ -209,26 +260,227 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
     );
   }
 
-  Widget _buildEmpty(bool isUpcoming) {
+  Widget _buildEmpty(bool isUpcoming, {bool isFiltered = false}) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(isUpcoming ? '\u{1F680}' : '\u{1F4CB}',
+          Text(isFiltered ? '\u{1F50D}' : (isUpcoming ? '\u{1F680}' : '\u{1F4CB}'),
               style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 12),
           Text(
-            isUpcoming ? 'No upcoming launches' : 'No past launches',
+            isFiltered
+                ? 'No matching launches'
+                : (isUpcoming ? 'No upcoming launches' : 'No past launches'),
             style: GoogleFonts.spaceGrotesk(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary(context)),
           ),
           const SizedBox(height: 4),
-          Text('Check back soon!',
+          Text(
+              isFiltered
+                  ? 'Try a different provider filter.'
+                  : 'Check back soon!',
               style: GoogleFonts.inter(
                   fontSize: 14, color: AppColors.textSecondary(context))),
+          if (isFiltered) ...[
+            const SizedBox(height: 16),
+            CupertinoButton(
+              color: AppColors.accentBlue,
+              borderRadius: BorderRadius.circular(12),
+              onPressed: _ctrl.clearProviderFilter,
+              child: Text('Clear filter',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════
+  // FILTER BOTTOM SHEET
+  // ═══════════════════════════════════════
+  void _openFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _FilterSheet(
+        selected: _ctrl.selectedProvider.value,
+        onPick: (v) {
+          _ctrl.setProviderFilter(v);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+}
+
+// =============================================
+// ACTIVE FILTER CHIP
+// =============================================
+
+class _ActiveFilterChip extends StatelessWidget {
+  final String provider;
+  final VoidCallback onClear;
+  const _ActiveFilterChip({
+    required this.provider,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark
+        ? LaunchBranding.providerColorOnDark(provider)
+        : LaunchBranding.providerColor(provider);
+    final emoji = LaunchBranding.providerEmoji(provider);
+    return GestureDetector(
+      onTap: onClear,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Text(
+              provider,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(CupertinoIcons.xmark_circle_fill,
+                size: 14, color: color.withValues(alpha: 0.8)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================
+// FILTER BOTTOM SHEET
+// =============================================
+
+class _FilterSheet extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onPick;
+  const _FilterSheet({required this.selected, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        decoration: BoxDecoration(
+          color: AppColors.surface(context),
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: isDark
+              ? const []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              'Filter by Provider',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary(context),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...LaunchesController.providerOptions.map((option) {
+              final isSelected = option == selected;
+              final emoji = option == LaunchesController.allProvidersLabel
+                  ? '\u{1F30C}'
+                  : (option == 'Other'
+                      ? '\u{1F6F0}'
+                      : LaunchBranding.providerEmoji(option));
+              final color = option == LaunchesController.allProvidersLabel
+                  ? AppColors.accentBlue
+                  : (isDark
+                      ? LaunchBranding.providerColorOnDark(option)
+                      : LaunchBranding.providerColor(option));
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onPick(option),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? color.withValues(alpha: 0.15)
+                        : AppColors.card(context),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? color.withValues(alpha: 0.5)
+                          : AppColors.cardBorder(context),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(emoji, style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          option,
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? color
+                                : AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(CupertinoIcons.checkmark_alt,
+                            size: 18, color: color),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -287,6 +539,7 @@ class _HeroLaunchCardState extends State<_HeroLaunchCard> {
   @override
   Widget build(BuildContext context) {
     final launch = widget.launch;
+    final accent = LaunchBranding.providerColorOnDark(launch.provider);
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -302,7 +555,7 @@ class _HeroLaunchCardState extends State<_HeroLaunchCard> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accentBlue.withValues(alpha: 0.2),
+              color: accent.withValues(alpha: 0.25),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -339,14 +592,23 @@ class _HeroLaunchCardState extends State<_HeroLaunchCard> {
               ),
             ),
 
+            // Provider-colored left accent bar
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 4,
+              child: Container(color: accent),
+            ),
+
             // Content
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Provider badge
-                  _ProviderBadge(provider: launch.provider),
+                  // Provider badge (on dark hero overlay)
+                  _ProviderBadge(provider: launch.provider, onDark: true),
 
                   const Spacer(),
 
@@ -533,6 +795,11 @@ class _LaunchCard extends StatelessWidget {
       'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
       'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
     ];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isDark
+        ? LaunchBranding.providerColorOnDark(launch.provider)
+        : LaunchBranding.providerColor(launch.provider);
+    final emoji = LaunchBranding.providerEmoji(launch.provider);
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -552,8 +819,6 @@ class _LaunchCard extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.glass(context),
                 borderRadius: BorderRadius.circular(14),
@@ -563,6 +828,9 @@ class _LaunchCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  // Provider-colored 4px left accent
+                  Container(width: 4, color: accent),
+                  const SizedBox(width: 10),
                   // Date column
                   SizedBox(
                     width: 44,
@@ -574,7 +842,7 @@ class _LaunchCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.accentBlue,
+                            color: accent,
                           ),
                         ),
                         Text(
@@ -631,7 +899,7 @@ class _LaunchCard extends StatelessWidget {
                         ],
                         const SizedBox(height: 2),
                         Text(
-                          '${launch.provider}${launch.padLocation.isNotEmpty ? ' \u2022 ${launch.padLocation}' : ''}',
+                          '$emoji ${launch.provider}${launch.padLocation.isNotEmpty ? ' \u2022 ${launch.padLocation}' : ''}',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: AppColors.textSecondary(context),
@@ -646,7 +914,8 @@ class _LaunchCard extends StatelessWidget {
                   const SizedBox(width: 10),
 
                   // Status / countdown badge
-                  _buildBadge(),
+                  _buildBadge(context),
+                  const SizedBox(width: 14),
                 ],
               ),
             ),
@@ -665,7 +934,7 @@ class _LaunchCard extends StatelessWidget {
     return '${diff.inMinutes}m';
   }
 
-  Widget _buildBadge() {
+  Widget _buildBadge(BuildContext context) {
     final isFuture = launch.launchDate.isAfter(DateTime.now());
 
     if (isUpcoming && isFuture) {
@@ -703,7 +972,7 @@ class _LaunchCard extends StatelessWidget {
       badgeColor = AppColors.accentOrange;
       label = '\u26A0 Partial';
     } else {
-      badgeColor = AppColors.textSecondaryDark;
+      badgeColor = AppColors.textSecondary(context);
       label = launch.status;
     }
 
@@ -734,35 +1003,38 @@ class _LaunchCard extends StatelessWidget {
 
 class _ProviderBadge extends StatelessWidget {
   final String provider;
-  const _ProviderBadge({required this.provider});
-
-  Color get _color {
-    final p = provider.toLowerCase();
-    if (p.contains('spacex')) return AppColors.accentCyan;
-    if (p.contains('nasa') || p.contains('isro')) return AppColors.accentBlue;
-    if (p.contains('ula')) return AppColors.success;
-    if (p.contains('rocket lab')) return AppColors.accentBlue;
-    if (p.contains('ariane')) return AppColors.starGold;
-    return AppColors.accentBlue;
-  }
+  final bool onDark;
+  const _ProviderBadge({required this.provider, this.onDark = false});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = onDark || Theme.of(context).brightness == Brightness.dark;
+    final color = isDark
+        ? LaunchBranding.providerColorOnDark(provider)
+        : LaunchBranding.providerColor(provider);
+    final emoji = LaunchBranding.providerEmoji(provider);
     return Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.2),
+        color: color.withValues(alpha: onDark ? 0.25 : 0.18),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _color.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
       ),
-      child: Text(
-        provider,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: _color,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 6),
+          Text(
+            provider,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

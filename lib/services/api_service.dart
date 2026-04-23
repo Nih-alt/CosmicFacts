@@ -210,11 +210,38 @@ class ApiService {
     return '';
   }
 
-  /// Fetch upcoming launches: SpaceX v5 query → SNAPI → hardcoded fallback.
+  /// Fetch upcoming launches: SNAPI v4 → SpaceX v5 → hardcoded fallback.
+  /// SNAPI first ensures all providers (NASA, ISRO, Blue Origin, Arianespace,
+  /// ULA, Rocket Lab, etc.) show up — SpaceX-only was the old behavior.
   static Future<List<LaunchModel>> getUpcomingLaunches({
-    int limit = 15,
+    int limit = 20,
   }) async {
-    // Method 1: SpaceX v5 query API with date filter
+    // Method 1: Spaceflight News API v4 (SNAPI) — all providers
+    try {
+      final now = DateTime.now().toUtc().toIso8601String();
+      final response = await _getWithRetry(
+        '$_newsBaseUrl/launches/?limit=$limit&ordering=net&net__gte=$now',
+      );
+      if (response != null) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final results = data['results'] as List<dynamic>? ?? [];
+        if (results.isNotEmpty) {
+          final parsed = results
+              .map((e) => LaunchModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+          debugPrint('SNAPI upcoming: parsed ${parsed.length} launches');
+          for (int i = 0; i < parsed.length && i < 3; i++) {
+            final l = parsed[i];
+            debugPrint('  [$i] ${l.provider} — ${l.rocketName} | ${l.missionName} (${l.launchDate.toIso8601String()})');
+          }
+          return parsed;
+        }
+      }
+    } catch (e) {
+      debugPrint('SNAPI upcoming error: $e');
+    }
+
+    // Method 2: SpaceX v5 (only as fallback)
     try {
       final response = await http
           .post(
@@ -238,6 +265,7 @@ class ApiService {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final docs = data['docs'] as List<dynamic>? ?? [];
         if (docs.isNotEmpty) {
+          debugPrint('SpaceX v5 upcoming fallback: ${docs.length} launches');
           return docs
               .map((e) => _parseSpaceXLaunch(
                   e as Map<String, dynamic>,
@@ -247,33 +275,41 @@ class ApiService {
       }
     } catch (_) {}
 
-    // Method 2: Spaceflight News API
+    // Method 3: Hardcoded realistic upcoming launches
+    debugPrint('Launches: using hardcoded 2026 fallback');
+    return _getHardcodedUpcoming();
+  }
+
+  /// Fetch past launches: SNAPI v4 → SpaceX v5 → empty.
+  static Future<List<LaunchModel>> getPastLaunches({
+    int limit = 20,
+  }) async {
+    // Method 1: Spaceflight News API v4 (SNAPI) — all providers
     try {
       final now = DateTime.now().toUtc().toIso8601String();
       final response = await _getWithRetry(
-        '$_newsBaseUrl/launches/?limit=$limit&ordering=net&net__gte=$now',
+        '$_newsBaseUrl/launches/?limit=$limit&ordering=-net&net__lte=$now',
       );
       if (response != null) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final results = data['results'] as List<dynamic>? ?? [];
         if (results.isNotEmpty) {
-          return results
-              .map((e) =>
-                  LaunchModel.fromJson(e as Map<String, dynamic>))
+          final parsed = results
+              .map((e) => LaunchModel.fromJson(e as Map<String, dynamic>))
               .toList();
+          debugPrint('SNAPI past: parsed ${parsed.length} launches');
+          for (int i = 0; i < parsed.length && i < 3; i++) {
+            final l = parsed[i];
+            debugPrint('  [$i] ${l.provider} — ${l.rocketName} | ${l.missionName} (${l.launchDate.toIso8601String()})');
+          }
+          return parsed;
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('SNAPI past error: $e');
+    }
 
-    // Method 3: Hardcoded realistic upcoming launches
-    return _getHardcodedUpcoming();
-  }
-
-  /// Fetch past launches: SpaceX v5 query → SNAPI fallback.
-  static Future<List<LaunchModel>> getPastLaunches({
-    int limit = 15,
-  }) async {
-    // Method 1: SpaceX v5 query API
+    // Method 2: SpaceX v5 (only as fallback)
     try {
       final response = await http
           .post(
@@ -298,28 +334,11 @@ class ApiService {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final docs = data['docs'] as List<dynamic>? ?? [];
         if (docs.isNotEmpty) {
+          debugPrint('SpaceX v5 past fallback: ${docs.length} launches');
           return docs
               .map((e) => _parseSpaceXLaunch(
                   e as Map<String, dynamic>,
                   isUpcoming: false))
-              .toList();
-        }
-      }
-    } catch (_) {}
-
-    // Method 2: Spaceflight News API
-    try {
-      final now = DateTime.now().toUtc().toIso8601String();
-      final response = await _getWithRetry(
-        '$_newsBaseUrl/launches/?limit=$limit&ordering=-net&net__lte=$now',
-      );
-      if (response != null) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final results = data['results'] as List<dynamic>? ?? [];
-        if (results.isNotEmpty) {
-          return results
-              .map((e) =>
-                  LaunchModel.fromJson(e as Map<String, dynamic>))
               .toList();
         }
       }
@@ -381,18 +400,133 @@ class ApiService {
     );
   }
 
-  /// Hardcoded realistic upcoming launches as last-resort fallback.
+  /// Hardcoded realistic 2026 upcoming launches as last-resort fallback.
+  /// Only used when both SNAPI and SpaceX APIs are unreachable.
   static List<LaunchModel> _getHardcodedUpcoming() {
     final now = DateTime.now();
+    // Anchor dates roughly to 2026 schedule where known; use near-term
+    // offsets for items with rolling cadence (Starlink).
     return [
-      LaunchModel(id: 'f1', name: 'Falcon 9 | Starlink Group 15-1', status: 'Upcoming', launchDate: now.add(const Duration(days: 3)), provider: 'SpaceX', rocketName: 'Falcon 9', missionName: 'Starlink Group 15-1', padLocation: 'Cape Canaveral, FL', imageUrl: '', videoUrl: ''),
-      LaunchModel(id: 'f2', name: 'Falcon Heavy | GOES-U', status: 'Upcoming', launchDate: now.add(const Duration(days: 8)), provider: 'SpaceX', rocketName: 'Falcon Heavy', missionName: 'GOES-U', padLocation: 'Kennedy Space Center', imageUrl: '', videoUrl: ''),
-      LaunchModel(id: 'f3', name: 'GSLV Mk III | Gaganyaan Uncrewed', status: 'Upcoming', launchDate: now.add(const Duration(days: 15)), provider: 'ISRO', rocketName: 'GSLV Mk III', missionName: 'Gaganyaan Uncrewed', padLocation: 'Sriharikota, India', imageUrl: '', videoUrl: ''),
-      LaunchModel(id: 'f4', name: 'New Glenn | Blue Ring', status: 'Upcoming', launchDate: now.add(const Duration(days: 20)), provider: 'Blue Origin', rocketName: 'New Glenn', missionName: 'Blue Ring', padLocation: 'Cape Canaveral, FL', imageUrl: '', videoUrl: ''),
-      LaunchModel(id: 'f5', name: 'Ariane 6 | Galileo L13', status: 'Upcoming', launchDate: now.add(const Duration(days: 30)), provider: 'Arianespace', rocketName: 'Ariane 6', missionName: 'Galileo L13', padLocation: 'Kourou, French Guiana', imageUrl: '', videoUrl: ''),
-      LaunchModel(id: 'f6', name: 'SLS | Artemis III', status: 'Upcoming', launchDate: now.add(const Duration(days: 45)), provider: 'NASA', rocketName: 'SLS', missionName: 'Artemis III', padLocation: 'Kennedy Space Center', imageUrl: '', videoUrl: ''),
-      LaunchModel(id: 'f7', name: 'Starship | Mars Cargo Test', status: 'Upcoming', launchDate: now.add(const Duration(days: 60)), provider: 'SpaceX', rocketName: 'Starship', missionName: 'Mars Cargo Test', padLocation: 'Boca Chica, TX', imageUrl: '', videoUrl: ''),
-      LaunchModel(id: 'f8', name: 'PSLV | Aditya-L2', status: 'Upcoming', launchDate: now.add(const Duration(days: 90)), provider: 'ISRO', rocketName: 'PSLV', missionName: 'Aditya-L2', padLocation: 'Sriharikota, India', imageUrl: '', videoUrl: ''),
+      LaunchModel(
+        id: 'h1',
+        name: 'SLS | Artemis II',
+        status: 'Go for Launch',
+        launchDate: DateTime(2026, 5, 15, 12, 0),
+        provider: 'NASA',
+        rocketName: 'SLS',
+        missionName: 'Artemis II',
+        padLocation: 'Kennedy Space Center, FL',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h2',
+        name: 'Falcon 9 | Starlink',
+        status: 'Go for Launch',
+        launchDate: now.add(const Duration(days: 5)),
+        provider: 'SpaceX',
+        rocketName: 'Falcon 9',
+        missionName: 'Starlink',
+        padLocation: 'Cape Canaveral, FL',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h3',
+        name: 'GSLV Mk III | Gaganyaan Uncrewed',
+        status: 'TBD',
+        launchDate: DateTime(2026, 7, 20, 9, 0),
+        provider: 'ISRO',
+        rocketName: 'GSLV Mk III',
+        missionName: 'Gaganyaan Uncrewed',
+        padLocation: 'Sriharikota, India',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h4',
+        name: 'New Glenn | Blue Ring',
+        status: 'TBD',
+        launchDate: DateTime(2026, 6, 10, 14, 0),
+        provider: 'Blue Origin',
+        rocketName: 'New Glenn',
+        missionName: 'Blue Ring',
+        padLocation: 'Cape Canaveral, FL',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h5',
+        name: 'Ariane 6 | Galileo',
+        status: 'TBD',
+        launchDate: DateTime(2026, 8, 5, 18, 0),
+        provider: 'Arianespace',
+        rocketName: 'Ariane 6',
+        missionName: 'Galileo',
+        padLocation: 'Kourou, French Guiana',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h6',
+        name: 'Starship | Flight Test',
+        status: 'TBD',
+        launchDate: DateTime(2026, 9, 12, 15, 0),
+        provider: 'SpaceX',
+        rocketName: 'Starship',
+        missionName: 'Flight Test',
+        padLocation: 'Boca Chica, TX',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h7',
+        name: 'PSLV | Earth Observation',
+        status: 'TBD',
+        launchDate: DateTime(2026, 10, 8, 5, 30),
+        provider: 'ISRO',
+        rocketName: 'PSLV',
+        missionName: 'Earth Observation',
+        padLocation: 'Sriharikota, India',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h8',
+        name: 'Falcon Heavy | Europa Clipper',
+        status: 'Go for Launch',
+        launchDate: DateTime(2026, 11, 3, 11, 0),
+        provider: 'SpaceX',
+        rocketName: 'Falcon Heavy',
+        missionName: 'Europa Clipper',
+        padLocation: 'Kennedy Space Center, FL',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h9',
+        name: 'Vulcan Centaur | Cert-2',
+        status: 'TBD',
+        launchDate: DateTime(2026, 6, 25, 17, 30),
+        provider: 'ULA',
+        rocketName: 'Vulcan Centaur',
+        missionName: 'Cert-2',
+        padLocation: 'Cape Canaveral, FL',
+        imageUrl: '',
+        videoUrl: '',
+      ),
+      LaunchModel(
+        id: 'h10',
+        name: 'Electron | Kineis',
+        status: 'TBD',
+        launchDate: DateTime(2026, 7, 2, 22, 0),
+        provider: 'Rocket Lab',
+        rocketName: 'Electron',
+        missionName: 'Kineis',
+        padLocation: 'Mahia Peninsula, NZ',
+        imageUrl: '',
+        videoUrl: '',
+      ),
     ];
   }
 

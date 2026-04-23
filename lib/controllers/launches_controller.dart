@@ -5,11 +5,62 @@ import '../services/api_service.dart';
 import '../services/cache_service.dart';
 
 class LaunchesController extends GetxController {
+  static const String allProvidersLabel = 'All Providers';
+  static const List<String> providerOptions = [
+    allProvidersLabel,
+    'SpaceX',
+    'NASA',
+    'ISRO',
+    'Blue Origin',
+    'Arianespace',
+    'ULA',
+    'Rocket Lab',
+    'Other',
+  ];
+
   final upcomingLaunches = <LaunchModel>[].obs;
   final pastLaunches = <LaunchModel>[].obs;
   final isLoading = true.obs;
   final hasError = false.obs;
   final selectedTab = 0.obs;
+  final selectedProvider = allProvidersLabel.obs;
+
+  bool _matchesSelectedProvider(LaunchModel l) {
+    final filter = selectedProvider.value;
+    if (filter == allProvidersLabel) return true;
+    final p = l.provider.toLowerCase();
+    if (filter == 'Other') {
+      const known = [
+        'spacex',
+        'nasa',
+        'isro',
+        'blue origin',
+        'arianespace',
+        'ula',
+        'united launch',
+        'rocket lab',
+      ];
+      return !known.any(p.contains);
+    }
+    if (filter == 'ULA') {
+      return p.contains('ula') || p.contains('united launch');
+    }
+    return p.contains(filter.toLowerCase());
+  }
+
+  List<LaunchModel> get filteredUpcoming =>
+      upcomingLaunches.where(_matchesSelectedProvider).toList();
+
+  List<LaunchModel> get filteredPast =>
+      pastLaunches.where(_matchesSelectedProvider).toList();
+
+  void setProviderFilter(String provider) {
+    selectedProvider.value = provider;
+  }
+
+  void clearProviderFilter() {
+    selectedProvider.value = allProvidersLabel;
+  }
 
   @override
   void onInit() {

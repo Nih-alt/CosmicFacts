@@ -36,19 +36,28 @@ class LaunchModel {
         ? (rawStatus['name']?.toString() ?? 'Unknown')
         : rawStatus?.toString() ?? 'Unknown';
 
-    // provider can be a Map (LL2 / SNAPI) or a plain String (cache)
-    final rawProvider = json['launch_service_provider'];
+    // provider can be under `launch_service_provider` (LL2) or `provider`
+    // (SNAPI v4) as a Map, or a plain String (cache).
+    final rawProvider =
+        json['launch_service_provider'] ?? json['provider'];
     final provider = rawProvider is Map
         ? (rawProvider['name']?.toString() ?? 'Unknown')
         : rawProvider?.toString() ?? 'Unknown';
 
-    // pad → location → name
+    // pad → name + location.name (SNAPI nests the pad location)
     final rawPad = json['pad'];
     String padLocation = '';
     if (rawPad is Map) {
+      final padName = rawPad['name']?.toString() ?? '';
+      String locName = '';
       final loc = rawPad['location'];
       if (loc is Map) {
-        padLocation = loc['name']?.toString() ?? '';
+        locName = loc['name']?.toString() ?? '';
+      }
+      if (padName.isNotEmpty && locName.isNotEmpty) {
+        padLocation = '$padName, $locName';
+      } else {
+        padLocation = padName.isNotEmpty ? padName : locName;
       }
     }
 
@@ -82,13 +91,25 @@ class LaunchModel {
       }
     }
 
-    // Video URL — try links.webcast, links.youtube_id, or flat videoUrl
+    // Video URL — try SNAPI v4 vid_urls[0].url, links.webcast, links.youtube_id,
+    // or flat videoUrl/vid_url from cache.
     final rawLinks = json['links'];
     String videoUrl = '';
     if (rawLinks is Map) {
       videoUrl = rawLinks['webcast']?.toString() ??
           rawLinks['youtube_id']?.toString() ??
           '';
+    }
+    if (videoUrl.isEmpty) {
+      final vidUrls = json['vid_urls'];
+      if (vidUrls is List && vidUrls.isNotEmpty) {
+        final first = vidUrls.first;
+        if (first is Map) {
+          videoUrl = first['url']?.toString() ?? '';
+        } else if (first is String) {
+          videoUrl = first;
+        }
+      }
     }
     if (videoUrl.isEmpty) {
       videoUrl = json['videoUrl']?.toString() ?? '';

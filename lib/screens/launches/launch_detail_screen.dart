@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/launch_model.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/launch_branding.dart';
 
 class LaunchDetailScreen extends StatefulWidget {
   final LaunchModel launch;
@@ -140,6 +141,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
                     'Status',
                     launch.status,
                     valueColor: _statusColor(),
+                    boldValue: true,
                   )
                       .animate()
                       .fadeIn(duration: 400.ms, delay: 400.ms)
@@ -295,7 +297,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
           Positioned(
             top: topPad + 8,
             right: 12,
-            child: _providerBadgeWidget(),
+            child: _providerBadgeWidget(onDark: true),
           ),
         ],
       ),
@@ -455,22 +457,34 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   // PROVIDER BADGE
   // ═══════════════════════════════════════
 
-  Widget _providerBadgeWidget() {
-    final color = _providerColor;
+  Widget _providerBadgeWidget({bool onDark = false}) {
+    final isDark =
+        onDark || Theme.of(context).brightness == Brightness.dark;
+    final color = isDark
+        ? LaunchBranding.providerColorOnDark(launch.provider)
+        : LaunchBranding.providerColor(launch.provider);
+    final emoji = LaunchBranding.providerEmoji(launch.provider);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.25),
+        color: color.withValues(alpha: onDark ? 0.25 : 0.18),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
       ),
-      child: Text(
-        launch.provider,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 6),
+          Text(
+            launch.provider,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -500,6 +514,10 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   }
 
   Widget _countdownUnit(int value, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isDark
+        ? LaunchBranding.providerColorOnDark(launch.provider)
+        : LaunchBranding.providerColor(launch.provider);
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
       child: BackdropFilter(
@@ -508,34 +526,48 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                accent.withValues(alpha: isDark ? 0.35 : 0.5),
+                accent.withValues(alpha: isDark ? 0.1 : 0.15),
+              ],
+            ),
             borderRadius: BorderRadius.circular(14),
-            border:
-                Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                value.toString().padLeft(2, '0'),
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  height: 1,
+          padding: const EdgeInsets.all(1.5),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(12.5),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  value.toString().padLeft(2, '0'),
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary(context),
+                    height: 1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary(context),
-                  letterSpacing: 0.5,
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary(context),
+                    letterSpacing: 0.5,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -550,7 +582,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
         style: GoogleFonts.spaceGrotesk(
           fontSize: 24,
           fontWeight: FontWeight.w700,
-          color: Colors.white.withValues(alpha: 0.3),
+          color: AppColors.textSecondary(context),
         ),
       ),
     );
@@ -565,10 +597,15 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
     String label,
     String value, {
     Color? valueColor,
+    bool boldValue = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isDark
+        ? LaunchBranding.providerColorOnDark(launch.provider)
+        : LaunchBranding.providerColor(launch.provider);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.glass(context),
         borderRadius: BorderRadius.circular(14),
@@ -577,7 +614,10 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.accentBlue, size: 22),
+          // 2px provider-colored left bar
+          Container(width: 2, height: 54, color: accent),
+          const SizedBox(width: 14),
+          Icon(icon, color: accent, size: 22),
           const SizedBox(width: 12),
           Text(
             label,
@@ -588,16 +628,19 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
           ),
           const Spacer(),
           Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: valueColor ?? AppColors.textPrimary(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: boldValue ? FontWeight.w800 : FontWeight.w600,
+                  color: valueColor ?? AppColors.textPrimary(context),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -608,17 +651,6 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   // ═══════════════════════════════════════
   // HELPERS
   // ═══════════════════════════════════════
-
-  Color get _providerColor {
-    final p = launch.provider.toLowerCase();
-    if (p.contains('spacex')) return AppColors.accentCyan;
-    if (p.contains('nasa') || p.contains('isro')) return AppColors.accentBlue;
-    if (p.contains('ula')) return AppColors.success;
-    if (p.contains('rocket lab')) return AppColors.accentBlue;
-    if (p.contains('ariane')) return AppColors.starGold;
-    if (p.contains('blue origin')) return const Color(0xFF2196F3);
-    return AppColors.accentBlue;
-  }
 
   List<Color> get _providerGradientColors {
     final p = launch.provider.toLowerCase();
@@ -640,10 +672,15 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   Color _statusColor() {
     final s = launch.status.toLowerCase();
     if (s.contains('success')) return const Color(0xFF00E096);
-    if (s.contains('failure')) return const Color(0xFFFF4D6A);
-    if (s.contains('upcoming')) return AppColors.accentBlue;
+    if (s.contains('failure') || s.contains('failed')) {
+      return const Color(0xFFFF4D6A);
+    }
+    if (s.contains('go') || s.contains('upcoming')) return AppColors.accentCyan;
+    if (s.contains('tbd') || s.contains('hold') || s.contains('tbc')) {
+      return AppColors.accentOrange;
+    }
     if (s.contains('partial')) return AppColors.accentOrange;
-    return AppColors.textSecondaryDark;
+    return AppColors.textSecondary(context);
   }
 
   String _formatDate(DateTime dt) {
