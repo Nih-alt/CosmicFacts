@@ -12,6 +12,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../controllers/home_controller.dart';
 import '../../models/space_article.dart';
+import '../../services/firebase_notification_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import '../stories/story_feed_screen.dart';
@@ -50,6 +51,35 @@ class _HomeScreenState extends State<HomeScreen> {
     LearnScreen(),
     ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeRequestNotificationPermission();
+  }
+
+  /// Ask for notification permission 3s after Home loads, and only once ever.
+  /// Kept out of main()/splash/onboarding so the OS dialog appears after the
+  /// user has seen what the app does.
+  void _maybeRequestNotificationPermission() {
+    Future.delayed(const Duration(seconds: 3), () async {
+      if (!mounted) return;
+      try {
+        final box = Hive.box('settings');
+        final alreadyAsked =
+            box.get('notification_permission_asked', defaultValue: false) ==
+                true;
+        if (alreadyAsked) return;
+
+        await NotificationService.requestPermission();
+        await FirebaseNotificationService.requestPermissionAndSubscribe();
+
+        await box.put('notification_permission_asked', true);
+      } catch (e) {
+        debugPrint('Deferred notification permission error: $e');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

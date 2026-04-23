@@ -16,32 +16,6 @@ class FirebaseNotificationService {
     // Set background handler
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
-    // Request permission
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      announcement: false,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-    );
-    debugPrint('FCM permission: ${settings.authorizationStatus}');
-
-    // Get FCM token
-    final token = await _messaging.getToken();
-    debugPrint('FCM Token: $token');
-    // Save token to Hive for reference
-    try {
-      final box = Hive.box('settings');
-      box.put('fcm_token', token);
-    } catch (e) {
-      debugPrint('Failed to save FCM token: $e');
-    }
-
-    // Subscribe to default topics
-    await subscribeToTopics();
-
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint('Foreground message: ${message.notification?.title}');
@@ -61,6 +35,32 @@ class FirebaseNotificationService {
           'App opened from notification: ${initialMessage.notification?.title}');
       _handleNotificationTap(initialMessage);
     }
+  }
+
+  /// Request FCM notification permission, then fetch token and subscribe to topics.
+  /// Called only after onboarding so the OS dialog doesn't appear on first launch.
+  static Future<void> requestPermissionAndSubscribe() async {
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      announcement: false,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+    );
+    debugPrint('FCM permission: ${settings.authorizationStatus}');
+
+    final token = await _messaging.getToken();
+    debugPrint('FCM Token: $token');
+    try {
+      final box = Hive.box('settings');
+      box.put('fcm_token', token);
+    } catch (e) {
+      debugPrint('Failed to save FCM token: $e');
+    }
+
+    await subscribeToTopics();
   }
 
   /// Subscribe to topic-based notifications based on user preferences.

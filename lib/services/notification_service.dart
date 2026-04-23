@@ -54,9 +54,12 @@ class NotificationService {
         // Handle notification tap — app opens automatically
       },
     );
+  }
 
-    // Request permission for Android 13+
-    await _plugin
+  /// Request Android 13+ POST_NOTIFICATIONS permission.
+  /// Called only after onboarding so the OS dialog doesn't appear on first launch.
+  static Future<bool?> requestPermission() async {
+    return _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
