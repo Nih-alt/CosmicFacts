@@ -546,11 +546,13 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  /// Fetch near-Earth asteroids for today from NASA NEO API.
-  static Future<List<Map<String, dynamic>>> getNearEarthAsteroids() async {
-    final today = DateTime.now().toIso8601String().split('T')[0];
+  /// Fetch near-Earth asteroids for a given date (defaults to today).
+  static Future<List<Map<String, dynamic>>> getNearEarthAsteroids({
+    DateTime? date,
+  }) async {
+    final d = (date ?? DateTime.now()).toIso8601String().split('T')[0];
     final url =
-        '$_nasaBaseUrl/neo/rest/v1/feed?start_date=$today&end_date=$today&api_key=${ApiKeys.nasaApiKey}';
+        '$_nasaBaseUrl/neo/rest/v1/feed?start_date=$d&end_date=$d&api_key=${ApiKeys.nasaApiKey}';
     final response = await _getWithRetry(url);
     if (response == null) return [];
     final data = jsonDecode(response.body);
@@ -558,6 +560,15 @@ class ApiService {
     if (dateKey == null) return [];
     return List<Map<String, dynamic>>.from(
         data['near_earth_objects'][dateKey] ?? []);
+  }
+
+  /// Fetch detailed info for a single NEO, including orbital_data.
+  static Future<Map<String, dynamic>?> getAsteroidDetail(String id) async {
+    final url =
+        '$_nasaBaseUrl/neo/rest/v1/neo/$id?api_key=${ApiKeys.nasaApiKey}';
+    final response = await _getWithRetry(url);
+    if (response == null) return null;
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
   // ── NASA EPIC (Earth from Space) ──

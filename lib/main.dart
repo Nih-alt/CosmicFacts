@@ -10,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -29,6 +30,15 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables before anything else so ApiKeys is ready
+  // by the time any service reads it. Non-fatal on failure — ApiKeys
+  // falls back to DEMO_KEY.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('dotenv load failed (falling back to DEMO_KEY): $e');
+  }
 
   PaintingBinding.instance.imageCache.maximumSizeBytes =
       80 * 1024 * 1024; // 80 MB
