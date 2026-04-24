@@ -5,7 +5,9 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../services/api_service.dart';
@@ -22,6 +24,8 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
     with TickerProviderStateMixin {
   double? _latitude;
   double? _longitude;
+  double? _prevLatitude;
+  double? _prevLongitude;
   List<Map<String, dynamic>> _astronauts = [];
   int _astronautCount = 0;
   bool _isLoadingISS = true;
@@ -31,6 +35,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
   Timer? _issTimer;
   Timer? _astronautTimer;
   late AnimationController _pulseController;
+  late MapController _mapController;
 
   @override
   void initState() {
@@ -39,10 +44,17 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
+    _mapController = MapController();
     _fetchISSLocation();
     _fetchAstronauts();
-    _issTimer = Timer.periodic(const Duration(seconds: 5), (_) => _fetchISSLocation());
-    _astronautTimer = Timer.periodic(const Duration(seconds: 60), (_) => _fetchAstronauts());
+    _issTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _fetchISSLocation(),
+    );
+    _astronautTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _fetchAstronauts(),
+    );
   }
 
   @override
@@ -50,6 +62,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
     _issTimer?.cancel();
     _astronautTimer?.cancel();
     _pulseController.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
@@ -57,12 +70,21 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
     final data = await ApiService.getISSLocation();
     if (!mounted) return;
     if (data != null && data['message'] == 'success') {
+      final newLat = double.tryParse(
+        data['iss_position']?['latitude']?.toString() ?? '',
+      );
+      final newLng = double.tryParse(
+        data['iss_position']?['longitude']?.toString() ?? '',
+      );
       setState(() {
-        _latitude = double.tryParse(data['iss_position']?['latitude']?.toString() ?? '');
-        _longitude = double.tryParse(data['iss_position']?['longitude']?.toString() ?? '');
+        _prevLatitude = _latitude;
+        _prevLongitude = _longitude;
+        _latitude = newLat;
+        _longitude = newLng;
         _isLoadingISS = false;
         _hasError = false;
       });
+      _recenterMap();
     } else if (_latitude == null) {
       setState(() {
         _hasError = true;
@@ -85,14 +107,27 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
     }
   }
 
+  void _recenterMap() {
+    if (_latitude == null || _longitude == null) return;
+    // camera access throws if map not yet mounted; guard with try/catch.
+    try {
+      final z = _mapController.camera.zoom;
+      _mapController.move(LatLng(_latitude!, _longitude!), z);
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mapHeight = MediaQuery.of(context).size.height * 0.45;
+
     return Scaffold(
       backgroundColor: AppColors.background(context),
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         slivers: [
-          // App bar
           SliverToBoxAdapter(
             child: SafeArea(
               bottom: false,
@@ -103,7 +138,10 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                     CupertinoButton(
                       padding: EdgeInsets.zero,
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Icon(CupertinoIcons.back, color: AppColors.textPrimary(context)),
+                      child: Icon(
+                        CupertinoIcons.back,
+                        color: AppColors.textPrimary(context),
+                      ),
                     ),
                     Expanded(
                       child: Text(
@@ -116,7 +154,6 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                         ),
                       ),
                     ),
-                    // Live indicator
                     _buildLiveIndicator(),
                   ],
                 ),
@@ -124,28 +161,40 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
             ),
           ),
 
-          // Radar section
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: _isLoadingISS
-                  ? _buildShimmer(320)
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _isLoadingISS && _latitude == null
+                  ? _buildShimmer(mapHeight)
                   : _hasError
                       ? _buildErrorState()
-                      : _buildRadarSection(),
-            ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, duration: 500.ms),
+                      : _buildMap(isDark, mapHeight),
+            ).animate().fadeIn(duration: 500.ms).slideY(
+                  begin: 0.1,
+                  end: 0,
+                  duration: 500.ms,
+                ),
           ),
 
-          // ISS Info Card
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: _buildISSInfoCard(),
-            ).animate().fadeIn(duration: 500.ms, delay: 100.ms)
-                .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 100.ms),
+              padding: const EdgeInsets.only(top: 4, bottom: 4),
+              child: _buildTelemetryStrip(),
+            ).animate().fadeIn(duration: 500.ms, delay: 80.ms),
           ),
 
-          // Astronauts section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+              child: _buildStatGrid(),
+            ).animate().fadeIn(duration: 500.ms, delay: 150.ms).slideY(
+                  begin: 0.12,
+                  end: 0,
+                  duration: 500.ms,
+                  delay: 150.ms,
+                ),
+          ),
+
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -163,7 +212,10 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                   ),
                   if (!_isLoadingAstronauts && _astronautCount > 0)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(20),
@@ -179,20 +231,26 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                     ),
                 ],
               ),
-            ).animate().fadeIn(duration: 500.ms, delay: 200.ms)
-                .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 200.ms),
+            ).animate().fadeIn(duration: 500.ms, delay: 220.ms).slideY(
+                  begin: 0.12,
+                  end: 0,
+                  duration: 500.ms,
+                  delay: 220.ms,
+                ),
           ),
 
-          // Astronaut list
           _isLoadingAstronauts
               ? SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
-                      children: List.generate(3, (i) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _buildShimmer(60),
-                      )),
+                      children: List.generate(
+                        3,
+                        (i) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _buildShimmer(60),
+                        ),
+                      ),
                     ),
                   ),
                 )
@@ -201,10 +259,25 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                     (context, index) {
                       final astronaut = _astronauts[index];
                       return Padding(
-                        padding: EdgeInsets.fromLTRB(20, index == 0 ? 0 : 4, 20, 4),
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          index == 0 ? 0 : 4,
+                          20,
+                          4,
+                        ),
                         child: _buildAstronautCard(astronaut),
-                      ).animate().fadeIn(duration: 400.ms, delay: Duration(milliseconds: 250 + index * 50))
-                          .slideX(begin: 0.1, end: 0, duration: 400.ms, delay: Duration(milliseconds: 250 + index * 50));
+                      )
+                          .animate()
+                          .fadeIn(
+                            duration: 400.ms,
+                            delay: Duration(milliseconds: 260 + index * 40),
+                          )
+                          .slideX(
+                            begin: 0.1,
+                            end: 0,
+                            duration: 400.ms,
+                            delay: Duration(milliseconds: 260 + index * 40),
+                          );
                     },
                     childCount: _astronauts.length,
                   ),
@@ -215,6 +288,405 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
       ),
     );
   }
+
+  // ═══════════════════════════════════════════
+  // MAP
+  // ═══════════════════════════════════════════
+
+  Widget _buildMap(bool isDark, double height) {
+    final hasFix = _latitude != null && _longitude != null;
+    final center = hasFix ? LatLng(_latitude!, _longitude!) : const LatLng(0, 0);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: SizedBox(
+        height: height,
+        child: Stack(
+          children: [
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: 2,
+                minZoom: 1,
+                maxZoom: 8,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.drag |
+                      InteractiveFlag.pinchZoom |
+                      InteractiveFlag.doubleTapZoom |
+                      InteractiveFlag.flingAnimation,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: isDark
+                      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+                      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c', 'd'],
+                  userAgentPackageName: 'com.apprication.cosmic_facts',
+                  maxNativeZoom: 19,
+                ),
+                PolylineLayer(polylines: _buildOrbitPolylines()),
+                if (hasFix)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: LatLng(_latitude!, _longitude!),
+                        width: 80,
+                        height: 80,
+                        child: _buildISSMarker(),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            // Attribution (CartoDB ToS).
+            Positioned(
+              right: 6,
+              bottom: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '© OpenStreetMap · CARTO',
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildISSMarker() {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, _) {
+        final pulse = _pulseController.value;
+        return Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 18 + 42 * pulse,
+              height: 18 + 42 * pulse,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.error.withValues(alpha: 0.35 * (1 - pulse)),
+              ),
+            ),
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.error,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.error.withValues(alpha: 0.55),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'ISS',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ═══════════════════════════════════════════
+  // ORBIT POLYLINE (20 points, solid cyan)
+  // Inclination 51.6°, period 93 min, Earth sidereal day 1436 min.
+  // ═══════════════════════════════════════════
+
+  List<Polyline> _buildOrbitPolylines() {
+    if (_latitude == null || _longitude == null) return const [];
+    final points = _computeOrbitPoints(_latitude!, _longitude!);
+    // Split at antimeridian (>180° jump) so the line doesn't wrap across the map.
+    final segments = <List<LatLng>>[];
+    var current = <LatLng>[];
+    for (final p in points) {
+      if (current.isNotEmpty &&
+          (p.longitude - current.last.longitude).abs() > 180) {
+        segments.add(current);
+        current = <LatLng>[];
+      }
+      current.add(p);
+    }
+    if (current.isNotEmpty) segments.add(current);
+
+    return [
+      for (final s in segments)
+        if (s.length >= 2)
+          Polyline(
+            points: s,
+            color: AppColors.accentCyan,
+            strokeWidth: 2.5,
+          ),
+    ];
+  }
+
+  List<LatLng> _computeOrbitPoints(double lat, double lng) {
+    const inclination = 51.6 * pi / 180.0;
+    const orbitalPeriodMin = 93.0;
+    const earthRotationMin = 1436.0;
+    const totalMinutes = 30.0;
+    const n = 20;
+
+    final latRad = lat * pi / 180.0;
+    final lngRad = lng * pi / 180.0;
+
+    // Orbital argument μ₀ from current latitude (assume ascending pass).
+    final sinMu0 = (sin(latRad) / sin(inclination)).clamp(-1.0, 1.0);
+    final mu0 = asin(sinMu0);
+    final lngOrbit0 = atan2(cos(inclination) * sin(mu0), cos(mu0));
+    final ascNodeLng = lngRad - lngOrbit0;
+
+    final out = <LatLng>[];
+    for (int i = 0; i < n; i++) {
+      final t = (i / (n - 1) - 0.5) * totalMinutes; // −15..+15 min
+      final mu = mu0 + 2 * pi * t / orbitalPeriodMin;
+      final pLat = asin(sin(inclination) * sin(mu));
+      final lngOrbitT = atan2(cos(inclination) * sin(mu), cos(mu));
+      var pLng = ascNodeLng + lngOrbitT - 2 * pi * t / earthRotationMin;
+      // Wrap to [−π, π].
+      pLng = (pLng + pi) % (2 * pi);
+      if (pLng < 0) pLng += 2 * pi;
+      pLng -= pi;
+      out.add(LatLng(pLat * 180 / pi, pLng * 180 / pi));
+    }
+    return out;
+  }
+
+  // ═══════════════════════════════════════════
+  // TELEMETRY STRIP (4 chips, horizontal scroll)
+  // ═══════════════════════════════════════════
+
+  Widget _buildTelemetryStrip() {
+    final hasFix = _latitude != null && _longitude != null;
+    return SizedBox(
+      height: 54,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        physics: const BouncingScrollPhysics(),
+        children: [
+          _telemetryChip('⚡', 'Velocity', '27,580 km/h'),
+          _telemetryChip(
+            '📍',
+            'Over',
+            hasFix ? _positionOver(_latitude!, _longitude!) : '—',
+          ),
+          _telemetryChip(
+            '🧭',
+            'Heading',
+            _heading(_prevLatitude, _prevLongitude, _latitude, _longitude),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _telemetryChip(String emoji, String label, String value) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.glass(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.glassBorder(context)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  color: AppColors.textSecondary(context),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                value,
+                softWrap: false,
+                overflow: TextOverflow.visible,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary(context),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════
+  // 2x2 STAT GRID
+  // ═══════════════════════════════════════════
+
+  Widget _buildStatGrid() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _statCard(
+                CupertinoIcons.speedometer,
+                'Speed',
+                '27,580',
+                'km/h',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _statCard(
+                CupertinoIcons.arrow_up_circle,
+                'Altitude',
+                '408',
+                'km',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _statCard(
+                CupertinoIcons.arrow_2_circlepath,
+                'Orbits Today',
+                '${_orbitsToday()}',
+                'of ~15',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _statCard(
+                CupertinoIcons.person_3_fill,
+                'Crew',
+                _isLoadingAstronauts ? '—' : '$_astronautCount',
+                'in space',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _statCard(IconData icon, String label, String value, String unit) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.glass(context),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.glassBorder(context)),
+            boxShadow: AppColors.cardShadow(context),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 16, color: AppColors.accentCyan),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary(context),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    value,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      unit,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.textSecondary(context),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════
+  // LIVE INDICATOR (reuses _pulseController)
+  // ═══════════════════════════════════════════
 
   Widget _buildLiveIndicator() {
     return Row(
@@ -228,10 +700,12 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.success.withValues(alpha: 0.5 + _pulseController.value * 0.5),
+                color: AppColors.success
+                    .withValues(alpha: 0.5 + _pulseController.value * 0.5),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.success.withValues(alpha: 0.3 * _pulseController.value),
+                    color: AppColors.success
+                        .withValues(alpha: 0.3 * _pulseController.value),
                     blurRadius: 6,
                     spreadRadius: 2 * _pulseController.value,
                   ),
@@ -254,129 +728,74 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
     );
   }
 
-  Widget _buildRadarSection() {
-    return Column(
-      children: [
-        // Radar circle
-        SizedBox(
-          width: 280,
-          height: 280,
-          child: CustomPaint(
-            painter: _RadarPainter(
-              latitude: _latitude ?? 0,
-              longitude: _longitude ?? 0,
-              pulseValue: _pulseController.value,
-              isDark: Theme.of(context).brightness == Brightness.dark,
-            ),
-            child: AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, _) => const SizedBox.expand(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Coordinates
-        Text(
-          'Latitude: ${_latitude?.toStringAsFixed(4) ?? '--'}°  |  Longitude: ${_longitude?.toStringAsFixed(4) ?? '--'}°',
-          style: GoogleFonts.jetBrainsMono(
-            fontSize: 13,
-            color: AppColors.textSecondary(context),
-          ),
-        ),
-      ],
-    );
-  }
+  // ═══════════════════════════════════════════
+  // ERROR / SHIMMER
+  // ═══════════════════════════════════════════
 
   Widget _buildErrorState() {
-    return Column(
-      children: [
-        const SizedBox(height: 40),
-        Icon(CupertinoIcons.wifi_slash, size: 48, color: AppColors.textSecondary(context)),
-        const SizedBox(height: 16),
-        Text(
-          'Could not fetch ISS data',
-          style: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context)),
-        ),
-        const SizedBox(height: 16),
-        CupertinoButton(
-          color: AppColors.accentBlue,
-          borderRadius: BorderRadius.circular(12),
-          onPressed: () {
-            setState(() {
-              _isLoadingISS = true;
-              _hasError = false;
-            });
-            _fetchISSLocation();
-          },
-          child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-        ),
-        const SizedBox(height: 40),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.glass(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.glassBorder(context)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            CupertinoIcons.wifi_slash,
+            size: 48,
+            color: AppColors.textSecondary(context),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Could not fetch ISS data',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: 16),
+          CupertinoButton(
+            color: AppColors.accentBlue,
+            borderRadius: BorderRadius.circular(12),
+            onPressed: () {
+              setState(() {
+                _isLoadingISS = true;
+                _hasError = false;
+              });
+              _fetchISSLocation();
+            },
+            child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildISSInfoCard() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.glass(context),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.glassBorder(context)),
-            boxShadow: AppColors.cardShadow(context),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'International Space Station',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary(context),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildInfoRow(CupertinoIcons.speedometer, 'Speed', '27,600 km/h'),
-              const SizedBox(height: 12),
-              _buildInfoRow(CupertinoIcons.arrow_up_circle, 'Altitude', '408 km above Earth'),
-              const SizedBox(height: 12),
-              _buildInfoRow(CupertinoIcons.arrow_2_circlepath, 'Orbits per day', '15.5 orbits'),
-            ],
-          ),
+  Widget _buildShimmer(double height) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase(context),
+      highlightColor: AppColors.shimmerHighlight(context),
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.shimmerBase(context),
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.accentCyan),
-        const SizedBox(width: 12),
-        Text(
-          label,
-          style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context)),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary(context),
-          ),
-        ),
-      ],
-    );
-  }
+  // ═══════════════════════════════════════════
+  // ASTRONAUT CARD
+  // ═══════════════════════════════════════════
 
   Widget _buildAstronautCard(Map<String, dynamic> astronaut) {
     final name = astronaut['name']?.toString() ?? 'Unknown';
     final craft = astronaut['craft']?.toString() ?? 'Unknown';
+    final flag = _astronautFlag(name, craft);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -394,6 +813,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
               Container(
                 width: 36,
                 height: 36,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -403,7 +823,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                     ],
                   ),
                 ),
-                child: const Icon(CupertinoIcons.person_fill, size: 18, color: Colors.white),
+                child: Text(flag, style: const TextStyle(fontSize: 18)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -430,7 +850,10 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: craft == 'ISS'
                       ? AppColors.accentCyan.withValues(alpha: 0.15)
@@ -442,7 +865,9 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: craft == 'ISS' ? AppColors.accentCyan : AppColors.accentOrange,
+                    color: craft == 'ISS'
+                        ? AppColors.accentCyan
+                        : AppColors.accentOrange,
                   ),
                 ),
               ),
@@ -453,142 +878,67 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
     );
   }
 
-  Widget _buildShimmer(double height) {
-    return Shimmer.fromColors(
-      baseColor: AppColors.shimmerBase(context),
-      highlightColor: AppColors.shimmerHighlight(context),
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: AppColors.shimmerBase(context),
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-    );
-  }
-}
+  // ═══════════════════════════════════════════
+  // HELPERS (pure functions)
+  // ═══════════════════════════════════════════
 
-// ═══════════════════════════════════════════
-// RADAR PAINTER
-// ═══════════════════════════════════════════
+  String _astronautFlag(String name, String craft) {
+    final c = craft.toLowerCase();
+    if (c.contains('tiangong') || c.contains('shenzhou')) return '🇨🇳';
 
-class _RadarPainter extends CustomPainter {
-  final double latitude;
-  final double longitude;
-  final double pulseValue;
-  final bool isDark;
+    final parts = name.trim().split(RegExp(r'\s+'));
+    final last = parts.isEmpty ? '' : parts.last.toLowerCase();
 
-  _RadarPainter({
-    required this.latitude,
-    required this.longitude,
-    required this.pulseValue,
-    required this.isDark,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    // Background circle
-    final bgPaint = Paint()
-      ..color = isDark ? AppColors.surfaceDark : const Color(0xFFE8E6F0)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, bgPaint);
-
-    // Border gradient
-    final borderPaint = Paint()
-      ..shader = SweepGradient(
-        colors: [
-          AppColors.accentBlue,
-          AppColors.accentCyan,
-          AppColors.accentBlue,
-        ],
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawCircle(center, radius - 1, borderPaint);
-
-    // Grid lines
-    final gridPaint = Paint()
-      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08)
-      ..strokeWidth = 0.5;
-
-    // Horizontal grid lines (latitude)
-    for (int i = 1; i < 6; i++) {
-      final y = center.dy - radius + (radius * 2 * i / 6);
-      final dx = sqrt(max(0, radius * radius - (y - center.dy) * (y - center.dy)));
-      canvas.drawLine(
-        Offset(center.dx - dx, y),
-        Offset(center.dx + dx, y),
-        gridPaint,
-      );
+    // Russian surname endings.
+    const ruEnds = ['ov', 'ev', 'in', 'ko', 'sky', 'skiy', 'uk', 'chuk'];
+    for (final e in ruEnds) {
+      if (last.endsWith(e)) return '🇷🇺';
     }
-
-    // Vertical grid lines (longitude)
-    for (int i = 1; i < 8; i++) {
-      final x = center.dx - radius + (radius * 2 * i / 8);
-      final dy = sqrt(max(0, radius * radius - (x - center.dx) * (x - center.dx)));
-      canvas.drawLine(
-        Offset(x, center.dy - dy),
-        Offset(x, center.dy + dy),
-        gridPaint,
-      );
-    }
-
-    // Equator line
-    final equatorPaint = Paint()
-      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15)
-      ..strokeWidth = 1;
-    canvas.drawLine(
-      Offset(center.dx - radius, center.dy),
-      Offset(center.dx + radius, center.dy),
-      equatorPaint,
-    );
-    // Prime meridian
-    canvas.drawLine(
-      Offset(center.dx, center.dy - radius),
-      Offset(center.dx, center.dy + radius),
-      equatorPaint,
-    );
-
-    // ISS position dot
-    // Map lat (-90 to 90) and lon (-180 to 180) to circle coords
-    final issX = center.dx + (longitude / 180) * (radius - 20);
-    final issY = center.dy - (latitude / 90) * (radius - 20);
-
-    // Check if point is within the circle
-    final dist = (Offset(issX, issY) - center).distance;
-    if (dist < radius - 5) {
-      // Pulse ring
-      final pulsePaint = Paint()
-        ..color = AppColors.error.withValues(alpha: 0.4 * (1 - pulseValue))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
-      canvas.drawCircle(Offset(issX, issY), 6 + 14 * pulseValue, pulsePaint);
-
-      // Second pulse ring
-      final pulse2Value = (pulseValue + 0.5) % 1.0;
-      final pulse2Paint = Paint()
-        ..color = AppColors.error.withValues(alpha: 0.3 * (1 - pulse2Value))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
-      canvas.drawCircle(Offset(issX, issY), 6 + 14 * pulse2Value, pulse2Paint);
-
-      // Core dot
-      final dotPaint = Paint()
-        ..color = AppColors.error
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(issX, issY), 6, dotPaint);
-
-      // Inner bright core
-      final corePaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.8)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(issX, issY), 2.5, corePaint);
-    }
+    // Default: assume US (the majority of remaining ISS crew).
+    return '🇺🇸';
   }
 
-  @override
-  bool shouldRepaint(covariant _RadarPainter old) => true;
+  String _positionOver(double lat, double lng) {
+    if (lat < -60) return 'Antarctica';
+    if (lat > 66 && lng > -60 && lng < 60) return 'Arctic';
+
+    // Continental bounding boxes — coarse but readable.
+    if (lat > -35 && lat < 37 && lng > -18 && lng < 51) return 'Africa';
+    if (lat > 36 && lat < 71 && lng > -10 && lng < 60) return 'Europe';
+    if (lat > 10 && lat < 75 && lng >= 60 && lng < 180) return 'Asia';
+    if (lat > -45 && lat < -10 && lng > 110 && lng <= 180) return 'Australia';
+    if (lat > 15 && lat < 75 && lng > -170 && lng < -50) return 'North America';
+    if (lat > -55 && lat < 13 && lng > -82 && lng < -34) return 'South America';
+
+    // Oceans by longitude band.
+    if (lng > -80 && lng < 20) return 'Atlantic Ocean';
+    if (lng >= 20 && lng < 150) return 'Indian Ocean';
+    return 'Pacific Ocean';
+  }
+
+  String _heading(double? lat1, double? lng1, double? lat2, double? lng2) {
+    if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) {
+      return '—';
+    }
+    if ((lat1 - lat2).abs() < 1e-6 && (lng1 - lng2).abs() < 1e-6) return '—';
+    final p1 = lat1 * pi / 180;
+    final p2 = lat2 * pi / 180;
+    var d = (lng2 - lng1) * pi / 180;
+    if (d > pi) d -= 2 * pi;
+    if (d < -pi) d += 2 * pi;
+    final y = sin(d) * cos(p2);
+    final x = cos(p1) * sin(p2) - sin(p1) * cos(p2) * cos(d);
+    var bearing = atan2(y, x) * 180 / pi;
+    bearing = (bearing + 360) % 360;
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    final cardinal = dirs[((bearing + 22.5) / 45).floor() % 8];
+    return '${bearing.round()}° $cardinal';
+  }
+
+  int _orbitsToday() {
+    final now = DateTime.now();
+    final fraction =
+        (now.hour + now.minute / 60.0 + now.second / 3600.0) / 24.0;
+    return (15.5 * fraction).floor();
+  }
 }
