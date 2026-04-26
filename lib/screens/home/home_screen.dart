@@ -1205,23 +1205,25 @@ class _TrendingFactsRow extends StatelessWidget {
                 width: 160,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF141438) : Colors.white,
+                  gradient: isDark
+                      ? null
+                      : const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.white, Color(0xFFF8F7FF)],
+                        ),
+                  color: isDark ? AppColors.glass(context) : null,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.glassBorder(context)),
                   boxShadow: isDark
-                      ? []
+                      ? AppColors.cardShadow(context)
                       : [
                           BoxShadow(
-                            color: const Color(0xFF6C63FF).withValues(alpha: 0.08),
+                            color: const Color(0xFF6C63FF).withValues(alpha: 0.06),
                             blurRadius: 12,
                             offset: const Offset(0, 3),
                           ),
                         ],
-                  border: isDark
-                      ? Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          width: 1,
-                        )
-                      : null,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
