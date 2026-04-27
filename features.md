@@ -132,15 +132,54 @@
 - Full explanation text
 - "Download HD" button
 
-### 13. Earth from Space (NASA EPIC)
-- Daily Earth photos from DSCOVR satellite
-- EPIC camera at L1 Lagrange Point (1.5M km away)
-- Uses epic.gsfc.nasa.gov direct API (no key needed)
-- Thumbnail-first loading (fast), HD on demand
-- Multiple photos per day (Earth rotation)
-- Earth Rotation auto-play feature
-- Date navigation through available dates
-- Camera/satellite info section
+### 13. Earth from Space (NASA EPIC) — Editorial Cinema
+Premium photo-magazine aesthetic over the same EPIC API. Inter typography
+(no monospace except the small UTC stamp), no card wrappers, no big blue
+buttons — built around a single full-bleed image and a magazine caption.
+
+**Layout**
+- Minimal 56 px top bar: back button + circular info "About EPIC" sheet.
+- **Full-bleed hero** (60% of screen height, edge-to-edge, black backdrop):
+  `InteractiveViewer` for pinch + double-tap zoom; long-press opens the
+  rotation player; horizontal swipe navigates between dates; tap reveals
+  ↤/↦ floating arrows that step through the day's frames before fading
+  out after 2 s. Slim white bar markers along the bottom show position
+  within the day's 19 frames.
+- **Editorial caption block** — uppercase letter-spaced date "APRIL 25,
+  2026", monospaced "00:41:06 UTC" timestamp, large 28 px / weight 300
+  hero title "Earth from a million miles away", and a storytelling
+  paragraph that converts numeric lat/lon to N/S/E/W form.
+- **WATCH EARTH ROTATE** CTA — the only visually prominent button. 88 px
+  card with a deep-blue → cyan gradient play disc, frame count subtitle.
+- **Date navigation** — chevron pair around a tap-to-pick centered date
+  (`CupertinoDatePicker`); next-day chevron disables when at today.
+- **Technical details** — `AnimatedSize` collapsible row revealing
+  Camera / Satellite / Position / Resolution / Distance + an inline
+  "View full resolution →" link (replaces the old big blue button).
+- **Sticky frosted action bar** — `BackdropFilter(ImageFilter.blur)` over
+  semi-transparent surface, three icon-only actions (Save HD / Share /
+  Save bookmark) reactive to `BookmarkController` via Obx.
+
+**Rotation Player** (`earth_rotation_player_screen.dart`)
+- Fullscreen immersive viewer (`SystemUiMode.immersive`) with PageView
+  through all frames at mid-quality JPG.
+- Auto-advance Timer at 800 ms / frame (1×), togglable to 2× and 4×.
+- Tap toggles overlays; overlays auto-hide after 3 s of no interaction.
+- Bottom progress line with 19 tap-jumpable vertical frame markers,
+  large play/pause disc, and speed pill.
+- Manual horizontal swipe pauses auto-play; vertical swipe-down past
+  600 px/s exits the viewer. SystemChrome restored on dispose.
+
+**Theme** — page bg `#050510` / `#FAFAFA`, deep-blue accent `#4A90E2`
+(dark) / `#1E40AF` (light) — Earth-toned, not the cyan of Mission Control.
+Image canvas always `Colors.black` for cinematic letterboxing.
+
+**Preserved logic** — every API call (`getEpicAvailableDates`,
+`getEpicImages`, `getEpicImageUrl`), the bookmark + share + Save HD
+handlers, and the HD viewer subroute carry over unchanged. The hero +
+player swap to mid-quality JPG via the documented EPIC URL pattern
+(`/archive/natural/Y/M/D/jpg/<image>.jpg`) constructed inline so
+`api_service.dart` stays untouched.
 
 ---
 
