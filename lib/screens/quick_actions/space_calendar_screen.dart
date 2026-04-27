@@ -1049,42 +1049,52 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
     return GestureDetector(
       onTap: () => _jumpTo(e.date.year, e.date.month, day: e.date.day),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.glass(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border(
-            left: BorderSide(color: e.color, width: 3),
-            top: BorderSide(color: AppColors.glassBorder(context)),
-            right: BorderSide(color: AppColors.glassBorder(context)),
-            bottom: BorderSide(color: AppColors.glassBorder(context)),
-          ),
+          border: Border.all(color: AppColors.glassBorder(context)),
         ),
-        child: Row(
-          children: [
-            Text(_eventEmoji(e.type), style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                e.name,
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary(context),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(width: 3, color: e.color),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    child: Row(
+                      children: [
+                        Text(_eventEmoji(e.type), style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            e.name,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary(context),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          dateStr,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: e.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              ],
             ),
-            Text(
-              dateStr,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: e.color,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1101,142 +1111,152 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
       decoration: BoxDecoration(
         color: AppColors.glass(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border(
-          left: BorderSide(color: event.color, width: 4),
-          top: BorderSide(color: AppColors.glassBorder(context)),
-          right: BorderSide(color: AppColors.glassBorder(context)),
-          bottom: BorderSide(color: AppColors.glassBorder(context)),
-        ),
+        border: Border.all(color: AppColors.glassBorder(context)),
         boxShadow: AppColors.cardShadow(context),
       ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: event.color.withValues(alpha: _isDark ? 0.20 : 0.12),
-              border: Border.all(color: event.color.withValues(alpha: 0.40)),
-            ),
-            child: Center(
-              child: Text(_eventEmoji(event.type), style: const TextStyle(fontSize: 22)),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: event.color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        _typeLabel(event.type).toUpperCase(),
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: event.color,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ),
-                    if (isToday)
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(width: 4, color: event.color),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+                          shape: BoxShape.circle,
+                          color: event.color.withValues(alpha: _isDark ? 0.20 : 0.12),
+                          border: Border.all(color: event.color.withValues(alpha: 0.40)),
                         ),
-                        child: Text(
-                          'TODAY',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.error,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      )
-                    else if (isPast)
-                      Text(
-                        'Passed',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: AppColors.textSecondary(context),
+                        child: Center(
+                          child: Text(_eventEmoji(event.type), style: const TextStyle(fontSize: 22)),
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  event.name,
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isPast
-                        ? AppColors.textSecondary(context)
-                        : AppColors.textPrimary(context),
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  event.description,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.textSecondary(context),
-                    height: 1.4,
-                  ),
-                ),
-                if (!isPast) ...[
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () => _addToCalendar(event),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            event.color.withValues(alpha: 0.20),
-                            event.color.withValues(alpha: 0.10),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: event.color.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    _typeLabel(event.type).toUpperCase(),
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: event.color,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ),
+                                if (isToday)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.error.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'TODAY',
+                                      style: GoogleFonts.spaceGrotesk(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.error,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                  )
+                                else if (isPast)
+                                  Text(
+                                    'Passed',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      color: AppColors.textSecondary(context),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              event.name,
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: isPast
+                                    ? AppColors.textSecondary(context)
+                                    : AppColors.textPrimary(context),
+                                height: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              event.description,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: AppColors.textSecondary(context),
+                                height: 1.4,
+                              ),
+                            ),
+                            if (!isPast) ...[
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () => _addToCalendar(event),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        event.color.withValues(alpha: 0.20),
+                                        event.color.withValues(alpha: 0.10),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: event.color.withValues(alpha: 0.40)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(CupertinoIcons.bell_fill, size: 12, color: event.color),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Add reminder',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: event.color,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: event.color.withValues(alpha: 0.40)),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(CupertinoIcons.bell_fill, size: 12, color: event.color),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Add reminder',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: event.color,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
-                ],
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     ).animate().fadeIn(
           duration: 350.ms,
