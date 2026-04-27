@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -14,13 +13,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/bookmark_controller.dart';
 import '../../models/bookmark_model.dart';
 import '../../services/api_service.dart';
-import 'earth_rotation_player_screen.dart';
+import '../../utils/earth_geo_helper.dart';
 
-/// Editorial / cinema-style viewer for NASA EPIC daily Earth photography.
+/// Editorial viewer for NASA EPIC daily Earth photography.
 ///
-/// Layout: minimal top bar → full-bleed hero image (60% screen height) →
-/// magazine-style caption block → "Watch Earth rotate" CTA → date nav →
-/// collapsible technical details → frosted sticky action bar.
+/// Layout: minimal top bar → full-bleed hero image (single best frame
+/// per day) → editorial caption → About this view → Cosmic Context (live-
+/// calculated stats) → The Mission (DSCOVR + EPIC) → date navigation →
+/// collapsible technical details → solid sticky action bar.
 class EarthFromSpaceScreen extends StatefulWidget {
   const EarthFromSpaceScreen({super.key});
 
@@ -78,6 +78,10 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
         DateTime.now().subtract(const Duration(days: 2)));
   }
 
+  /// Pick the middle frame of the day — usually the best Earth centering.
+  static int _pickBestIndex(List<dynamic> images) =>
+      images.isEmpty ? 0 : images.length ~/ 2;
+
   Future<void> _loadImagesForDate(String dateStr) async {
     setState(() {
       _isLoading = true;
@@ -87,11 +91,10 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
     if (result.isNotEmpty && mounted) {
       setState(() {
         _images = result;
-        _selectedIndex = 0;
+        _selectedIndex = _pickBestIndex(result);
         _currentDate = dateStr;
         _isLoading = false;
       });
-      _precacheNeighbors();
       return;
     }
     if (mounted) {
@@ -111,11 +114,10 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
       if (result.isNotEmpty && mounted) {
         setState(() {
           _images = result;
-          _selectedIndex = 0;
+          _selectedIndex = _pickBestIndex(result);
           _currentDate = dateStr;
           _isLoading = false;
         });
-        _precacheNeighbors();
         return;
       }
     }
@@ -124,16 +126,6 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
         _isLoading = false;
         _hasError = true;
       });
-    }
-  }
-
-  void _precacheNeighbors() {
-    final count = _images.length.clamp(0, 4);
-    for (int i = 0; i < count; i++) {
-      precacheImage(
-        CachedNetworkImageProvider(_imageUrl(_images[i])),
-        context,
-      );
     }
   }
 
@@ -238,19 +230,6 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
     );
   }
 
-  void _openRotationPlayer() {
-    if (_images.isEmpty) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => EarthRotationPlayerScreen(
-          images: _images,
-          date: _currentDate,
-          initialIndex: _selectedIndex,
-        ),
-      ),
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════
   // BUILD
   // ═══════════════════════════════════════════════════════════════
@@ -276,10 +255,12 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
                             children: [
                               _buildHero(),
                               _buildCaption(),
-                              _buildWatchCta(),
+                              _buildAboutThisView(),
+                              _buildCosmicContext(),
+                              _buildMission(),
                               _buildDateNav(),
                               _buildTechDetails(),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 24),
                             ],
                           ),
                         ),
@@ -348,11 +329,10 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
     final heroHeight = MediaQuery.of(context).size.height * 0.6;
 
     return GestureDetector(
-      // Tap or long-press opens the fullscreen player where zoom + manual
-      // frame navigation live. Keeping zoom out of the inline image
+      // Tap opens the fullscreen HD viewer (pinch-to-zoom). Horizontal
+      // swipe changes day. Keeping zoom out of the inline image
       // eliminates per-frame InteractiveViewer overhead while scrolling.
-      onTap: _openRotationPlayer,
-      onLongPress: _openRotationPlayer,
+      onTap: _openFullResolution,
       onHorizontalDragEnd: (details) {
         final v = details.primaryVelocity ?? 0;
         if (v < -300 && _canGoNextDay) {
@@ -361,69 +341,51 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
           _goToPreviousDay();
         }
       },
-      child: SizedBox(
+      child: Container(
+        color: Colors.black,
+        width: double.infinity,
         height: heroHeight,
-        child: Stack(
-          children: [
-            Container(
-              color: Colors.black,
-              width: double.infinity,
-              height: heroHeight,
-              child: Center(
-                child: CachedNetworkImage(
-                  imageUrl: url,
-                  cacheKey: 'epic_hero_${img['image']}',
-                  fit: BoxFit.contain,
-                  // Decode at half resolution — quality stays high on phone
-                  // displays while memory drops ~75%.
-                  memCacheWidth: 1024,
-                  memCacheHeight: 1024,
-                  fadeInDuration: const Duration(milliseconds: 200),
-                  placeholder: (_, _) => Center(
-                    child: Shimmer.fromColors(
-                      baseColor: Colors.white.withValues(alpha: 0.06),
-                      highlightColor: Colors.white.withValues(alpha: 0.18),
-                      child: Container(
-                        width: heroHeight * 0.7,
-                        height: heroHeight * 0.7,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ),
-                  errorWidget: (_, _, _) => Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(CupertinoIcons.photo,
-                            size: 48, color: Colors.white38),
-                        const SizedBox(height: 8),
-                        Text('Image unavailable',
-                            style: GoogleFonts.inter(
-                                color: Colors.white60, fontSize: 13)),
-                      ],
-                    ),
+        child: Center(
+          child: CachedNetworkImage(
+            imageUrl: url,
+            cacheKey: 'epic_hero_${img['image']}',
+            fit: BoxFit.contain,
+            // Decode at half resolution — quality stays high on phone
+            // displays while memory drops ~75%.
+            memCacheWidth: 1024,
+            memCacheHeight: 1024,
+            fadeInDuration: const Duration(milliseconds: 200),
+            placeholder: (_, _) => Center(
+              child: Shimmer.fromColors(
+                baseColor: Colors.white.withValues(alpha: 0.06),
+                highlightColor: Colors.white.withValues(alpha: 0.18),
+                child: Container(
+                  width: heroHeight * 0.7,
+                  height: heroHeight * 0.7,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
                   ),
                 ),
               ),
             ),
-            // Frame indicator bars
-            if (_images.length > 1)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 12,
-                child: _FrameBars(
-                  total: _images.length,
-                  current: _selectedIndex,
-                ),
+            errorWidget: (_, _, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(CupertinoIcons.photo,
+                      size: 48, color: Colors.white38),
+                  const SizedBox(height: 8),
+                  Text('Image unavailable',
+                      style: GoogleFonts.inter(
+                          color: Colors.white60, fontSize: 13)),
+                ],
               ),
-          ],
+            ),
+          ),
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms);
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -484,7 +446,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: 100.ms);
+    );
   }
 
   String _composeStorytellingText(double? lat, double? lon) {
@@ -501,77 +463,314 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // D) WATCH EARTH ROTATE — hero CTA
+  // D1) ABOUT THIS VIEW — region + sunlit side
   // ─────────────────────────────────────────────────────────────
-  Widget _buildWatchCta() {
-    if (_images.length < 2) return const SizedBox.shrink();
+  Widget _buildAboutThisView() {
+    if (_images.isEmpty) return const SizedBox.shrink();
+    final img = _images[_selectedIndex];
+    final coords = img['centroid_coordinates'] as Map<String, dynamic>?;
+    final lat = (coords?['lat'] as num?)?.toDouble();
+    final lon = (coords?['lon'] as num?)?.toDouble();
+    if (lat == null || lon == null) return const SizedBox.shrink();
+
+    final regionText = EarthGeoHelper.describeRegion(lat, lon);
+    final sunlitText = EarthGeoHelper.describeSunlitSide(lon);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-      child: GestureDetector(
-        onTap: _openRotationPlayer,
-        child: Container(
-          height: 88,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: _isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _secondary.withValues(alpha: 0.15),
-              width: 0.5,
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'About this view',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              letterSpacing: 2,
+              fontWeight: FontWeight.w600,
+              color: _secondary,
             ),
           ),
-          child: Row(
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF1E40AF), Color(0xFF38BDF8)],
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(Icons.public, size: 16, color: _secondary),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  regionText,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: _primary,
                   ),
                 ),
-                child: const Icon(Icons.play_arrow,
-                    size: 28, color: Colors.white),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'WATCH EARTH ROTATE',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 2,
-                        color: _secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_images.length} frames • 24-hour timelapse',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: _primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right,
-                  color: _secondary.withValues(alpha: 0.7), size: 22),
             ],
           ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(Icons.wb_sunny_outlined,
+                    size: 16, color: _secondary),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  sunlitText,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: _primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // D2) COSMIC CONTEXT — 2×2 stat grid (live-calculated)
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildCosmicContext() {
+    if (_currentDate.isEmpty) return const SizedBox.shrink();
+    final DateTime date;
+    try {
+      date = DateTime.parse(_currentDate);
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+
+    final sunMillionKm = EarthGeoHelper.earthSunDistanceMillionKm(date);
+    final moonKm       = EarthGeoHelper.earthMoonDistanceKm(date);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cosmic Context',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              letterSpacing: 2,
+              fontWeight: FontWeight.w600,
+              color: _secondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 2.0,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            children: [
+              _statCard(
+                label: 'DISTANCE FROM SUN',
+                value: '${sunMillionKm.toStringAsFixed(2)}M km',
+                icon: Icons.wb_sunny,
+              ),
+              _statCard(
+                label: 'DISTANCE FROM MOON',
+                value: '${(moonKm / 1000).toStringAsFixed(0)}K km',
+                icon: Icons.brightness_2,
+              ),
+              _statCard(
+                label: 'ORBITAL SPEED',
+                value: '107,200 km/h',
+                icon: Icons.speed,
+              ),
+              _statCard(
+                label: 'ROTATION (EQUATOR)',
+                value: '1,670 km/h',
+                icon: Icons.refresh,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCard({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.black.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _secondary.withValues(alpha: 0.1),
+          width: 0.5,
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: _accent),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w600,
+                    color: _secondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: _primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // D3) THE MISSION — DSCOVR + EPIC educational card
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildMission() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'The Mission',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              letterSpacing: 2,
+              fontWeight: FontWeight.w600,
+              color: _secondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : Colors.black.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _secondary.withValues(alpha: 0.1),
+                width: 0.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _missionEntry(
+                  icon: Icons.satellite_alt,
+                  name: 'DSCOVR',
+                  kind: 'Satellite',
+                  body:
+                      'Launched in 2015, the Deep Space Climate Observatory '
+                      'orbits at the L1 Lagrange point — a gravitational '
+                      'sweet spot 1.5 million km between Earth and the Sun.',
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(
+                    color: _secondary.withValues(alpha: 0.1),
+                    height: 1,
+                  ),
+                ),
+                _missionEntry(
+                  icon: Icons.camera_alt,
+                  name: 'EPIC',
+                  kind: 'Camera',
+                  body:
+                      'The Earth Polychromatic Imaging Camera takes 10–22 '
+                      'photos daily across 10 narrowband filters, capturing '
+                      'the full sunlit face of Earth in stunning '
+                      '2048×2048 detail.',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _missionEntry({
+    required IconData icon,
+    required String name,
+    required String kind,
+    required String body,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: _accent.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: _accent),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              name,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                color: _primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              kind,
+              style: GoogleFonts.inter(fontSize: 12, color: _secondary),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          body,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            height: 1.6,
+            color: _secondary,
+          ),
+        ),
+      ],
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -635,7 +834,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -1111,36 +1310,6 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
       return t.length >= 8 ? t.substring(0, 8) : t;
     }
     return '';
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// FRAME BARS — slim vertical markers showing position within a day
-// ═══════════════════════════════════════════════════════════════════
-class _FrameBars extends StatelessWidget {
-  final int total;
-  final int current;
-  const _FrameBars({required this.total, required this.current});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Wrap(
-        spacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: List.generate(total, (i) {
-          final active = i == current;
-          return Container(
-            width: 3,
-            height: 12,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: active ? 1.0 : 0.30),
-              borderRadius: BorderRadius.circular(1.5),
-            ),
-          );
-        }),
-      ),
-    );
   }
 }
 

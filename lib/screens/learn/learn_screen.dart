@@ -10,20 +10,11 @@ import '../../data/learn_content.dart';
 import '../../theme/app_colors.dart';
 import '../bookmarks/bookmarks_screen.dart';
 import '../quiz/quiz_hub_screen.dart';
-import 'planet_comparator_screen.dart';
-import 'space_calculator_screen.dart';
+import '../research/space_research_screen.dart';
 import 'space_glossary_screen.dart';
 import 'space_quotes_screen.dart';
-import 'astronaut_directory_screen.dart';
-import 'constellation_guide_screen.dart';
 import 'topic_detail_screen.dart';
 import 'universe_timeline_screen.dart';
-import 'active_missions_screen.dart';
-import '../explore/exoplanet_explorer_screen.dart';
-import '../research/space_research_screen.dart';
-import '../weather/space_weather_screen.dart';
-import '../quick_actions/space_calendar_screen.dart';
-import '../tools/stargazing_forecast_screen.dart';
 
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
@@ -142,36 +133,17 @@ class _LearnScreenState extends State<LearnScreen> {
                 child: _buildQuizBanner(),
               ),
             ),
+            SliverToBoxAdapter(child: _buildSectionHeader('Reference Library')),
+            SliverToBoxAdapter(child: _buildReferenceRow()),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            SliverToBoxAdapter(child: _buildSectionHeader('Deep Reading')),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text('Tools & Discovery',
-                        style: GoogleFonts.spaceGrotesk(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                            color: AppColors.textPrimary(context))),
-                  ],
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: _buildDeepReadingCard(),
               ),
             ),
-            SliverToBoxAdapter(child: _buildToolsRow()),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -352,40 +324,57 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 
   // ═══════════════════════════════════════
-  // TOOLS ROW (horizontal scroll)
+  // SECTION HEADER (shared)
   // ═══════════════════════════════════════
 
-  static const _toolData = <_ToolInfo>[
-    _ToolInfo(Icons.calculate_rounded, 'Calculator', '8 calculators', [AppColors.accentBlue, AppColors.accentCyan]),
-    _ToolInfo(Icons.compare_arrows_rounded, 'Comparator', 'Compare worlds', [AppColors.accentCyan, Color(0xFF4A90D9)]),
-    _ToolInfo(Icons.menu_book_rounded, 'Glossary', '200+ terms', [Color(0xFFDAA520), Color(0xFFFFD700)]),
-    _ToolInfo(Icons.timeline_rounded, 'Timeline', '13.8B years', [Color(0xFFFF6B35), Color(0xFFFF4D6A)]),
-    _ToolInfo(Icons.format_quote_rounded, 'Quotes', '100+ quotes', [Color(0xFFE040FB), Color(0xFFAB47BC)]),
-    _ToolInfo(Icons.calendar_month_rounded, 'Calendar', 'Space events', [Color(0xFF4A90D9), Color(0xFF1E88E5)]),
-    _ToolInfo(Icons.people_rounded, 'Astronauts', '50 heroes', [Color(0xFFFF4D6A), Color(0xFFFF6B35)]),
-    _ToolInfo(Icons.auto_awesome_rounded, 'Stars', '30 patterns', [Color(0xFF4FC3F7), Color(0xFF7986CB)]),
-    _ToolInfo(Icons.satellite_alt_rounded, 'Missions', '20 missions', [Color(0xFF6C63FF), Color(0xFF448AFF)]),
-    _ToolInfo(Icons.blur_circular_rounded, 'Exoplanets', '5,000+ worlds', [Color(0xFF00E676), Color(0xFF6C63FF)]),
-    _ToolInfo(Icons.article_outlined, 'Research', 'Latest papers', [Color(0xFFFFB800), Color(0xFFFF8F00)]),
-    _ToolInfo(Icons.wb_sunny_outlined, 'Weather', 'Live solar data', [Color(0xFFFFAB40), Color(0xFFFF5252)]),
-    _ToolInfo(Icons.nights_stay_outlined, 'Stargazing', "Tonight's sky", [Color(0xFF00B4D8), Color(0xFF6C63FF)]),
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 20,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(title,
+              style: GoogleFonts.spaceGrotesk(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: AppColors.textPrimary(context))),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════
+  // REFERENCE LIBRARY ROW (horizontal scroll, 3 cards)
+  // Reuses the original tools-row card design.
+  // ═══════════════════════════════════════
+
+  static const _referenceItems = <_ToolInfo>[
+    _ToolInfo(Icons.menu_book_rounded, 'Glossary', '200+ terms',
+        [Color(0xFF4A90E2), Color(0xFF60A5FA)]),
+    _ToolInfo(Icons.timeline_rounded, 'Timeline', '13.8B years',
+        [Color(0xFF9D7BFF), Color(0xFFB39DFF)]),
+    _ToolInfo(Icons.format_quote_rounded, 'Quotes', '100+ quotes',
+        [Color(0xFFFFB74D), Color(0xFFFFCC80)]),
   ];
 
-  Widget _buildToolsRow() {
-    final screens = [
-      const SpaceCalculatorScreen(),
-      const PlanetComparatorScreen(),
+  Widget _buildReferenceRow() {
+    final screens = <Widget>[
       const SpaceGlossaryScreen(),
       const UniverseTimelineScreen(),
       const SpaceQuotesScreen(),
-      const SpaceCalendarScreen(),
-      const AstronautDirectoryScreen(),
-      const ConstellationGuideScreen(),
-      const ActiveMissionsScreen(),
-      const ExoplanetExplorerScreen(),
-      const SpaceResearchScreen(),
-      const SpaceWeatherScreen(),
-      const StargazingForecastScreen(),
     ];
     return SizedBox(
       height: 108,
@@ -393,10 +382,10 @@ class _LearnScreenState extends State<LearnScreen> {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _toolData.length,
+        itemCount: _referenceItems.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
-          final t = _toolData[i];
+          final t = _referenceItems[i];
           return GestureDetector(
             onTap: () => Navigator.of(context).push(
               CupertinoPageRoute(builder: (_) => screens[i]),
@@ -407,32 +396,58 @@ class _LearnScreenState extends State<LearnScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 color: _isDark ? null : AppColors.cardLight,
-                gradient: _isDark ? LinearGradient(
-                  begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [AppColors.surfaceDark, t.colors[0].withValues(alpha: 0.08)],
-                ) : null,
-                border: Border.all(color: t.colors[0].withValues(alpha: _isDark ? 0.15 : 0.1)),
+                gradient: _isDark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.surfaceDark,
+                          t.colors[0].withValues(alpha: 0.08),
+                        ],
+                      )
+                    : null,
+                border: Border.all(
+                    color: t.colors[0]
+                        .withValues(alpha: _isDark ? 0.15 : 0.1)),
                 boxShadow: _isDark
-                  ? [BoxShadow(color: t.colors[0].withValues(alpha: 0.06), blurRadius: 16)]
-                  : [BoxShadow(color: t.colors[0].withValues(alpha: 0.12), blurRadius: 14, offset: const Offset(0, 4)),
-                     BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2))],
+                    ? [
+                        BoxShadow(
+                            color: t.colors[0].withValues(alpha: 0.06),
+                            blurRadius: 16),
+                      ]
+                    : [
+                        BoxShadow(
+                            color: t.colors[0].withValues(alpha: 0.12),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4)),
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2)),
+                      ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 36, height: 36,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(colors: t.colors),
-                      boxShadow: [BoxShadow(color: t.colors[0].withValues(alpha: 0.25), blurRadius: 8)],
+                      boxShadow: [
+                        BoxShadow(
+                            color: t.colors[0].withValues(alpha: 0.25),
+                            blurRadius: 8),
+                      ],
                     ),
                     child: Icon(t.icon, color: Colors.white, size: 18),
                   ),
                   const Spacer(),
                   Text(t.name,
                       style: GoogleFonts.spaceGrotesk(
-                          fontSize: 14, fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary(context))),
                   Text(t.sub,
                       style: GoogleFonts.inter(
@@ -441,10 +456,97 @@ class _LearnScreenState extends State<LearnScreen> {
                 ],
               ),
             ),
-          ).animate().fadeIn(duration: 350.ms, delay: Duration(milliseconds: 60 * i));
+          ).animate().fadeIn(
+              duration: 350.ms, delay: Duration(milliseconds: 60 * i));
         },
       ),
     );
+  }
+
+  // ═══════════════════════════════════════
+  // DEEP READING (single full-width tile)
+  // ═══════════════════════════════════════
+
+  Widget _buildDeepReadingCard() {
+    const teal      = Color(0xFF06B6D4);
+    const tealDeep  = Color(0xFF0891B2);
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        CupertinoPageRoute(builder: (_) => const SpaceResearchScreen()),
+      ),
+      child: Container(
+        height: 80,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: _isDark ? null : AppColors.cardLight,
+          gradient: _isDark
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surfaceDark,
+                    Color(0x2906B6D4),
+                  ],
+                )
+              : null,
+          border: Border.all(
+              color: teal.withValues(alpha: _isDark ? 0.25 : 0.18)),
+          boxShadow: _isDark
+              ? [BoxShadow(color: teal.withValues(alpha: 0.08), blurRadius: 18)]
+              : [
+                  BoxShadow(
+                      color: teal.withValues(alpha: 0.12),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4)),
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2)),
+                ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(colors: [teal, tealDeep]),
+                boxShadow: [
+                  BoxShadow(
+                      color: teal.withValues(alpha: 0.3),
+                      blurRadius: 10),
+                ],
+              ),
+              child: const Icon(Icons.article_outlined,
+                  color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Research Papers',
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context))),
+                  const SizedBox(height: 2),
+                  Text('Latest from arXiv & journals',
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.textSecondary(context))),
+                ],
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right,
+                size: 16, color: AppColors.textSecondary(context)),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
 
   // ═══════════════════════════════════════
