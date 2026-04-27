@@ -7,13 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constants/api_endpoints.dart';
 import '../../controllers/bookmark_controller.dart';
 import '../../models/bookmark_model.dart';
 import '../../services/api_service.dart';
 import '../../utils/earth_geo_helper.dart';
+import '../../widgets/shimmer/shimmer_circle.dart';
 
 /// Editorial viewer for NASA EPIC daily Earth photography.
 ///
@@ -140,8 +141,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
       return ApiService.getEpicImageUrl(_currentDate, imageName,
           thumbnail: true);
     }
-    return 'https://epic.gsfc.nasa.gov/archive/natural/'
-        '${parts[0]}/${parts[1]}/${parts[2]}/jpg/$imageName.jpg';
+    return ApiEndpoints.epicImageJpg(_currentDate, imageName);
   }
 
   String _fullUrl(Map<String, dynamic> img) {
@@ -356,17 +356,9 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
             memCacheHeight: 1024,
             fadeInDuration: const Duration(milliseconds: 200),
             placeholder: (_, _) => Center(
-              child: Shimmer.fromColors(
-                baseColor: Colors.white.withValues(alpha: 0.06),
-                highlightColor: Colors.white.withValues(alpha: 0.18),
-                child: Container(
-                  width: heroHeight * 0.7,
-                  height: heroHeight * 0.7,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
+              child: ShimmerCircle(
+                size: heroHeight * 0.7,
+                overlay: true,
               ),
             ),
             errorWidget: (_, _, _) => Center(
@@ -1054,18 +1046,7 @@ class _EarthFromSpaceScreenState extends State<EarthFromSpaceScreen> {
           width: double.infinity,
           color: Colors.black,
           child: Center(
-            child: Shimmer.fromColors(
-              baseColor: Colors.white.withValues(alpha: 0.06),
-              highlightColor: Colors.white.withValues(alpha: 0.18),
-              child: Container(
-                width: h * 0.7,
-                height: h * 0.7,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
+            child: ShimmerCircle(size: h * 0.7, overlay: true),
           ),
         ),
         const SizedBox(height: 24),

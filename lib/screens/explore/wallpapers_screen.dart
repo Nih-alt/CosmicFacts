@@ -3,11 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../models/nasa_image.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 import 'wallpaper_preview_screen.dart';
 
 class WallpapersScreen extends StatefulWidget {
@@ -108,7 +108,7 @@ class _WallpapersScreenState extends State<WallpapersScreen> {
                           ),
                           itemCount: _images.length + (_loadingMore ? 2 : 0),
                           itemBuilder: (ctx, i) {
-                            if (i >= _images.length) return _shimmerTile();
+                            if (i >= _images.length) return const ShimmerBox(width: double.infinity, height: double.infinity, borderRadius: 14);
                             return _tile(_images[i], i, isDark);
                           },
                         ),
@@ -185,7 +185,7 @@ class _WallpapersScreenState extends State<WallpapersScreen> {
             CachedNetworkImage(
               imageUrl: img.imageUrl,
               fit: BoxFit.cover,
-              placeholder: (_, _) => _shimmerTile(),
+              placeholder: (_, _) => const ShimmerBox(width: double.infinity, height: double.infinity, borderRadius: 14),
               errorWidget: (_, _, _) => Container(
                 color: AppColors.card(context),
                 child: Icon(CupertinoIcons.photo, size: 32, color: AppColors.textSecondary(context)),
@@ -229,16 +229,10 @@ class _WallpapersScreenState extends State<WallpapersScreen> {
         crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.6,
       ),
       itemCount: 6,
-      itemBuilder: (_, _) => _shimmerTile(),
-    );
-  }
-
-  Widget _shimmerTile() {
-    return Shimmer.fromColors(
-      baseColor: AppColors.shimmerBase(context),
-      highlightColor: AppColors.shimmerHighlight(context),
-      child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+      itemBuilder: (_, _) => const ShimmerBox(
+        width: double.infinity,
+        height: double.infinity,
+        borderRadius: 14,
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../constants/api_endpoints.dart';
+
 class TleService {
   // CelesTrak NORAD catalog numbers (public domain)
   static const Map<String, String> _catalogNumbers = {
@@ -16,7 +18,7 @@ class TleService {
     if (catNum == null) return null;
 
     try {
-      final url = 'https://celestrak.org/SATCAT/tle.php?CATNR=$catNum';
+      final url = ApiEndpoints.tleByCatNum(int.parse(catNum));
       final response = await http.get(
         Uri.parse(url),
         headers: {'Accept': 'text/plain'},

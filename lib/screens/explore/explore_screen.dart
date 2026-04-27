@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../controllers/explore_controller.dart';
 import '../../data/cosmic_tools.dart';
 import '../../models/nasa_image.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 import 'ar_sky_map_screen.dart';
 import 'image_detail_screen.dart';
 import 'nasa_gallery_screen.dart';
@@ -1153,8 +1153,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── Shimmer sliver for initial loading ──
   Widget _buildShimmerSliver() {
-    final base = AppColors.shimmerBase(context);
-    final highlight = AppColors.shimmerHighlight(context);
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
       sliver: SliverMasonryGrid.count(
@@ -1165,17 +1163,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         itemBuilder: (_, i) {
           const patterns = [1.3, 0.9, 1.1, 1.5, 0.8, 1.2, 1.0, 1.4];
           final h = 140 * patterns[i % patterns.length];
-          return Shimmer.fromColors(
-            baseColor: base,
-            highlightColor: highlight,
-            child: Container(
-              height: h,
-              decoration: BoxDecoration(
-                color: base,
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          );
+          return ShimmerBox(height: h, borderRadius: 14);
         },
       ),
     );
@@ -1183,23 +1171,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── JWST shimmer placeholder ──
   Widget _buildJWSTShimmer() {
-    final base = AppColors.shimmerBase(context);
-    final highlight = AppColors.shimmerHighlight(context);
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       itemCount: 3,
-      itemBuilder: (_, i) => Shimmer.fromColors(
-        baseColor: base,
-        highlightColor: highlight,
-        child: Container(
-          width: 280,
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          decoration: BoxDecoration(
-            color: base,
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
+      itemBuilder: (_, i) => const ShimmerBox(
+        width: 280,
+        height: 180,
+        borderRadius: 16,
+        margin: EdgeInsets.symmetric(horizontal: 6),
       ),
     );
   }

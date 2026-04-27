@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../controllers/orbital_mechanics_controller.dart';
 import '../../data/celestial_bodies.dart';
+import '../../utils/number_format_utils.dart';
 import '../../widgets/orbital_animations.dart';
 
 /// Mission-Control-styled orbital mechanics calculator with four
@@ -556,7 +556,7 @@ class _LabeledSlider extends StatelessWidget {
   }
 
   static String _short(double v) {
-    if (v >= 1000) return NumberFormat('#,###').format(v);
+    if (v >= 1000) return NumberFormatUtils.commas(v);
     if (v == v.roundToDouble()) return v.toStringAsFixed(0);
     return v.toStringAsFixed(2);
   }
@@ -755,7 +755,7 @@ class _OrbitTab extends StatelessWidget {
                 Obx(() => _LabeledSlider(
                       label: 'ALTITUDE (KM)',
                       valueLabel:
-                          NumberFormat('#,###').format(ctrl.altitudeKm.value.round()),
+                          NumberFormatUtils.commas(ctrl.altitudeKm.value.round()),
                       value: ctrl.altitudeKm.value,
                       min: 100,
                       max: 50000,
@@ -768,7 +768,7 @@ class _OrbitTab extends StatelessWidget {
                 Obx(() {
                   final body = CelestialBody.byName(ctrl.centralBody.value);
                   return Text(
-                    'PLANET RADIUS: ${NumberFormat('#,###').format(body.radius.round())} KM',
+                    'PLANET RADIUS: ${NumberFormatUtils.commas(body.radius.round())} KM',
                     style: GoogleFonts.spaceMono(
                       fontSize: 10,
                       letterSpacing: 1.0,
@@ -955,7 +955,7 @@ class _EscapeTab extends StatelessWidget {
                       _kv('MASS', '${b.mass.toStringAsExponential(3)} KG',
                           secondary, primary),
                       _kv('RADIUS',
-                          '${NumberFormat('#,###').format(b.radius.round())} KM',
+                          '${NumberFormatUtils.commas(b.radius.round())} KM',
                           secondary, primary),
                       _kv('SURFACE g',
                           '${b.surfaceGravity.toStringAsFixed(2)} M/S²',
@@ -1016,7 +1016,7 @@ class _EscapeTab extends StatelessWidget {
                       Expanded(
                         child: _ResultCell(
                           label: 'KM/H',
-                          value: NumberFormat('#,###').format(kmh.round()),
+                          value: NumberFormatUtils.commas(kmh.round()),
                           accent: accent,
                           secondary: secondary,
                         ),

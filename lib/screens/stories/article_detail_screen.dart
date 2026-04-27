@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../controllers/achievement_controller.dart';
 import '../../models/space_article.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 
 // ═════════════════════════════════════════════
 // HELPERS
@@ -231,10 +231,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                     CachedNetworkImage(
                       imageUrl: article.imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (_, _) => Shimmer.fromColors(
-                        baseColor: AppColors.shimmerBase(context),
-                        highlightColor: AppColors.shimmerHighlight(context),
-                        child: Container(color: AppColors.shimmerBase(context)),
+                      placeholder: (_, _) => const ShimmerBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        borderRadius: 0,
                       ),
                       errorWidget: (_, _, _) => Container(
                         decoration: BoxDecoration(

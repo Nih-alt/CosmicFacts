@@ -11,6 +11,8 @@ import '../../controllers/home_controller.dart';
 import '../../models/space_article.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/state_widgets/empty_state.dart';
+import '../../widgets/state_widgets/error_state.dart';
 import 'article_detail_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -393,52 +395,19 @@ class _StoryFeedScreenState extends State<StoryFeedScreen> {
   }
 
   Widget _buildCategoryError() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(CupertinoIcons.exclamationmark_triangle, size: 48,
-              color: AppColors.textSecondary(context)),
-          const SizedBox(height: 16),
-          Obx(() => Text(
-            'No stories found for ${_feed.selectedCategory.value}',
-            style: GoogleFonts.spaceGrotesk(fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context)),
-          )),
-          const SizedBox(height: 24),
-          CupertinoButton(
-            color: AppColors.accentBlue,
-            borderRadius: BorderRadius.circular(12),
-            onPressed: _feed.retryCategory,
-            child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
-    );
+    return Obx(() => ErrorStateWidget(
+          title: 'No stories found for ${_feed.selectedCategory.value}',
+          icon: CupertinoIcons.exclamationmark_triangle,
+          onRetry: _feed.retryCategory,
+        ));
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(CupertinoIcons.doc_text, size: 48,
-              color: AppColors.textSecondary(context)),
-          const SizedBox(height: 16),
-          Text('No stories available',
-              style: GoogleFonts.spaceGrotesk(fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary(context))),
-          const SizedBox(height: 24),
-          CupertinoButton(
-            color: AppColors.accentBlue,
-            borderRadius: BorderRadius.circular(12),
-            onPressed: _homeCtrl.refreshData,
-            child: Text('Refresh', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
+    return EmptyStateWidget(
+      icon: CupertinoIcons.doc_text,
+      title: 'No stories available',
+      actionLabel: 'Refresh',
+      onAction: _homeCtrl.refreshData,
     );
   }
 }

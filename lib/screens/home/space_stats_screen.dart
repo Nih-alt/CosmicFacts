@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../controllers/space_stats_controller.dart';
+import '../../utils/date_format_utils.dart';
+import '../../utils/number_format_utils.dart';
 import '../../widgets/cockpit_painters.dart';
 
 /// NASA Mission Control cockpit dashboard for live space statistics.
@@ -100,7 +101,8 @@ class _SpaceStatsScreenState extends State<SpaceStatsScreen>
     final accent = cockpitAccent(isDark);
     final live = cockpitLive(isDark);
     final secondary = _secondary(isDark);
-    final stardate = DateFormat('yyyy.MM.dd').format(DateTime.now());
+    final stardate = DateFormatUtils.stardate(DateTime.now())
+        .replaceFirst('STARDATE ', '');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 6, 18, 0),
@@ -306,7 +308,7 @@ class _SpaceStatsScreenState extends State<SpaceStatsScreen>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      NumberFormat('#,###').format(age.toInt()),
+                      NumberFormatUtils.commas(age.toInt()),
                       style: GoogleFonts.spaceMono(
                         fontSize: 11,
                         color: secondary,
@@ -1050,7 +1052,7 @@ class _MarqueeText extends StatelessWidget {
 
 class _Fmt {
   const _Fmt();
-  String intComma(int n) => NumberFormat('#,###').format(n);
-  String kmh(double v) => '${NumberFormat('#,###').format(v.round())} KM/H';
+  String intComma(int n) => NumberFormatUtils.commas(n);
+  String kmh(double v) => '${NumberFormatUtils.commas(v.round())} KM/H';
   String km(double v) => '${v.toStringAsFixed(0)} KM';
 }

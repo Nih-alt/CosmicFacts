@@ -11,16 +11,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constants/api_endpoints.dart';
 import '../../controllers/bookmark_controller.dart';
 import '../../controllers/explore_controller.dart';
 import '../../models/bookmark_model.dart';
 import '../../models/nasa_image.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 
 // ═════════════════════════════════════════════
 // DESIGN TOKENS
@@ -208,8 +209,7 @@ class _DetailPageState extends State<_DetailPage> {
     if (confirmedUrl == null && img.nasaId.isNotEmpty) {
       try {
         final manifestResp = await http
-            .get(Uri.parse(
-                'https://images-api.nasa.gov/asset/${img.nasaId}'))
+            .get(Uri.parse(ApiEndpoints.nasaImageAsset(img.nasaId)))
             .timeout(const Duration(seconds: 8));
         if (manifestResp.statusCode == 200) {
           final body =
@@ -368,13 +368,8 @@ class _DetailPageState extends State<_DetailPage> {
                   memCacheHeight: 800,
                   filterQuality: FilterQuality.high,
                   fadeInDuration: const Duration(milliseconds: 200),
-                  placeholder: (ctx, url) => Shimmer.fromColors(
-                    baseColor: AppColors.shimmerBase(ctx),
-                    highlightColor: AppColors.shimmerHighlight(ctx),
-                    child: Container(
-                        height: imageHeight,
-                        color: AppColors.card(ctx)),
-                  ),
+                  placeholder: (ctx, url) =>
+                      ShimmerBox(height: imageHeight, borderRadius: 0),
                   errorWidget: (ctx, url, err) => Container(
                     height: imageHeight,
                     color: AppColors.surface(ctx),
@@ -916,7 +911,7 @@ class _DetailPageState extends State<_DetailPage> {
                       height: 140,
                       fit: BoxFit.cover,
                       placeholder: (ctx, url) =>
-                          _shimmerBox(160, 140, radius: 14),
+                          const ShimmerBox(width: 160, height: 140, borderRadius: 14),
                       errorWidget: (ctx, url, err) => Container(
                         width: 160,
                         height: 140,
@@ -963,29 +958,12 @@ class _DetailPageState extends State<_DetailPage> {
       itemBuilder: (context, index) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _shimmerBox(160, 140, radius: 14),
+          const ShimmerBox(width: 160, height: 140, borderRadius: 14),
           const SizedBox(height: 8),
-          _shimmerBox(150, 12, radius: 4),
+          const ShimmerBox(width: 150, height: 12, borderRadius: 4),
           const SizedBox(height: 4),
-          _shimmerBox(110, 12, radius: 4),
+          const ShimmerBox(width: 110, height: 12, borderRadius: 4),
         ],
-      ),
-    );
-  }
-
-  Widget _shimmerBox(double w, double h, {double radius = 8}) {
-    final base = AppColors.shimmerBase(context);
-    final highlight = AppColors.shimmerHighlight(context);
-    return Shimmer.fromColors(
-      baseColor: base,
-      highlightColor: highlight,
-      child: Container(
-        width: w,
-        height: h,
-        decoration: BoxDecoration(
-          color: base,
-          borderRadius: BorderRadius.circular(radius),
-        ),
       ),
     );
   }

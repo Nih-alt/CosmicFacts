@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constants/api_endpoints.dart';
 import '../../controllers/achievement_controller.dart';
 import '../../controllers/theme_controller.dart';
 import '../../models/observation_log.dart';
@@ -940,14 +941,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           text:
               '\u{1F30C} Cosmic Facts \u2014 Explore the Universe!\n\n'
               'Daily space news, astronomy photos, rocket launches, and 84 space lessons!\n\n'
-              'Download: https://play.google.com/store/apps/details?id=com.cosmicfacts.app',
+              'Download: ${ApiEndpoints.playStore}',
         ),
       );
     } catch (_) {}
   }
 
   void _openPrivacy() => launchUrl(
-    Uri.parse('https://nih-alt.github.io/cosmic-facts-privacy/'),
+    Uri.parse(ApiEndpoints.privacyPolicy),
     mode: LaunchMode.externalApplication,
   );
 
@@ -997,9 +998,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               Navigator.pop(context);
               launchUrl(
-                Uri.parse(
-                  'https://play.google.com/store/apps/details?id=com.cosmicfacts.app',
-                ),
+                Uri.parse(ApiEndpoints.playStore),
                 mode: LaunchMode.externalApplication,
               );
             },

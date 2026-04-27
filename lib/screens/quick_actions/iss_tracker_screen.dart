@@ -8,10 +8,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 
 class ISSTrackerScreen extends StatefulWidget {
   const ISSTrackerScreen({super.key});
@@ -165,7 +165,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: _isLoadingISS && _latitude == null
-                  ? _buildShimmer(mapHeight)
+                  ? ShimmerBox(height: mapHeight, borderRadius: 16)
                   : _hasError
                       ? _buildErrorState()
                       : _buildMap(isDark, mapHeight),
@@ -248,7 +248,7 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
                         3,
                         (i) => Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: _buildShimmer(60),
+                          child: const ShimmerBox(height: 60, borderRadius: 16),
                         ),
                       ),
                     ),
@@ -770,20 +770,6 @@ class _ISSTrackerScreenState extends State<ISSTrackerScreen>
             child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildShimmer(double height) {
-    return Shimmer.fromColors(
-      baseColor: AppColors.shimmerBase(context),
-      highlightColor: AppColors.shimmerHighlight(context),
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: AppColors.shimmerBase(context),
-          borderRadius: BorderRadius.circular(16),
-        ),
       ),
     );
   }

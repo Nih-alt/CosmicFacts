@@ -7,8 +7,9 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 
-import '../constants/api_keys.dart';
+import '../constants/api_endpoints.dart';
 import '../services/api_service.dart';
+import '../utils/date_format_utils.dart';
 
 /// Mission Control reactive state for the Space Statistics dashboard.
 ///
@@ -134,11 +135,10 @@ class SpaceStatsController extends GetxController {
 
   Future<void> _refreshAsteroids() async {
     try {
-      final today = DateTime.now().toIso8601String().split('T')[0];
-      final url = 'https://api.nasa.gov/neo/rest/v1/feed'
-          '?start_date=$today&end_date=$today&api_key=${ApiKeys.nasaApiKey}';
-      final resp =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+      final today = DateFormatUtils.api(DateTime.now());
+      final resp = await http
+          .get(Uri.parse(ApiEndpoints.neoFeed(today)))
+          .timeout(const Duration(seconds: 8));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
         final count = data['element_count'];

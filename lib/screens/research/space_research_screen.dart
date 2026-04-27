@@ -6,12 +6,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/research_paper.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 
 // ─── Accent palette ───────────────────────────────────────────
 const _kAccent = Color(0xFF6C63FF);
@@ -845,26 +845,14 @@ class _SpaceResearchScreenState extends State<SpaceResearchScreen> {
   // ═══════════════════════════════════════════════════════════
 
   Widget _buildShimmer() {
-    final base = AppColors.shimmerBase(context);
-    final highlight = AppColors.shimmerHighlight(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: List.generate(
           5,
-          (i) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Shimmer.fromColors(
-              baseColor: base,
-              highlightColor: highlight,
-              child: Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: base,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
+          (i) => const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: ShimmerBox(height: 120, borderRadius: 16),
           ),
         ),
       ),

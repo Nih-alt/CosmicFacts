@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constants/api_endpoints.dart';
 import '../../models/launch_model.dart';
 import '../../services/analytics_service.dart';
 import '../../theme/app_colors.dart';
@@ -313,16 +314,14 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   Widget _buildWatchButton() {
     return GestureDetector(
       onTap: () {
-        final query = Uri.encodeComponent(
-          '${launch.provider} ${launch.rocketName} ${launch.missionName} launch',
-        );
-
         if (launch.videoUrl.isNotEmpty) {
           launchUrl(Uri.parse(launch.videoUrl),
               mode: LaunchMode.externalApplication);
         } else {
+          final query =
+              '${launch.provider} ${launch.rocketName} ${launch.missionName} launch';
           launchUrl(
-            Uri.parse('https://www.youtube.com/results?search_query=$query'),
+            Uri.parse(ApiEndpoints.youtubeSearch(query)),
             mode: LaunchMode.externalApplication,
           );
         }

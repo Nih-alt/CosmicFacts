@@ -3,10 +3,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../controllers/explore_controller.dart';
 import '../../models/nasa_image.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 import 'image_detail_screen.dart';
 
 /// Dedicated full-screen NASA Image Gallery.
@@ -456,6 +456,9 @@ class _NasaGalleryScreenState extends State<NasaGalleryScreen> {
     );
   }
 
+  // DRIFT FIX: previously used inline purple-tinted hex (0xFF141438 /
+  // 0xFFEEEEFF). Now routed through ShimmerBox → AppColors.shimmer*,
+  // matching the rest of the app. Visually slightly bluer.
   Widget _buildShimmer(bool isDark) {
     return MasonryGridView.count(
       crossAxisCount: 2,
@@ -466,21 +469,7 @@ class _NasaGalleryScreenState extends State<NasaGalleryScreen> {
       itemBuilder: (_, i) {
         const heights = [1.3, 0.9, 1.1, 1.5, 0.8, 1.2, 1.0, 1.4];
         final h = heights[i % heights.length];
-        return Shimmer.fromColors(
-          baseColor:
-              isDark ? const Color(0xFF141438) : const Color(0xFFEEEEFF),
-          highlightColor:
-              isDark ? const Color(0xFF1E1E4A) : const Color(0xFFDDDDFF),
-          child: Container(
-            height: 140 * h,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF141438)
-                  : const Color(0xFFEEEEFF),
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        );
+        return ShimmerBox(height: 140 * h, borderRadius: 14);
       },
     );
   }

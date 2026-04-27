@@ -7,12 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../controllers/launches_controller.dart';
 import '../../models/launch_model.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/launch_branding.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
+import '../../widgets/state_widgets/error_state.dart';
 import 'launch_detail_screen.dart';
 
 class LaunchesScreen extends StatefulWidget {
@@ -235,28 +236,10 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
   }
 
   Widget _buildError() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(CupertinoIcons.wifi_slash,
-              size: 48, color: AppColors.textSecondary(context)),
-          const SizedBox(height: 16),
-          Text("Couldn't load launches",
-              style: GoogleFonts.spaceGrotesk(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary(context))),
-          const SizedBox(height: 24),
-          CupertinoButton(
-            color: AppColors.accentBlue,
-            borderRadius: BorderRadius.circular(12),
-            onPressed: _ctrl.loadLaunches,
-            child: Text('Retry',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
+    return ErrorStateWidget(
+      title: "Couldn't load launches",
+      icon: CupertinoIcons.wifi_slash,
+      onRetry: _ctrl.loadLaunches,
     );
   }
 
@@ -1054,33 +1037,13 @@ class _ShimmerList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
         // Hero shimmer
-        Shimmer.fromColors(
-          baseColor: AppColors.shimmerBase(context),
-          highlightColor: AppColors.shimmerHighlight(context),
-          child: Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: AppColors.shimmerBase(context),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        ),
+        const ShimmerBox(height: 200, borderRadius: 20),
         const SizedBox(height: 16),
         // List shimmers
         ...List.generate(5, (i) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Shimmer.fromColors(
-              baseColor: AppColors.shimmerBase(context),
-              highlightColor: AppColors.shimmerHighlight(context),
-              child: Container(
-                height: 90,
-                decoration: BoxDecoration(
-                  color: AppColors.shimmerBase(context),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
+          return const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: ShimmerBox(height: 90, borderRadius: 14),
           );
         }),
       ],
