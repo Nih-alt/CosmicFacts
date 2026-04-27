@@ -28,6 +28,7 @@ import '../quick_actions/space_calendar_screen.dart';
 import 'apod_archive_screen.dart';
 import 'earth_from_space_screen.dart';
 import 'search_screen.dart';
+import 'orbital_mechanics_screen.dart';
 import 'space_stats_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -1090,6 +1091,7 @@ final _quickActions = [
   _QuickActionItem(CupertinoIcons.moon_fill, 'Moon', const Color(0xFFFFD700), const MoonPhaseScreen()),
   _QuickActionItem(CupertinoIcons.calendar, 'Calendar', const Color(0xFF34D399), const SpaceCalendarScreen()),
   _QuickActionItem(CupertinoIcons.chart_bar_fill, 'Live Stats', const Color(0xFF3B82F6), const SpaceStatsScreen()),
+  _QuickActionItem(CupertinoIcons.scope, 'Orbits', const Color(0xFF00E5FF), const OrbitalMechanicsScreen()),
   _QuickActionItem(CupertinoIcons.globe, 'Earth', const Color(0xFF4A90D9), const EarthFromSpaceScreen()),
 ];
 

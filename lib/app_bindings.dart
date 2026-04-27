@@ -5,6 +5,7 @@ import 'controllers/bookmark_controller.dart';
 import 'controllers/explore_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/launches_controller.dart';
+import 'controllers/orbital_mechanics_controller.dart';
 import 'controllers/quiz_controller.dart';
 
 /// Lazy GetX dependency registration.
@@ -26,5 +27,6 @@ class AppBindings extends Bindings {
     Get.lazyPut(() => BookmarkController(), fenix: true);
     Get.lazyPut(() => AchievementController(), fenix: true);
     Get.lazyPut(() => QuizController(), fenix: true);
+    Get.lazyPut(() => OrbitalMechanicsController(), fenix: true);
   }
 }

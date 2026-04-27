@@ -378,6 +378,44 @@ dark mode shifting to deep blue/purple in light mode.
 **Theming** — fully theme-aware via `Theme.of(context).brightness`; no
 hard-coded white backgrounds in dark mode.
 
+### 36b. Orbital Mechanics Calculator — Mission Control Cockpit
+Interactive astrodynamics playground sharing the Mission Control aesthetic
+(Space Mono, HUD corner brackets, cyan/deep-blue accents). Four tabs:
+
+- **🛰️ ORBIT** — circular orbital period & velocity for any altitude around
+  Earth, Moon, Mars, Sun, or Jupiter. Sliders feed Kepler's third law:
+  `T = 2π · √(r³/μ)`, `v = √(μ/r)`. Visual: dashed orbit with a satellite
+  dot rotating around a colored body (`OrbitVisualPainter`).
+- **🚀 ESCAPE** — surface escape velocity for Earth, Moon, Mars, Sun,
+  Jupiter, Pluto. Shows km/s, km/h, and Mach (vs Earth sea-level sound).
+  Visual: parabolic trajectory with animated dot + side gauge scaled to
+  Earth-escape (`EscapeTrajectoryPainter`).
+- **🌌 TRANSFER** — Hohmann transfer between any two heliocentric planets.
+  Outputs Δv₁, Δv₂, total Δv, and one-way transfer days/years using the
+  vis-viva equation. Visual: Sun-centred concentric orbits + dashed
+  transfer ellipse with Sun at one focus, animated transit dot
+  (`HohmannPainter`).
+- **⚡ DILATION** — special-relativity time dilation. Sliders for v/c
+  (0..0.999) and rest time (0.1..100 yr) drive `γ = 1/√(1−v²/c²)` and
+  `Δt' = Δt·γ`. Visual: two clock faces side-by-side, the traveler's hand
+  rotating at 1/γ the rate of the stationary one (`DualClockPainter`).
+
+Shared UX:
+- HUD top bar with FORMULAS eye toggle that reveals math + variable
+  definitions in a green-CRT terminal panel under each calculator.
+- Educational explanation paragraph under every tab.
+- All inputs are `.obs` fields on `OrbitalMechanicsController`; results are
+  `Obx`-reactive computed getters in km / km/s / s — no unit mixing.
+- Animation controllers are screen-scoped and disposed in `dispose`.
+
+Data lives in `lib/data/celestial_bodies.dart`: Sun, Mercury, Venus, Earth,
+Moon, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto with mass, radius,
+gravitational parameter μ, and semi-major axis sourced from NASA fact sheets.
+
+Sanity-checked against textbook values: ISS @ 408 km → 92.58 min / 7.668 km/s,
+Earth escape → 11.186 km/s, Earth→Mars Hohmann → 5.591 km/s & 259 d,
+γ(0.5c) = 1.155, γ(0.999c) = 22.37.
+
 ---
 
 ## Media
