@@ -538,6 +538,60 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  /// Fetch live ISS telemetry (velocity, altitude, lat/lon, footprint) from
+  /// wheretheiss.at — free, no API key. Falls back to known constants.
+  static Future<Map<String, double>> getISSLiveTelemetry() async {
+    const url = 'https://api.wheretheiss.at/v1/satellites/25544';
+    try {
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body) as Map<String, dynamic>;
+        return {
+          'velocity': (data['velocity'] as num).toDouble(),
+          'altitude': (data['altitude'] as num).toDouble(),
+          'latitude': (data['latitude'] as num).toDouble(),
+          'longitude': (data['longitude'] as num).toDouble(),
+          'footprint': (data['footprint'] as num).toDouble(),
+        };
+      }
+    } catch (e) {
+      debugPrint('ISS telemetry error: $e');
+    }
+    return {
+      'velocity': 27600.0,
+      'altitude': 408.0,
+      'latitude': 0.0,
+      'longitude': 0.0,
+      'footprint': 4500.0,
+    };
+  }
+
+  /// Total confirmed exoplanets via NASA Exoplanet Archive TAP service.
+  /// Returns a fallback constant on failure.
+  static Future<int> getExoplanetCount() async {
+    const url =
+        'https://exoplanetarchive.ipac.caltech.edu/TAP/sync'
+        '?query=SELECT+COUNT(*)+FROM+pscomppars&format=json';
+    try {
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body) as List;
+        if (data.isNotEmpty) {
+          final row = data[0] as Map<String, dynamic>;
+          final count = row['COUNT(*)'] ?? row['count(*)'];
+          if (count != null) return (count as num).toInt();
+        }
+      }
+    } catch (e) {
+      debugPrint('Exoplanet count error: $e');
+    }
+    return 5800;
+  }
+
   /// Fetch astronauts currently in space.
   static Future<Map<String, dynamic>?> getAstronautsInSpace() async {
     final response =

@@ -1,16 +1,15 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
-import 'package:shimmer/shimmer.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
-import '../../constants/api_keys.dart';
-import '../../theme/app_colors.dart';
+import '../../controllers/space_stats_controller.dart';
+import '../../widgets/cockpit_painters.dart';
 
+/// NASA Mission Control cockpit dashboard for live space statistics.
 class SpaceStatsScreen extends StatefulWidget {
   const SpaceStatsScreen({super.key});
 
@@ -18,546 +17,1040 @@ class SpaceStatsScreen extends StatefulWidget {
   State<SpaceStatsScreen> createState() => _SpaceStatsScreenState();
 }
 
-class _SpaceStatsScreenState extends State<SpaceStatsScreen> {
-  Timer? _tickTimer;
-  Timer? _apiTimer;
-  DateTime _now = DateTime.now();
+class _SpaceStatsScreenState extends State<SpaceStatsScreen>
+    with TickerProviderStateMixin {
+  late final SpaceStatsController _ctrl;
+  late final AnimationController _radarCtrl;
+  late final AnimationController _tickerCtrl;
 
-  // Live data
-  int? _peopleInSpace;
-  int? _asteroidsToday;
-  bool _loadingApi = true;
+  static const _fmt = _Fmt();
 
   @override
   void initState() {
     super.initState();
-    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _now = DateTime.now());
-    });
-    _fetchLiveData();
-    _apiTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      _fetchLiveData();
-    });
+    _ctrl = Get.put(SpaceStatsController(), permanent: true);
+    _radarCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+    _tickerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 40),
+    )..repeat();
   }
 
   @override
   void dispose() {
-    _tickTimer?.cancel();
-    _apiTimer?.cancel();
+    _radarCtrl.dispose();
+    _tickerCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _fetchLiveData() async {
-    // People in space
-    try {
-      final resp = await http
-          .get(Uri.parse('http://api.open-notify.org/astros.json'))
-          .timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        if (mounted) setState(() => _peopleInSpace = data['number'] as int?);
-      }
-    } catch (_) {}
-
-    // Asteroids today
-    try {
-      final today = DateTime.now().toIso8601String().split('T')[0];
-      final resp = await http
-          .get(Uri.parse(
-              'https://api.nasa.gov/neo/rest/v1/feed?start_date=$today&end_date=$today&api_key=${ApiKeys.nasaApiKey}'))
-          .timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        final count = data['element_count'] as int?;
-        if (mounted) setState(() => _asteroidsToday = count);
-      }
-    } catch (_) {}
-
-    if (mounted) setState(() => _loadingApi = false);
-  }
-
-  // ── Calculations ──
-
-  String get _universeAge {
-    // Big Bang: ~13.8 billion years ago
-    const bigBangYears = 13800000000;
-    final now = _now;
-    final dayOfYear =
-        now.difference(DateTime(now.year, 1, 1)).inDays;
-    final hours = now.hour;
-    final minutes = now.minute;
-    final seconds = now.second;
-    return '$bigBangYears years, $dayOfYear days, $hours h, $minutes m, $seconds s';
-  }
-
-  double get _moonDistance {
-    // Simplified: average 384,400 km, varies ~25,100 km
-    final phase = _getMoonPhase();
-    final variation = 25100 * cos(phase * 2 * pi);
-    return 384400 + variation;
-  }
-
-  double get _sunDistance {
-    // Perihelion Jan 3: ~147.1M km, Aphelion Jul 4: ~152.1M km
-    final dayOfYear =
-        _now.difference(DateTime(_now.year, 1, 1)).inDays;
-    return 149.598 + 2.5 * cos((dayOfYear - 3) * 2 * pi / 365.25);
-  }
-
-  double _getMoonPhase() {
-    // Simplified moon phase 0-1 based on synodic month
-    const synodicMonth = 29.53059;
-    final known = DateTime(2000, 1, 6, 18, 14); // known new moon
-    final diff = _now.difference(known).inHours / 24.0;
-    return (diff % synodicMonth) / synodicMonth;
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: AppColors.background(context),
+      backgroundColor: _bg(isDark),
       body: SafeArea(
-        child: CustomScrollView(
+        child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _buildTopBar()),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                child: _buildUniverseAge(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildTopBar(isDark),
+              const SizedBox(height: 12),
+              _buildTickerBar(isDark),
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: _buildUniverseAgePanel(isDark),
               ),
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: _buildIssTelemetryPanel(isDark),
+              ),
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: _buildInstrumentCluster(isDark),
+              ),
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: _buildStatusLegend(isDark),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: _buildConsoleLog(isDark),
+              ),
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // A) TOP BAR
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildTopBar(bool isDark) {
+    final accent = cockpitAccent(isDark);
+    final live = cockpitLive(isDark);
+    final secondary = _secondary(isDark);
+    final stardate = DateFormat('yyyy.MM.dd').format(DateTime.now());
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 6, 18, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: Icon(
+              Icons.arrow_back_ios_new,
+              size: 18,
+              color: _primary(isDark),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.05,
+            splashRadius: 22,
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'MISSION CONTROL',
+                  style: GoogleFonts.spaceMono(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                    color: accent,
+                  ),
                 ),
-                delegate: SliverChildListDelegate(_buildStatCards()),
+                const SizedBox(height: 2),
+                Text(
+                  'STARDATE $stardate',
+                  style: GoogleFonts.spaceMono(
+                    fontSize: 10,
+                    letterSpacing: 1.3,
+                    color: secondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _PulsingDot(color: live)
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .fadeIn(duration: 900.ms)
+              .then()
+              .fadeOut(duration: 900.ms),
+          const SizedBox(width: 6),
+          Text(
+            'ONLINE',
+            style: GoogleFonts.spaceMono(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+              color: live,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // B) SCROLLING TICKER BAR
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildTickerBar(bool isDark) {
+    final accent = cockpitAccent(isDark);
+    final tickerBg = isDark
+        ? const Color(0xFF02020A)
+        : const Color(0xFFE8EEFB);
+    final borderColor = accent.withValues(alpha: 0.25);
+
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: tickerBg,
+        border: Border(
+          top: BorderSide(color: borderColor, width: 0.5),
+          bottom: BorderSide(color: borderColor, width: 0.5),
+        ),
+      ),
+      child: ClipRect(
+        child: Obx(() {
+          final text = _buildTickerText();
+          return AnimatedBuilder(
+            animation: _tickerCtrl,
+            builder: (_, _) {
+              return _MarqueeText(
+                text: text,
+                progress: _tickerCtrl.value,
+                color: accent,
+              );
+            },
+          );
+        }),
+      ),
+    );
+  }
+
+  String _buildTickerText() {
+    final v = _fmt.kmh(_ctrl.issVelocity.value);
+    final a = _fmt.km(_ctrl.issAltitude.value);
+    final exo = _fmt.intComma(_ctrl.exoplanetCount.value);
+    final crew = _ctrl.peopleInSpace.value;
+    final neo = _ctrl.asteroidsToday.value;
+    final moon = _fmt.intComma(_ctrl.moonDistanceKm.value.round());
+    final sun = _ctrl.sunDistanceMillionKm.value.toStringAsFixed(2);
+    final lat = _ctrl.issLat.value.toStringAsFixed(2);
+    final lon = _ctrl.issLon.value.toStringAsFixed(2);
+    return '   ▸ ISS VEL: $v   '
+        '▸ ALT: $a   '
+        '▸ LAT/LON: $lat / $lon   '
+        '▸ EXOPLANETS: $exo   '
+        '▸ CREW: $crew   '
+        '▸ NEO: $neo TRACKED   '
+        '▸ MOON: $moon KM   '
+        '▸ SUN: $sun MIL KM   ';
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // C) UNIVERSE AGE HERO
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildUniverseAgePanel(bool isDark) {
+    final accent = cockpitAccent(isDark);
+    final live = cockpitLive(isDark);
+    final secondary = _secondary(isDark);
+    return _CockpitPanel(
+      isDark: isDark,
+      accent: accent,
+      height: 180,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'UNIVERSE AGE',
+                  style: GoogleFonts.spaceMono(
+                    fontSize: 11,
+                    letterSpacing: 1.6,
+                    fontWeight: FontWeight.w700,
+                    color: secondary,
+                  ),
+                ),
+                const Spacer(),
+                _PulsingDot(color: live)
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .fadeIn(duration: 800.ms)
+                    .then()
+                    .fadeOut(duration: 800.ms),
+                const SizedBox(width: 6),
+                Text(
+                  'REAL-TIME',
+                  style: GoogleFonts.spaceMono(
+                    fontSize: 10,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w700,
+                    color: live,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Center(
+              child: Obx(() {
+                final age = _ctrl.universeAgeSeconds.value;
+                // Compact scientific format: 4.3508 × 10¹⁷ fits one line.
+                final exponent = (log(age) / ln10).floor();
+                final mantissa = age / pow(10, exponent);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: GoogleFonts.spaceMono(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: _primary(isDark),
+                          letterSpacing: 1,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                        children: [
+                          TextSpan(text: mantissa.toStringAsFixed(4)),
+                          const TextSpan(
+                            text: ' × 10',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          TextSpan(
+                            text: '$exponent',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: accent,
+                              fontFeatures: const [
+                                FontFeature.superscripts(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      NumberFormat('#,###').format(age.toInt()),
+                      style: GoogleFonts.spaceMono(
+                        fontSize: 11,
+                        color: secondary,
+                        letterSpacing: 0.5,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: Text(
+                'SECONDS SINCE BIG BANG',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 10,
+                  letterSpacing: 1.4,
+                  color: secondary,
+                ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                child: Text('Fun Comparisons',
-                    style: GoogleFonts.spaceGrotesk(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context))),
-              ),
-            ),
-            SliverToBoxAdapter(child: _buildComparisons()),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            const Spacer(),
           ],
         ),
       ),
     );
   }
 
-  // ═══════════════════════════════════════
-  // TOP BAR
-  // ═══════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
+  // D) ISS LIVE TELEMETRY PANEL
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildIssTelemetryPanel(bool isDark) {
+    final accent = cockpitAccent(isDark);
+    final live = cockpitLive(isDark);
+    final secondary = _secondary(isDark);
 
-  Widget _buildTopBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.glass(context),
-                shape: BoxShape.circle,
-                boxShadow: AppColors.cardShadow(context),
-              ),
-              child: Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary(context), size: 18),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return _CockpitPanel(
+      isDark: isDark,
+      accent: accent,
+      height: 240,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text('Space Statistics',
-                    style: GoogleFonts.spaceGrotesk(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context))),
-                Text('The universe in numbers \u2014 live',
-                    style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppColors.textSecondary(context))),
+                Expanded(
+                  child: Text(
+                    'ISS — INTERNATIONAL SPACE STATION',
+                    style: GoogleFonts.spaceMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                      color: accent,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Obx(() => _LiveBadge(
+                      isLive: _ctrl.issLive.value,
+                      isDark: isDark,
+                    )),
               ],
             ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms);
-  }
-
-  // ═══════════════════════════════════════
-  // UNIVERSE AGE HERO
-  // ═══════════════════════════════════════
-
-  Widget _buildUniverseAge() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2A1060), Color(0xFF0A0A30), Color(0xFF061030)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentBlue.withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Star particles
-          ...List.generate(6, (i) {
-            final rng = Random(i * 17);
-            return Positioned(
-              left: rng.nextDouble() * 300,
-              top: rng.nextDouble() * 100,
-              child: Container(
-                width: 1.5 + rng.nextDouble() * 2,
-                height: 1.5 + rng.nextDouble() * 2,
-                decoration: BoxDecoration(
-                  color: Colors.white
-                      .withValues(alpha: 0.3 + rng.nextDouble() * 0.4),
-                  shape: BoxShape.circle,
-                ),
-              )
-                  .animate(
-                      onPlay: (c) => c.repeat(reverse: true),
-                      delay: Duration(milliseconds: rng.nextInt(2000)))
-                  .fadeIn(
-                      duration:
-                          Duration(milliseconds: 1200 + rng.nextInt(1500)))
-                  .then()
-                  .fadeOut(
-                      duration:
-                          Duration(milliseconds: 1200 + rng.nextInt(1500))),
-            );
-          }),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            const SizedBox(height: 8),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('\u{1F30C}', style: TextStyle(fontSize: 28)),
+                  // Speedometer
+                  Expanded(
+                    flex: 6,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Obx(() {
+                            return CustomPaint(
+                              painter: SpeedometerPainter(
+                                value: _ctrl.issVelocity.value,
+                                maxValue: 30000,
+                                isDark: isDark,
+                              ),
+                              child: const SizedBox.expand(),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 4),
+                        Obx(() => Text(
+                              '${_fmt.intComma(_ctrl.issVelocity.value.round())} KM/H',
+                              style: GoogleFonts.spaceMono(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                color: _primary(isDark),
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures()
+                                ],
+                              ),
+                            )),
+                        Text(
+                          'ORBITAL VELOCITY',
+                          style: GoogleFonts.spaceMono(
+                            fontSize: 9,
+                            letterSpacing: 1.2,
+                            color: secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
-                  Text('Age of the Universe',
-                      style: GoogleFonts.spaceGrotesk(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
+                  // Altimeter
+                  Expanded(
+                    flex: 4,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Obx(() {
+                            return CustomPaint(
+                              painter: AltimeterBarPainter(
+                                altitudeKm: _ctrl.issAltitude.value,
+                                isDark: isDark,
+                              ),
+                              child: const SizedBox.expand(),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 4),
+                        Obx(() => Text(
+                              '${_ctrl.issAltitude.value.toStringAsFixed(0)} KM',
+                              style: GoogleFonts.spaceMono(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: _primary(isDark),
+                              ),
+                            )),
+                        Obx(() => Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'LAT ${_ctrl.issLat.value.toStringAsFixed(2)}°',
+                                  style: GoogleFonts.spaceMono(
+                                    fontSize: 11,
+                                    letterSpacing: 0.8,
+                                    color: secondary,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  'LON ${_ctrl.issLon.value.toStringAsFixed(2)}°',
+                                  style: GoogleFonts.spaceMono(
+                                    fontSize: 11,
+                                    letterSpacing: 0.8,
+                                    color: secondary,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )),
+                        Text(
+                          'ALTITUDE',
+                          style: GoogleFonts.spaceMono(
+                            fontSize: 9,
+                            letterSpacing: 1.2,
+                            color: secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Text('13,800,000,000',
-                  style: GoogleFonts.spaceGrotesk(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-              const SizedBox(height: 4),
-              Text(_universeAge,
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.7))),
-              const SizedBox(height: 8),
-              Text('and counting...',
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.white.withValues(alpha: 0.5))),
-            ],
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 500.ms).scale(
-        begin: const Offset(0.97, 0.97), end: const Offset(1, 1));
-  }
-
-  // ═══════════════════════════════════════
-  // STAT CARDS GRID
-  // ═══════════════════════════════════════
-
-  List<Widget> _buildStatCards() {
-    final moonDist = _moonDistance.round();
-    final sunDist = _sunDistance.toStringAsFixed(1);
-
-    return [
-      _statCard(
-        emoji: '\u{1F6F0}\uFE0F',
-        label: 'ISS Speed',
-        value: '27,600 km/h',
-        subtitle: 'Orbiting Earth every 90 min',
-        accent: AppColors.accentCyan,
-        isLive: false,
-        index: 0,
-      ),
-      _statCard(
-        emoji: '\u{1F30D}',
-        label: 'ISS Altitude',
-        value: '408 km',
-        subtitle: 'Above Earth\'s surface',
-        accent: const Color(0xFF4A90D9),
-        isLive: false,
-        index: 1,
-      ),
-      _statCard(
-        emoji: '\u{1F9D1}\u200D\u{1F680}',
-        label: 'People in Space',
-        value: _loadingApi
-            ? '...'
-            : (_peopleInSpace?.toString() ?? '?'),
-        subtitle: 'Right now aboard ISS & Tiangong',
-        accent: AppColors.success,
-        isLive: true,
-        index: 2,
-      ),
-      _statCard(
-        emoji: '\u2604\uFE0F',
-        label: 'Asteroids Today',
-        value: _loadingApi
-            ? '...'
-            : (_asteroidsToday?.toString() ?? '?'),
-        subtitle: 'Near-Earth objects today',
-        accent: AppColors.accentOrange,
-        isLive: true,
-        index: 3,
-      ),
-      _statCard(
-        emoji: '\u{1F319}',
-        label: 'Moon Distance',
-        value: '${_formatNumber(moonDist)} km',
-        subtitle: 'Current approx. distance',
-        accent: const Color(0xFFB0B0C0),
-        isLive: false,
-        index: 4,
-      ),
-      _statCard(
-        emoji: '\u2600\uFE0F',
-        label: 'Earth-Sun Distance',
-        value: '$sunDist M km',
-        subtitle: 'Earth to Sun right now',
-        accent: AppColors.starGold,
-        isLive: false,
-        index: 5,
-      ),
-      _statCard(
-        emoji: '\u{1F52D}',
-        label: 'Known Exoplanets',
-        value: '5,800+',
-        subtitle: 'Confirmed planets beyond our Sun',
-        accent: AppColors.accentBlue,
-        isLive: false,
-        index: 6,
-      ),
-      _statCard(
-        emoji: '\u{1F30C}',
-        label: 'Observable Universe',
-        value: '93B light-years',
-        subtitle: 'Diameter of observable universe',
-        accent: const Color(0xFF5B3FBF),
-        isLive: false,
-        index: 7,
-      ),
-    ];
-  }
-
-  Widget _statCard({
-    required String emoji,
-    required String label,
-    required String value,
-    required String subtitle,
-    required Color accent,
-    required bool isLive,
-    required int index,
-  }) {
-    final isLoading = isLive && _loadingApi;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: accent, width: 3)),
-        boxShadow: AppColors.cardShadow(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32, height: 32,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                    child: Text(emoji, style: const TextStyle(fontSize: 16))),
-              ),
-              const Spacer(),
-              if (isLive)
-                Container(
-                  width: 8, height: 8,
-                  decoration: BoxDecoration(
-                    color: AppColors.success,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.success.withValues(alpha: 0.5),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true))
-                    .fadeIn(duration: 1000.ms)
-                    .then()
-                    .fadeOut(duration: 1000.ms),
-            ],
-          ),
-          const Spacer(),
-          if (isLoading)
-            Shimmer.fromColors(
-              baseColor: AppColors.shimmerBase(context),
-              highlightColor: AppColors.shimmerHighlight(context),
-              child: Container(
-                width: 80, height: 22,
-                decoration: BoxDecoration(
-                  color: AppColors.shimmerBase(context),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-            )
-          else
-            Text(value,
-                style: GoogleFonts.spaceGrotesk(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary(context)),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 2),
-          Text(label,
-              style: GoogleFonts.inter(
-                  fontSize: 13, color: AppColors.textSecondary(context))),
-          Text(subtitle,
-              style: GoogleFonts.inter(
-                  fontSize: 11, color: AppColors.textSecondary(context)),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(
-            duration: 400.ms, delay: Duration(milliseconds: 60 * index))
-        .slideY(
-            begin: 0.05,
-            end: 0,
-            delay: Duration(milliseconds: 60 * index));
-  }
-
-  // ═══════════════════════════════════════
-  // FUN COMPARISONS
-  // ═══════════════════════════════════════
-
-  Widget _buildComparisons() {
-    const comparisons = [
-      ('\u{1F3C3}', 'Running to Moon',
-          'It would take 9.3 years of non-stop running'),
-      ('\u2708\uFE0F', 'Flying to Sun',
-          '17 years on a commercial airplane'),
-      ('\u{1F697}', 'Driving to Mars',
-          '~228 years at highway speed'),
-      ('\u{1F4A1}', 'Light to Nearest Star',
-          '4.24 years to Proxima Centauri'),
-      ('\u{1F9EE}', 'Stars vs Grains',
-          '~10x more stars than sand grains on Earth'),
-    ];
-
-    return SizedBox(
-      height: 110,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: comparisons.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (context, i) {
-          final (emoji, title, desc) = comparisons[i];
-          return Container(
-            width: 200,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.glass(context),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.glassBorder(context)),
-              boxShadow: AppColors.cardShadow(context),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(emoji, style: const TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(title,
-                          style: GoogleFonts.spaceGrotesk(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary(context)),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: Text(desc,
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary(context),
-                          height: 1.4),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis),
-                ),
-              ],
+            const SizedBox(height: 4),
+            Container(
+              height: 1,
+              color: live.withValues(alpha: 0.15),
             ),
-          )
-              .animate()
-              .fadeIn(
-                  duration: 350.ms,
-                  delay: Duration(milliseconds: 60 * i));
-        },
+          ],
+        ),
       ),
     );
   }
 
-  String _formatNumber(int n) {
-    final s = n.toString();
-    final buf = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
-      buf.write(s[i]);
-    }
-    return buf.toString();
+  // ═══════════════════════════════════════════════════════════════
+  // E) INSTRUMENT CLUSTER (2-col grid)
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildInstrumentCluster(bool isDark) {
+    final live = cockpitLive(isDark);
+
+    final tiles = <Widget>[
+      // 1. People in Space
+      Obx(() => _InstrumentTile(
+            isDark: isDark,
+            accent: live,
+            label: 'CREW IN ORBIT',
+            valueText: '${_ctrl.peopleInSpace.value}',
+            badge: 'LIVE',
+            badgeColor: live,
+            isLive: _ctrl.peopleLive.value,
+            icon: Icons.person_pin_circle_outlined,
+          )),
+
+      // 2. Asteroids Today + Radar
+      Obx(() => _InstrumentTile(
+            isDark: isDark,
+            accent: const Color(0xFFFB923C),
+            label: 'NEO TRACKED',
+            valueText: '${_ctrl.asteroidsToday.value}',
+            badge: 'LIVE',
+            badgeColor: live,
+            isLive: _ctrl.asteroidsLive.value,
+            customLeading: SizedBox(
+              width: 56,
+              height: 56,
+              child: AnimatedBuilder(
+                animation: _radarCtrl,
+                builder: (_, _) => CustomPaint(
+                  painter: RadarSweepPainter(
+                    sweepAngle: _radarCtrl.value * 2 * pi,
+                    blipCount:
+                        _ctrl.asteroidsToday.value.clamp(0, 14),
+                    isDark: isDark,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+          )),
+
+      // 3. Exoplanets
+      Obx(() => _InstrumentTile(
+            isDark: isDark,
+            accent: const Color(0xFFA78BFA),
+            label: 'CONFIRMED EXOPLANETS',
+            valueText: _fmt.intComma(_ctrl.exoplanetCount.value),
+            badge: 'NASA ARCHIVE',
+            badgeColor: const Color(0xFFA78BFA),
+            isLive: _ctrl.exoLive.value,
+            icon: Icons.travel_explore,
+          )),
+
+      // 4. Moon Distance
+      Obx(() => _InstrumentTile(
+            isDark: isDark,
+            accent: const Color(0xFFB8C1D6),
+            label: 'LUNAR RANGE (KM)',
+            valueText: _fmt.intComma(_ctrl.moonDistanceKm.value.round()),
+            badge: 'CALC',
+            badgeColor: const Color(0xFFFCD34D),
+            isLive: false,
+            icon: Icons.brightness_2,
+          )),
+
+      // 5. Sun Distance
+      Obx(() => _InstrumentTile(
+            isDark: isDark,
+            accent: const Color(0xFFFCD34D),
+            label: 'SOLAR RANGE (M KM)',
+            valueText:
+                _ctrl.sunDistanceMillionKm.value.toStringAsFixed(2),
+            badge: 'CALC',
+            badgeColor: const Color(0xFFFCD34D),
+            isLive: false,
+            icon: Icons.wb_sunny_outlined,
+          )),
+
+      // 6. Observable Universe
+      _InstrumentTile(
+        isDark: isDark,
+        accent: const Color(0xFF8B5CF6),
+        label: 'LIGHT-YEARS DIAMETER',
+        valueText: '93B',
+        badge: 'FIXED',
+        badgeColor: const Color(0xFFB8C1D6),
+        isLive: false,
+        icon: Icons.public,
+      ),
+    ];
+
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 0.95,
+      children: List.generate(tiles.length, (i) {
+        return tiles[i]
+            .animate()
+            .fadeIn(
+              duration: 350.ms,
+              delay: Duration(milliseconds: 60 * i),
+            )
+            .slideY(begin: 0.06, end: 0);
+      }),
+    );
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // F) STATUS LEGEND
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildStatusLegend(bool isDark) {
+    final secondary = _secondary(isDark);
+    return Wrap(
+      spacing: 10,
+      runSpacing: 6,
+      children: [
+        _legendChip(const Color(0xFF22C55E), 'LIVE', secondary, isDark),
+        _legendChip(const Color(0xFFFCD34D), 'CALC', secondary, isDark),
+        _legendChip(const Color(0xFFB8C1D6), 'FIXED', secondary, isDark),
+      ],
+    );
+  }
+
+  Widget _legendChip(Color dotColor, String label, Color secondary, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF080820)
+            : Colors.white,
+        border: Border.all(
+          color: cockpitAccent(isDark).withValues(alpha: 0.18),
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: dotColor.withValues(alpha: 0.6),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.spaceMono(
+              fontSize: 10,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w700,
+              color: secondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // G) CONSOLE LOG
+  // ═══════════════════════════════════════════════════════════════
+  Widget _buildConsoleLog(bool isDark) {
+    final accent = cockpitAccent(isDark);
+    final live = cockpitLive(isDark);
+    final logBg = isDark ? const Color(0xFF000010) : const Color(0xFFF0F4FF);
+    final logColor = isDark ? const Color(0xFFA8FFB6) : const Color(0xFF1E3A8A);
+
+    const lines = [
+      '[14:32:01] RUN_TO_MOON: 9.3 YEARS @ 10 KM/H',
+      '[14:32:02] FLIGHT_TO_SUN: 17 YEARS @ 900 KM/H',
+      '[14:32:03] DRIVE_TO_MARS: 228 YEARS @ 100 KM/H',
+      '[14:32:04] LIGHT_TO_PROXIMA: 4.24 YEARS',
+      '[14:32:05] STARS_VS_GRAINS: 10× MORE STARS',
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: logBg,
+        border: Border(left: BorderSide(color: live, width: 3)),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '▸ TRANSMISSION LOG',
+            style: GoogleFonts.spaceMono(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+              color: accent,
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final l in lines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                '> $l',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 12,
+                  color: logColor,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ── theme helpers ──
+  Color _bg(bool isDark) =>
+      isDark ? const Color(0xFF030310) : const Color(0xFFF5F7FB);
+  Color _primary(bool isDark) =>
+      isDark ? Colors.white : const Color(0xFF0A1628);
+  Color _secondary(bool isDark) =>
+      isDark ? const Color(0xFF7A8AB8) : const Color(0xFF5B6B85);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Reusable building blocks
+// ═══════════════════════════════════════════════════════════════════
+
+/// Panel with HUD corner brackets ┌ ┐ └ ┘.
+class _CockpitPanel extends StatelessWidget {
+  final bool isDark;
+  final Color accent;
+  final double? height;
+  final Widget child;
+
+  const _CockpitPanel({
+    required this.isDark,
+    required this.accent,
+    required this.child,
+    this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF050514) : const Color(0xFFF8FAFF),
+        border: Border.all(color: accent.withValues(alpha: 0.30)),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(child: child),
+          Positioned(top: 0, left: 0, child: _Corner(accent, _CornerPos.tl)),
+          Positioned(top: 0, right: 0, child: _Corner(accent, _CornerPos.tr)),
+          Positioned(
+              bottom: 0, left: 0, child: _Corner(accent, _CornerPos.bl)),
+          Positioned(
+              bottom: 0, right: 0, child: _Corner(accent, _CornerPos.br)),
+        ],
+      ),
+    );
+  }
+}
+
+enum _CornerPos { tl, tr, bl, br }
+
+class _Corner extends StatelessWidget {
+  final Color color;
+  final _CornerPos pos;
+  const _Corner(this.color, this.pos);
+
+  @override
+  Widget build(BuildContext context) {
+    const len = 10.0;
+    final c = color;
+    final top = (pos == _CornerPos.tl || pos == _CornerPos.tr)
+        ? BorderSide(color: c, width: 2)
+        : BorderSide.none;
+    final bottom = (pos == _CornerPos.bl || pos == _CornerPos.br)
+        ? BorderSide(color: c, width: 2)
+        : BorderSide.none;
+    final left = (pos == _CornerPos.tl || pos == _CornerPos.bl)
+        ? BorderSide(color: c, width: 2)
+        : BorderSide.none;
+    final right = (pos == _CornerPos.tr || pos == _CornerPos.br)
+        ? BorderSide(color: c, width: 2)
+        : BorderSide.none;
+    return SizedBox(
+      width: len,
+      height: len,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: top, bottom: bottom, left: left, right: right),
+        ),
+      ),
+    );
+  }
+}
+
+class _PulsingDot extends StatelessWidget {
+  final Color color;
+  const _PulsingDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 6),
+        ],
+      ),
+    );
+  }
+}
+
+class _LiveBadge extends StatelessWidget {
+  final bool isLive;
+  final bool isDark;
+  const _LiveBadge({required this.isLive, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final live = cockpitLive(isDark);
+    final dim = isDark
+        ? Colors.white.withValues(alpha: 0.4)
+        : Colors.black.withValues(alpha: 0.4);
+    final color = isLive ? live : dim;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _PulsingDot(color: color),
+          const SizedBox(width: 4),
+          Text(
+            isLive ? 'LIVE' : 'CACHED',
+            style: GoogleFonts.spaceMono(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InstrumentTile extends StatelessWidget {
+  final bool isDark;
+  final Color accent;
+  final String label;
+  final String valueText;
+  final String badge;
+  final Color badgeColor;
+  final bool isLive;
+  final IconData? icon;
+  final Widget? customLeading;
+
+  const _InstrumentTile({
+    required this.isDark,
+    required this.accent,
+    required this.label,
+    required this.valueText,
+    required this.badge,
+    required this.badgeColor,
+    required this.isLive,
+    this.icon,
+    this.customLeading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final secondary =
+        isDark ? const Color(0xFF7A8AB8) : const Color(0xFF5B6B85);
+    return _CockpitPanel(
+      isDark: isDark,
+      accent: accent,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (customLeading != null)
+                  customLeading!
+                else if (icon != null)
+                  Icon(icon, size: 16, color: accent),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: Text(
+                    badge,
+                    style: GoogleFonts.spaceMono(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.0,
+                      color: badgeColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                valueText,
+                maxLines: 1,
+                style: GoogleFonts.spaceMono(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: GoogleFonts.spaceMono(
+                fontSize: 9,
+                letterSpacing: 1.1,
+                color: secondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (isLive)
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _PulsingDot(color: cockpitLive(isDark))
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .fadeIn(duration: 700.ms)
+                          .then()
+                          .fadeOut(duration: 700.ms),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'STREAMING',
+                          style: GoogleFonts.spaceMono(
+                            fontSize: 8,
+                            letterSpacing: 1.0,
+                            color: cockpitLive(isDark),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Marquee-style continuously scrolling text driven by an external [progress]
+/// (0..1, looped). Renders the text twice so the seam is invisible.
+class _MarqueeText extends StatelessWidget {
+  final String text;
+  final double progress;
+  final Color color;
+
+  const _MarqueeText({
+    required this.text,
+    required this.progress,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final style = GoogleFonts.spaceMono(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.8,
+      color: color,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Compute string width.
+        final tp = TextPainter(
+          text: TextSpan(text: text, style: style),
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+        final stringWidth = tp.width;
+        // Total scroll cycle = string width + viewport width so it always
+        // exits cleanly.
+        final cycle = stringWidth + constraints.maxWidth;
+        final dx = -progress * cycle;
+
+        return ClipRect(
+          child: OverflowBox(
+            maxWidth: double.infinity,
+            alignment: Alignment.centerLeft,
+            child: Transform.translate(
+              offset: Offset(dx, 0),
+              child: Row(
+                children: [
+                  Text(text, style: style, maxLines: 1),
+                  SizedBox(width: constraints.maxWidth),
+                  Text(text, style: style, maxLines: 1),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Fmt {
+  const _Fmt();
+  String intComma(int n) => NumberFormat('#,###').format(n);
+  String kmh(double v) => '${NumberFormat('#,###').format(v.round())} KM/H';
+  String km(double v) => '${v.toStringAsFixed(0)} KM';
 }

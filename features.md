@@ -338,17 +338,45 @@
 - Event types: Eclipse, Meteor Shower, Planet, Solstice
 - Color-coded by type
 
-### 36. Space Statistics Dashboard
-- Age of Universe (real-time ticking counter)
-- ISS Speed: 27,600 km/h
-- ISS Altitude: 408 km
-- People in Space: LIVE from API
-- Asteroids Today: LIVE from NASA
-- Moon Distance: calculated
-- Earth-Sun Distance: calculated from orbit
-- Known Exoplanets: 5,800+
-- Observable Universe: 93 billion light-years
-- Fun Comparisons section
+### 36. Space Statistics Dashboard — Mission Control Cockpit
+NASA-inspired cockpit aesthetic with monospaced HUD typography (Space Mono),
+HUD corner brackets ┌ ┐ └ ┘ on every panel, and a CRT cyan/green palette in
+dark mode shifting to deep blue/purple in light mode.
+
+**Live data sources**
+- ISS telemetry — `wheretheiss.at/v1/satellites/25544` (velocity, altitude,
+  lat/lon), refreshed every 15 s.
+- People in space — `open-notify.org/astros.json`.
+- Near-Earth asteroids today — NASA NEO Feed.
+- Total confirmed exoplanets — NASA Exoplanet Archive TAP service
+  (`pscomppars` count).
+- Calculated: Moon distance (synodic phase), Earth–Sun distance (orbit).
+- Static: Observable universe diameter (93B light-years).
+
+**Layout**
+- Top bar: "MISSION CONTROL" + STARDATE + pulsing ONLINE indicator.
+- Scrolling marquee ticker bar — full-width 36 px CRT-style readout cycling
+  through ISS velocity, altitude, lat/lon, exoplanet count, crew, NEO count,
+  moon and sun ranges.
+- Universe Age hero panel — real-time ticker advancing every 50 ms, formatted
+  with comma separators and a 2-decimal CRT counter.
+- ISS Live Telemetry panel — semicircular speedometer (`SpeedometerPainter`,
+  0–30,000 km/h) on the left; vertical altimeter bar (`AltimeterBarPainter`,
+  0–500 km) with lat/lon readout on the right; LIVE/CACHED badge.
+- Instrument cluster (2-col grid): Crew in Orbit, NEO Tracked + animated
+  radar sweep (`RadarSweepPainter`), Confirmed Exoplanets, Lunar Range,
+  Solar Range, Observable Universe.
+- Status legend: 🟢 LIVE / 🟡 CALC / ⚪ FIXED.
+- Transmission Log (terminal panel): fun comparisons rendered as
+  console lines (`> [HH:MM:SS] LABEL: …`).
+
+**State**
+- `SpaceStatsController` (GetX) with reactive `.obs` fields, two timers
+  (50 ms age ticker, 15 s ISS refresh) and Hive-backed offline cache for
+  crew, asteroid, and exoplanet counts.
+
+**Theming** — fully theme-aware via `Theme.of(context).brightness`; no
+hard-coded white backgrounds in dark mode.
 
 ---
 
