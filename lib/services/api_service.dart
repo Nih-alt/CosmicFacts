@@ -4,28 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 
-import '../constants/api_keys.dart';
+import '../constants/api_endpoints.dart';
 import '../models/apod_model.dart';
 import '../models/launch_model.dart';
 import '../models/nasa_image.dart';
 import '../models/research_paper.dart';
 import '../models/space_article.dart';
 import '../models/space_weather_model.dart';
+import '../utils/date_format_utils.dart';
 
 class ApiService {
-  static const String _newsBaseUrl = 'https://api.spaceflightnewsapi.net/v4';
-  static const String _nasaBaseUrl = 'https://api.nasa.gov';
-  static const String _nasaImagesUrl = 'https://images-api.nasa.gov';
-
   static DateTime _getNasaDate() {
     // NASA publishes APOD based on US Eastern time (UTC-5).
     final utcNow = DateTime.now().toUtc();
     final nasaTime = utcNow.subtract(const Duration(hours: 5));
     return nasaTime;
-  }
-
-  static String _formatApodDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   /// HTTP GET with automatic retry (2 attempts, 8s timeout).
@@ -54,8 +47,8 @@ class ApiService {
         ? Uri.encodeComponent(searchQuery)
         : null;
     final url = encoded != null
-        ? '$_newsBaseUrl/articles/?limit=$limit&offset=$offset&search=$encoded'
-        : '$_newsBaseUrl/articles/?limit=$limit&offset=$offset';
+        ? '${ApiEndpoints.snapi}/articles/?limit=$limit&offset=$offset&search=$encoded'
+        : '${ApiEndpoints.snapi}/articles/?limit=$limit&offset=$offset';
     final response = await _getWithRetry(url);
     if (response == null) return null;
 
@@ -78,10 +71,10 @@ class ApiService {
   }) async {
     String url;
     if (category == 'All') {
-      url = '$_newsBaseUrl/articles/?limit=$limit&offset=$offset';
+      url = '${ApiEndpoints.snapi}/articles/?limit=$limit&offset=$offset';
     } else {
       final encoded = Uri.encodeComponent(category);
-      url = '$_newsBaseUrl/articles/?search=$encoded&limit=$limit&offset=$offset';
+      url = '${ApiEndpoints.snapi}/articles/?search=$encoded&limit=$limit&offset=$offset';
     }
     final response = await _getWithRetry(url);
     if (response == null) return null;
@@ -99,12 +92,11 @@ class ApiService {
 
   /// Fetch NASA Astronomy Picture of the Day.
   static Future<ApodModel?> getApod() async {
-    final nasaDate = _formatApodDate(_getNasaDate());
+    final nasaDate = DateFormatUtils.api(_getNasaDate());
 
     try {
       final response = await http
-          .get(Uri.parse(
-              '$_nasaBaseUrl/planetary/apod?api_key=${ApiKeys.nasaApiKey}&date=$nasaDate'))
+          .get(Uri.parse(ApiEndpoints.apod(date: nasaDate)))
           .timeout(const Duration(seconds: 8));
       if (response.statusCode != 200) return null;
 
@@ -118,8 +110,7 @@ class ApiService {
   static Future<ApodModel?> getApodByDate(String date) async {
     try {
       final response = await http
-          .get(Uri.parse(
-              '$_nasaBaseUrl/planetary/apod?api_key=${ApiKeys.nasaApiKey}&date=$date'))
+          .get(Uri.parse(ApiEndpoints.apod(date: date)))
           .timeout(const Duration(seconds: 8));
       if (response.statusCode != 200) return null;
 
@@ -132,13 +123,13 @@ class ApiService {
 
   static Future<ApodModel?> getApodWithFallback() async {
     final today = _getNasaDate();
-    final todayStr = _formatApodDate(today);
+    final todayStr = DateFormatUtils.api(today);
 
     final todayResult = await getApodByDate(todayStr);
     if (todayResult != null) return todayResult;
 
     final yesterday = today.subtract(const Duration(days: 1));
-    final yesterdayStr = _formatApodDate(yesterday);
+    final yesterdayStr = DateFormatUtils.api(yesterday);
     return getApodByDate(yesterdayStr);
   }
 
@@ -149,7 +140,7 @@ class ApiService {
   }) async {
     final encoded = Uri.encodeComponent(query);
     final response = await _getWithRetry(
-      '$_nasaImagesUrl/search?q=$encoded&media_type=image&page=$page&page_size=30',
+      '${ApiEndpoints.nasaImages}/search?q=$encoded&media_type=image&page=$page&page_size=30',
     );
     if (response == null) return [];
 
@@ -220,7 +211,7 @@ class ApiService {
     try {
       final now = DateTime.now().toUtc().toIso8601String();
       final response = await _getWithRetry(
-        '$_newsBaseUrl/launches/?limit=$limit&ordering=net&net__gte=$now',
+        '${ApiEndpoints.snapi}/launches/?limit=$limit&ordering=net&net__gte=$now',
       );
       if (response != null) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -245,7 +236,7 @@ class ApiService {
     try {
       final response = await http
           .post(
-            Uri.parse('https://api.spacexdata.com/v5/launches/query'),
+            Uri.parse(ApiEndpoints.spacexLaunchesQuery()),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               'query': {
@@ -288,7 +279,7 @@ class ApiService {
     try {
       final now = DateTime.now().toUtc().toIso8601String();
       final response = await _getWithRetry(
-        '$_newsBaseUrl/launches/?limit=$limit&ordering=-net&net__lte=$now',
+        '${ApiEndpoints.snapi}/launches/?limit=$limit&ordering=-net&net__lte=$now',
       );
       if (response != null) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -313,7 +304,7 @@ class ApiService {
     try {
       final response = await http
           .post(
-            Uri.parse('https://api.spacexdata.com/v5/launches/query'),
+            Uri.parse(ApiEndpoints.spacexLaunchesQuery()),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               'query': {
@@ -532,16 +523,67 @@ class ApiService {
 
   /// Fetch current ISS location.
   static Future<Map<String, dynamic>?> getISSLocation() async {
-    final response =
-        await _getWithRetry('http://api.open-notify.org/iss-now.json');
+    final response = await _getWithRetry(ApiEndpoints.issNow());
     if (response == null) return null;
     return jsonDecode(response.body);
   }
 
+  /// Fetch live ISS telemetry (velocity, altitude, lat/lon, footprint) from
+  /// wheretheiss.at — free, no API key. Falls back to known constants.
+  static Future<Map<String, double>> getISSLiveTelemetry() async {
+    final url = ApiEndpoints.issLive();
+    try {
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body) as Map<String, dynamic>;
+        return {
+          'velocity': (data['velocity'] as num).toDouble(),
+          'altitude': (data['altitude'] as num).toDouble(),
+          'latitude': (data['latitude'] as num).toDouble(),
+          'longitude': (data['longitude'] as num).toDouble(),
+          'footprint': (data['footprint'] as num).toDouble(),
+        };
+      }
+    } catch (e) {
+      debugPrint('ISS telemetry error: $e');
+    }
+    return {
+      'velocity': 27600.0,
+      'altitude': 408.0,
+      'latitude': 0.0,
+      'longitude': 0.0,
+      'footprint': 4500.0,
+    };
+  }
+
+  /// Total confirmed exoplanets via NASA Exoplanet Archive TAP service.
+  /// Returns a fallback constant on failure.
+  static Future<int> getExoplanetCount() async {
+    final url =
+        '${ApiEndpoints.exoArchive}?query=SELECT+COUNT(*)+FROM+pscomppars&format=json';
+    try {
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body) as List;
+        if (data.isNotEmpty) {
+          final row = data[0] as Map<String, dynamic>;
+          final count = row['COUNT(*)'] ?? row['count(*)'];
+          if (count != null) return (count as num).toInt();
+        }
+      }
+    } catch (e) {
+      debugPrint('Exoplanet count error: $e');
+    }
+    return 5800;
+  }
+
   /// Fetch astronauts currently in space.
   static Future<Map<String, dynamic>?> getAstronautsInSpace() async {
-    final response =
-        await _getWithRetry('http://api.open-notify.org/astros.json');
+    final response = await _getWithRetry(ApiEndpoints.astronautsInSpace());
     if (response == null) return null;
     return jsonDecode(response.body);
   }
@@ -550,9 +592,8 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> getNearEarthAsteroids({
     DateTime? date,
   }) async {
-    final d = (date ?? DateTime.now()).toIso8601String().split('T')[0];
-    final url =
-        '$_nasaBaseUrl/neo/rest/v1/feed?start_date=$d&end_date=$d&api_key=${ApiKeys.nasaApiKey}';
+    final d = DateFormatUtils.api(date ?? DateTime.now());
+    final url = ApiEndpoints.neoFeed(d);
     final response = await _getWithRetry(url);
     if (response == null) return [];
     final data = jsonDecode(response.body);
@@ -564,8 +605,7 @@ class ApiService {
 
   /// Fetch detailed info for a single NEO, including orbital_data.
   static Future<Map<String, dynamic>?> getAsteroidDetail(String id) async {
-    final url =
-        '$_nasaBaseUrl/neo/rest/v1/neo/$id?api_key=${ApiKeys.nasaApiKey}';
+    final url = ApiEndpoints.neoDetail(id);
     final response = await _getWithRetry(url);
     if (response == null) return null;
     return jsonDecode(response.body) as Map<String, dynamic>;
@@ -574,11 +614,10 @@ class ApiService {
   // ── NASA EPIC (Earth from Space) ──
   // Uses direct EPIC endpoint (epic.gsfc.nasa.gov) — no API key needed,
   // more reliable than the api.nasa.gov proxy.
-  static const String _epicBaseUrl = 'https://epic.gsfc.nasa.gov';
 
   /// Fetch available EPIC image dates (most recent first).
   static Future<List<String>> getEpicAvailableDates() async {
-    final url = '$_epicBaseUrl/api/natural/all';
+    final url = ApiEndpoints.epicAvailableDates();
     debugPrint('EPIC: Fetching available dates: $url');
     try {
       final response = await http
@@ -608,8 +647,8 @@ class ApiService {
     String? date,
   }) async {
     final url = date != null
-        ? '$_epicBaseUrl/api/natural/date/$date'
-        : '$_epicBaseUrl/api/natural';
+        ? ApiEndpoints.epicImagesByDate(date)
+        : ApiEndpoints.epicImagesLatest();
     debugPrint('EPIC: Fetching images: $url');
     try {
       final response = await http
@@ -639,7 +678,7 @@ class ApiService {
     final parts = date.split('-');
     final type = thumbnail ? 'thumbs' : 'png';
     final ext = thumbnail ? 'jpg' : 'png';
-    return '$_epicBaseUrl/archive/natural/${parts[0]}/${parts[1]}/${parts[2]}/$type/$imageName.$ext';
+    return '${ApiEndpoints.epic}/archive/natural/${parts[0]}/${parts[1]}/${parts[2]}/$type/$imageName.$ext';
   }
 
   /// Get trending/curated NASA images.
@@ -660,9 +699,6 @@ class ApiService {
   // Data: NASA Exoplanet Archive (public domain)
   // ═══════════════════════════════════════════════════════════
 
-  static const String _exoplanetBase =
-      'https://exoplanetarchive.ipac.caltech.edu/TAP/sync';
-
   static Future<List<Map<String, dynamic>>> getExoplanets() async {
     const query =
         'select top 100 pl_name,hostname,pl_rade,pl_bmasse,pl_orbper,'
@@ -674,7 +710,7 @@ class ApiService {
         'order by disc_year desc';
 
     final encoded = Uri.encodeComponent(query);
-    final url = '$_exoplanetBase?query=$encoded&format=json';
+    final url = '${ApiEndpoints.exoArchive}?query=$encoded&format=json';
 
     try {
       final response = await http.get(
@@ -711,8 +747,6 @@ class ApiService {
   // arXiv API — open-access research papers, no key needed
   // ═══════════════════════════════════════════════════════════
 
-  static const String _arxivBase = 'https://export.arxiv.org/api/query';
-
   static Future<List<ResearchPaper>> getResearchPapers({
     String category = 'astro-ph',
     String searchQuery = '',
@@ -727,7 +761,7 @@ class ApiService {
       query = 'search_query=cat:$category';
     }
 
-    final url = '$_arxivBase?$query&start=$start&max_results=$maxResults'
+    final url = '${ApiEndpoints.arxivApi}?$query&start=$start&max_results=$maxResults'
         '&sortBy=submittedDate&sortOrder=descending';
 
     try {
@@ -782,7 +816,7 @@ class ApiService {
           return a.findElements('name').first.innerText.trim();
         }).toList();
 
-        String pdfUrl = 'https://arxiv.org/pdf/$id';
+        String pdfUrl = ApiEndpoints.arxivPdf(id);
         for (final link in entry.findElements('link')) {
           if (link.getAttribute('type') == 'application/pdf') {
             pdfUrl = link.getAttribute('href') ?? pdfUrl;
@@ -829,7 +863,7 @@ class ApiService {
             category: catLabel,
             arxivCat: categoryLabel,
             pdfUrl: pdfUrl,
-            abstractUrl: 'https://arxiv.org/abs/$id',
+            abstractUrl: ApiEndpoints.arxivAbstract(id),
           ));
         }
       }
@@ -852,8 +886,8 @@ class ApiService {
         updated: DateTime(2024, 4, 2),
         category: 'Planets',
         arxivCat: 'astro-ph.EP',
-        pdfUrl: 'https://arxiv.org/pdf/2404.00041',
-        abstractUrl: 'https://arxiv.org/abs/2404.00041',
+        pdfUrl: ApiEndpoints.arxivPdf('2404.00041'),
+        abstractUrl: ApiEndpoints.arxivAbstract('2404.00041'),
       ),
       ResearchPaper(
         id: '2403.18891',
@@ -866,8 +900,8 @@ class ApiService {
         updated: DateTime(2024, 3, 29),
         category: 'Black Holes',
         arxivCat: 'astro-ph.HE',
-        pdfUrl: 'https://arxiv.org/pdf/2403.18891',
-        abstractUrl: 'https://arxiv.org/abs/2403.18891',
+        pdfUrl: ApiEndpoints.arxivPdf('2403.18891'),
+        abstractUrl: ApiEndpoints.arxivAbstract('2403.18891'),
       ),
       ResearchPaper(
         id: '2403.15887',
@@ -880,8 +914,8 @@ class ApiService {
         updated: DateTime(2024, 3, 22),
         category: 'Cosmology',
         arxivCat: 'astro-ph.CO',
-        pdfUrl: 'https://arxiv.org/pdf/2403.15887',
-        abstractUrl: 'https://arxiv.org/abs/2403.15887',
+        pdfUrl: ApiEndpoints.arxivPdf('2403.15887'),
+        abstractUrl: ApiEndpoints.arxivAbstract('2403.15887'),
       ),
       ResearchPaper(
         id: '2403.09188',
@@ -894,8 +928,8 @@ class ApiService {
         updated: DateTime(2024, 3, 15),
         category: 'Solar & Stars',
         arxivCat: 'astro-ph.SR',
-        pdfUrl: 'https://arxiv.org/pdf/2403.09188',
-        abstractUrl: 'https://arxiv.org/abs/2403.09188',
+        pdfUrl: ApiEndpoints.arxivPdf('2403.09188'),
+        abstractUrl: ApiEndpoints.arxivAbstract('2403.09188'),
       ),
       ResearchPaper(
         id: '2402.18816',
@@ -908,8 +942,8 @@ class ApiService {
         updated: DateTime(2024, 3, 1),
         category: 'Galaxies',
         arxivCat: 'astro-ph.GA',
-        pdfUrl: 'https://arxiv.org/pdf/2402.18816',
-        abstractUrl: 'https://arxiv.org/abs/2402.18816',
+        pdfUrl: ApiEndpoints.arxivPdf('2402.18816'),
+        abstractUrl: ApiEndpoints.arxivAbstract('2402.18816'),
       ),
     ];
   }
@@ -918,16 +952,14 @@ class ApiService {
   // NOAA Space Weather — US government public domain, no key
   // ═══════════════════════════════════════════════════════════
 
-  static const String _noaaBase = 'https://services.swpc.noaa.gov';
-
   static Future<SpaceWeatherData?> getSpaceWeather() async {
     try {
       final results = await Future.wait([
-        _getWithRetry('$_noaaBase/products/solar-wind/plasma-7-day.json'),
-        _getWithRetry('$_noaaBase/products/solar-wind/mag-7-day.json'),
-        _getWithRetry('$_noaaBase/products/noaa-planetary-k-index.json'),
-        _getWithRetry('$_noaaBase/json/goes/primary/xrays-7-day.json'),
-        _getWithRetry('$_noaaBase/products/alerts.json'),
+        _getWithRetry('${ApiEndpoints.noaa}/products/solar-wind/plasma-7-day.json'),
+        _getWithRetry('${ApiEndpoints.noaa}/products/solar-wind/mag-7-day.json'),
+        _getWithRetry('${ApiEndpoints.noaa}/products/noaa-planetary-k-index.json'),
+        _getWithRetry('${ApiEndpoints.noaa}/json/goes/primary/xrays-7-day.json'),
+        _getWithRetry('${ApiEndpoints.noaa}/products/alerts.json'),
       ]);
 
       if (results.any((r) => r == null)) return _getFallbackWeatherData();

@@ -3,20 +3,20 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../constants/api_endpoints.dart';
+
 /// Weather service backed by Open-Meteo (open data, no API key required).
 ///
 /// Used by the Stargazing Forecast tool to compute tonight's cloud cover,
 /// humidity, and temperature for the user's current location.
 class WeatherService {
-  static const String _baseUrl = 'https://api.open-meteo.com/v1/forecast';
-
   /// Fetches a 3-day forecast for the given coordinates.
   /// Returns the raw decoded JSON, or `null` on any failure.
   static Future<Map<String, dynamic>?> getWeatherForecast({
     required double lat,
     required double lon,
   }) async {
-    final url = '$_baseUrl'
+    final url = '${ApiEndpoints.openMeteo}'
         '?latitude=$lat&longitude=$lon'
         '&hourly=cloudcover,relativehumidity_2m,temperature_2m'
         '&daily=weathercode,windspeed_10m_max'

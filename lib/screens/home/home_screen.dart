@@ -8,13 +8,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../controllers/home_controller.dart';
 import '../../models/space_article.dart';
 import '../../services/firebase_notification_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
+import '../../widgets/state_widgets/error_state.dart';
 import '../stories/story_feed_screen.dart';
 import '../explore/explore_screen.dart';
 import '../launches/launches_screen.dart';
@@ -28,6 +29,7 @@ import '../quick_actions/space_calendar_screen.dart';
 import 'apod_archive_screen.dart';
 import 'earth_from_space_screen.dart';
 import 'search_screen.dart';
+import 'orbital_mechanics_screen.dart';
 import 'space_stats_screen.dart';
 
 // ═════════════════════════════════════════════
@@ -232,7 +234,7 @@ class _HomeTabState extends State<_HomeTab> {
         const _Starfield(),
         Obx(() {
           if (ctrl.hasError.value && ctrl.stories.isEmpty) {
-            return _ErrorState(onRetry: ctrl.refreshData);
+            return ErrorStateWidget.network(onRetry: ctrl.refreshData);
           }
 
           return RefreshIndicator(
@@ -410,7 +412,11 @@ class _HomeTabState extends State<_HomeTab> {
                 // ── Stories PageView ──
                 SliverToBoxAdapter(
                   child: ctrl.isLoading.value
-                      ? _shimmerRect(300, margin: const EdgeInsets.symmetric(horizontal: 20), context: context)
+                      ? const ShimmerBox(
+                          height: 300,
+                          borderRadius: 20,
+                          margin: EdgeInsets.symmetric(horizontal: 20),
+                        )
                       : SizedBox(
                           height: 300,
                           child: PageView.builder(
@@ -608,7 +614,7 @@ class _HomeTabState extends State<_HomeTab> {
         apod == null && (_apodError || ctrl.hasApodError.value || !ctrl.isLoadingApod.value);
 
     if (apod == null && ctrl.isLoadingApod.value && !showFallback) {
-      return _shimmerRect(200, context: context);
+      return const ShimmerBox(height: 200, borderRadius: 20);
     }
     if (showFallback) {
       return _buildApodFallbackCard();
@@ -865,63 +871,6 @@ class _QuoteOfDayCard extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════
-// SHIMMER PLACEHOLDER
-// ═════════════════════════════════════════════
-
-Widget _shimmerRect(double height, {EdgeInsets margin = EdgeInsets.zero, BuildContext? context}) {
-  final base = context != null ? AppColors.shimmerBase(context) : AppColors.cardDark;
-  final highlight = context != null ? AppColors.shimmerHighlight(context) : AppColors.surfaceDark;
-  return Padding(
-    padding: margin,
-    child: Shimmer.fromColors(
-      baseColor: base,
-      highlightColor: highlight,
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: base,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    ),
-  );
-}
-
-// ═════════════════════════════════════════════
-// ERROR STATE
-// ═════════════════════════════════════════════
-
-class _ErrorState extends StatelessWidget {
-  final VoidCallback onRetry;
-  const _ErrorState({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(CupertinoIcons.wifi_slash, size: 48, color: AppColors.textSecondary(context)),
-          const SizedBox(height: 16),
-          Text('No internet connection',
-              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
-          const SizedBox(height: 8),
-          Text('Check your connection and try again',
-              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary(context))),
-          const SizedBox(height: 24),
-          CupertinoButton(
-            color: AppColors.accentBlue,
-            borderRadius: BorderRadius.circular(12),
-            onPressed: onRetry,
-            child: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ═════════════════════════════════════════════
 // LIVE STORY CARD (uses SpaceArticle)
 // ═════════════════════════════════════════════
 
@@ -1090,6 +1039,7 @@ final _quickActions = [
   _QuickActionItem(CupertinoIcons.moon_fill, 'Moon', const Color(0xFFFFD700), const MoonPhaseScreen()),
   _QuickActionItem(CupertinoIcons.calendar, 'Calendar', const Color(0xFF34D399), const SpaceCalendarScreen()),
   _QuickActionItem(CupertinoIcons.chart_bar_fill, 'Live Stats', const Color(0xFF3B82F6), const SpaceStatsScreen()),
+  _QuickActionItem(CupertinoIcons.scope, 'Orbits', const Color(0xFF00E5FF), const OrbitalMechanicsScreen()),
   _QuickActionItem(CupertinoIcons.globe, 'Earth', const Color(0xFF4A90D9), const EarthFromSpaceScreen()),
 ];
 

@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/date_format_utils.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 import 'asteroid_detail_screen.dart';
 
 class AsteroidsScreen extends StatefulWidget {
@@ -53,7 +53,7 @@ class _AsteroidsScreenState extends State<AsteroidsScreen>
   // DATA
   // ═══════════════════════════════════════════
 
-  String get _dateKey => DateFormat('yyyy-MM-dd').format(_selectedDate);
+  String get _dateKey => DateFormatUtils.api(_selectedDate);
 
   Future<void> _loadAsteroids() async {
     setState(() {
@@ -297,7 +297,10 @@ class _AsteroidsScreenState extends State<AsteroidsScreen>
                     4,
                     (i) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildShimmer(i == 0 ? 240 : 90),
+                      child: ShimmerBox(
+                        height: i == 0 ? 240 : 90,
+                        borderRadius: 16,
+                      ),
                     ),
                   ),
                 ),
@@ -439,8 +442,8 @@ class _AsteroidsScreenState extends State<AsteroidsScreen>
 
   Widget _buildDateHeader() {
     final label = _selectedIsToday
-        ? 'Today — ${DateFormat('MMM d, y').format(_selectedDate)}'
-        : DateFormat('EEE, MMM d, y').format(_selectedDate);
+        ? 'Today — ${DateFormatUtils.shortFull(_selectedDate)}'
+        : DateFormatUtils.dayOfWeekFull(_selectedDate);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
@@ -1166,19 +1169,6 @@ class _AsteroidsScreenState extends State<AsteroidsScreen>
     );
   }
 
-  Widget _buildShimmer(double height) {
-    return Shimmer.fromColors(
-      baseColor: AppColors.shimmerBase(context),
-      highlightColor: AppColors.shimmerHighlight(context),
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: AppColors.shimmerBase(context),
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-    );
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════

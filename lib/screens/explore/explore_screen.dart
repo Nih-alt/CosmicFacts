@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../controllers/explore_controller.dart';
+import '../../data/cosmic_tools.dart';
 import '../../models/nasa_image.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 import 'ar_sky_map_screen.dart';
 import 'image_detail_screen.dart';
 import 'nasa_gallery_screen.dart';
@@ -169,6 +170,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
               SliverToBoxAdapter(child: _buildInteractiveCards()),
               const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
+              // ══════════════════════════════════════
+              // SECTION 3.5 — Cosmic Tools (discoverability hub)
+              // ══════════════════════════════════════
+              SliverToBoxAdapter(child: _buildCosmicToolsSection(isDark)),
 
               // ══════════════════════════════════════
               // SECTION 4 — Category pills
@@ -1147,8 +1153,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── Shimmer sliver for initial loading ──
   Widget _buildShimmerSliver() {
-    final base = AppColors.shimmerBase(context);
-    final highlight = AppColors.shimmerHighlight(context);
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
       sliver: SliverMasonryGrid.count(
@@ -1159,17 +1163,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         itemBuilder: (_, i) {
           const patterns = [1.3, 0.9, 1.1, 1.5, 0.8, 1.2, 1.0, 1.4];
           final h = 140 * patterns[i % patterns.length];
-          return Shimmer.fromColors(
-            baseColor: base,
-            highlightColor: highlight,
-            child: Container(
-              height: h,
-              decoration: BoxDecoration(
-                color: base,
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          );
+          return ShimmerBox(height: h, borderRadius: 14);
         },
       ),
     );
@@ -1177,23 +1171,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   // ── JWST shimmer placeholder ──
   Widget _buildJWSTShimmer() {
-    final base = AppColors.shimmerBase(context);
-    final highlight = AppColors.shimmerHighlight(context);
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       itemCount: 3,
-      itemBuilder: (_, i) => Shimmer.fromColors(
-        baseColor: base,
-        highlightColor: highlight,
-        child: Container(
-          width: 280,
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          decoration: BoxDecoration(
-            color: base,
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
+      itemBuilder: (_, i) => const ShimmerBox(
+        width: 280,
+        height: 180,
+        borderRadius: 16,
+        margin: EdgeInsets.symmetric(horizontal: 6),
       ),
     );
   }
@@ -1398,6 +1384,224 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ),
                   onTap: () => Navigator.pop(context),
                 )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═════════════════════════════════════════════
+  // SECTION 3.5 — COSMIC TOOLS
+  // Categorized hub that surfaces specialized features
+  // (live data, calculators, imagery, explorers).
+  // ═════════════════════════════════════════════
+
+  Widget _buildCosmicToolsSection(bool isDark) {
+    final grouped = CosmicTools.grouped;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCosmicToolsHeader(isDark),
+        for (final cat in CosmicTools.categoryOrder)
+          if ((grouped[cat] ?? const []).isNotEmpty)
+            _buildToolCategory(cat, grouped[cat]!, isDark),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildCosmicToolsHeader(bool isDark) {
+    final primaryText =
+        isDark ? Colors.white : const Color(0xFF0A1628);
+    final secondaryText = AppColors.textSecondary(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cosmic Tools',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+              color: primaryText,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Explore live data, calculators & galleries',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: secondaryText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolCategory(
+    String category,
+    List<CosmicTool> tools,
+    bool isDark,
+  ) {
+    final accent = CosmicTools.categoryAccents[category]!;
+    final icon = CosmicTools.categoryIcons[category]!;
+    final name = CosmicTools.categoryNames[category]!;
+    final secondaryText = AppColors.textSecondary(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, size: 14, color: accent),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.5,
+                  color: accent,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${tools.length} tools',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: secondaryText.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 140,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: tools.length,
+            itemBuilder: (ctx, i) => _buildToolCard(tools[i], isDark),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToolCard(CosmicTool tool, bool isDark) {
+    final primaryText =
+        isDark ? Colors.white : const Color(0xFF0A1628);
+    final secondaryText = AppColors.textSecondary(context);
+    final cardBg = isDark ? const Color(0xFF0F1428) : Colors.white;
+    final accent = tool.accentColor;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(builder: (_) => tool.screenBuilder()),
+        );
+      },
+      child: Container(
+        width: 200,
+        height: 130,
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: accent.withValues(alpha: 0.25),
+          ),
+          boxShadow: isDark
+              ? const <BoxShadow>[]
+              : [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.3),
+                        accent.withValues(alpha: 0.1),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Icon(tool.icon, size: 20, color: accent),
+                ),
+                const Spacer(),
+                if (tool.badge != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      tool.badge!,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              tool.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: primaryText,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              tool.subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                color: secondaryText,
+                height: 1.3,
+              ),
+            ),
           ],
         ),
       ),

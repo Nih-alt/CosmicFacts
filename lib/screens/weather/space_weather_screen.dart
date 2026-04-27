@@ -10,11 +10,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../models/space_weather_model.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/date_format_utils.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 
 // ─── Palette ──────────────────────────────────────────────────
 const _kAccent = Color(0xFF6C63FF);
@@ -212,14 +213,11 @@ class _SpaceWeatherScreenState extends State<SpaceWeatherScreen>
     });
   }
 
-  String _ago(DateTime dt) {
-    final m = DateTime.now().difference(dt).inMinutes;
-    if (m < 1) return 'just now';
-    if (m == 1) return '1 min ago';
-    return '$m min ago';
-  }
+  String _ago(DateTime dt) => DateFormatUtils.relative(dt, verbose: true);
 
   String _flareAgo(DateTime dt) {
+    // Custom "< 1h ago" format — preserved for visual fidelity on flare
+    // chips. Bucketed in hours, not minutes.
     final h = DateTime.now().difference(dt).inHours;
     if (h < 1) return '< 1h ago';
     return '${h}h ago';
@@ -1110,8 +1108,6 @@ class _SpaceWeatherScreenState extends State<SpaceWeatherScreen>
   // ═══════════════════════════════════════════════════════════
 
   Widget _buildLoading() {
-    final base = AppColors.shimmerBase(context);
-    final highlight = AppColors.shimmerHighlight(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1121,16 +1117,9 @@ class _SpaceWeatherScreenState extends State<SpaceWeatherScreen>
             4,
             (i) => Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: Shimmer.fromColors(
-                baseColor: base,
-                highlightColor: highlight,
-                child: Container(
-                  height: i == 0 ? 160 : 90,
-                  decoration: BoxDecoration(
-                    color: base,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
+              child: ShimmerBox(
+                height: i == 0 ? 160 : 90,
+                borderRadius: 16,
               ),
             ),
           ),

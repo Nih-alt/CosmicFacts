@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constants/api_endpoints.dart';
 import '../../data/space_sounds_data.dart';
 import '../../theme/app_colors.dart';
 
@@ -99,7 +100,7 @@ class _SpaceSoundsScreenState extends State<SpaceSoundsScreen>
             CupertinoDialogAction(child: const Text('Cancel'), onPressed: () => Navigator.pop(context)),
             CupertinoDialogAction(child: const Text('Open Source Site'), onPressed: () {
               Navigator.pop(context);
-              launchUrl(Uri.parse('https://www.nasa.gov/audio-and-ringtones/'), mode: LaunchMode.externalApplication);
+              launchUrl(Uri.parse(ApiEndpoints.nasaAudio), mode: LaunchMode.externalApplication);
             }),
           ],
         ),

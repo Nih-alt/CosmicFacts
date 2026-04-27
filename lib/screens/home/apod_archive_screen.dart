@@ -8,18 +8,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:get/get.dart';
 
-import '../../constants/api_keys.dart';
+import '../../constants/api_endpoints.dart';
 import '../../controllers/bookmark_controller.dart';
 import '../../models/bookmark_model.dart';
 import '../../services/analytics_service.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/date_format_utils.dart';
+import '../../widgets/shimmer/shimmer_box.dart';
 
 class ApodArchiveScreen extends StatefulWidget {
   final String? initialDate;
@@ -36,8 +37,6 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
   bool _error = false;
 
   static final _minDate = DateTime(1995, 6, 16);
-  static final _dateFmt = DateFormat('MMMM d, yyyy');
-  static final _apiFmt = DateFormat('yyyy-MM-dd');
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
@@ -76,9 +75,8 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
 
     setState(() { _loading = true; _error = false; });
 
-    final dateStr = _apiFmt.format(date);
-    final url =
-        'https://api.nasa.gov/planetary/apod?api_key=${ApiKeys.nasaApiKey}&date=$dateStr';
+    final dateStr = DateFormatUtils.api(date);
+    final url = ApiEndpoints.apod(date: dateStr);
 
     debugPrint('APOD: requesting $dateStr (attempt ${retryCount + 1})');
 
@@ -213,7 +211,7 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                 child: GestureDetector(
                   onTap: _showDatePicker,
                   child: Text(
-                    _dateFmt.format(_date),
+                    DateFormatUtils.editorial(_date),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.spaceGrotesk(
                         fontSize: 20,
@@ -383,7 +381,8 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: 300,
-                      placeholder: (_, _) => _shimmerBox(300),
+                      placeholder: (_, _) =>
+                          const ShimmerBox(height: 300, borderRadius: 0),
                       errorWidget: (_, _, _) => Container(
                           height: 300,
                           color: AppColors.card(context),
@@ -590,14 +589,6 @@ class _ApodArchiveScreenState extends State<ApodArchiveScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _shimmerBox(double h) {
-    return Shimmer.fromColors(
-      baseColor: AppColors.shimmerBase(context),
-      highlightColor: AppColors.shimmerHighlight(context),
-      child: Container(height: h, color: Colors.white),
     );
   }
 

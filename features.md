@@ -132,15 +132,54 @@
 - Full explanation text
 - "Download HD" button
 
-### 13. Earth from Space (NASA EPIC)
-- Daily Earth photos from DSCOVR satellite
-- EPIC camera at L1 Lagrange Point (1.5M km away)
-- Uses epic.gsfc.nasa.gov direct API (no key needed)
-- Thumbnail-first loading (fast), HD on demand
-- Multiple photos per day (Earth rotation)
-- Earth Rotation auto-play feature
-- Date navigation through available dates
-- Camera/satellite info section
+### 13. Earth from Space (NASA EPIC) — Editorial Cinema
+Premium photo-magazine aesthetic over the same EPIC API. Inter typography
+(no monospace except the small UTC stamp), no card wrappers, no big blue
+buttons — built around a single full-bleed image and a magazine caption.
+
+**Layout**
+- Minimal 56 px top bar: back button + circular info "About EPIC" sheet.
+- **Full-bleed hero** (60% of screen height, edge-to-edge, black backdrop):
+  `InteractiveViewer` for pinch + double-tap zoom; long-press opens the
+  rotation player; horizontal swipe navigates between dates; tap reveals
+  ↤/↦ floating arrows that step through the day's frames before fading
+  out after 2 s. Slim white bar markers along the bottom show position
+  within the day's 19 frames.
+- **Editorial caption block** — uppercase letter-spaced date "APRIL 25,
+  2026", monospaced "00:41:06 UTC" timestamp, large 28 px / weight 300
+  hero title "Earth from a million miles away", and a storytelling
+  paragraph that converts numeric lat/lon to N/S/E/W form.
+- **WATCH EARTH ROTATE** CTA — the only visually prominent button. 88 px
+  card with a deep-blue → cyan gradient play disc, frame count subtitle.
+- **Date navigation** — chevron pair around a tap-to-pick centered date
+  (`CupertinoDatePicker`); next-day chevron disables when at today.
+- **Technical details** — `AnimatedSize` collapsible row revealing
+  Camera / Satellite / Position / Resolution / Distance + an inline
+  "View full resolution →" link (replaces the old big blue button).
+- **Sticky frosted action bar** — `BackdropFilter(ImageFilter.blur)` over
+  semi-transparent surface, three icon-only actions (Save HD / Share /
+  Save bookmark) reactive to `BookmarkController` via Obx.
+
+**Rotation Player** (`earth_rotation_player_screen.dart`)
+- Fullscreen immersive viewer (`SystemUiMode.immersive`) with PageView
+  through all frames at mid-quality JPG.
+- Auto-advance Timer at 800 ms / frame (1×), togglable to 2× and 4×.
+- Tap toggles overlays; overlays auto-hide after 3 s of no interaction.
+- Bottom progress line with 19 tap-jumpable vertical frame markers,
+  large play/pause disc, and speed pill.
+- Manual horizontal swipe pauses auto-play; vertical swipe-down past
+  600 px/s exits the viewer. SystemChrome restored on dispose.
+
+**Theme** — page bg `#050510` / `#FAFAFA`, deep-blue accent `#4A90E2`
+(dark) / `#1E40AF` (light) — Earth-toned, not the cyan of Mission Control.
+Image canvas always `Colors.black` for cinematic letterboxing.
+
+**Preserved logic** — every API call (`getEpicAvailableDates`,
+`getEpicImages`, `getEpicImageUrl`), the bookmark + share + Save HD
+handlers, and the HD viewer subroute carry over unchanged. The hero +
+player swap to mid-quality JPG via the documented EPIC URL pattern
+(`/archive/natural/Y/M/D/jpg/<image>.jpg`) constructed inline so
+`api_service.dart` stays untouched.
 
 ---
 
@@ -338,17 +377,83 @@
 - Event types: Eclipse, Meteor Shower, Planet, Solstice
 - Color-coded by type
 
-### 36. Space Statistics Dashboard
-- Age of Universe (real-time ticking counter)
-- ISS Speed: 27,600 km/h
-- ISS Altitude: 408 km
-- People in Space: LIVE from API
-- Asteroids Today: LIVE from NASA
-- Moon Distance: calculated
-- Earth-Sun Distance: calculated from orbit
-- Known Exoplanets: 5,800+
-- Observable Universe: 93 billion light-years
-- Fun Comparisons section
+### 36. Space Statistics Dashboard — Mission Control Cockpit
+NASA-inspired cockpit aesthetic with monospaced HUD typography (Space Mono),
+HUD corner brackets ┌ ┐ └ ┘ on every panel, and a CRT cyan/green palette in
+dark mode shifting to deep blue/purple in light mode.
+
+**Live data sources**
+- ISS telemetry — `wheretheiss.at/v1/satellites/25544` (velocity, altitude,
+  lat/lon), refreshed every 15 s.
+- People in space — `open-notify.org/astros.json`.
+- Near-Earth asteroids today — NASA NEO Feed.
+- Total confirmed exoplanets — NASA Exoplanet Archive TAP service
+  (`pscomppars` count).
+- Calculated: Moon distance (synodic phase), Earth–Sun distance (orbit).
+- Static: Observable universe diameter (93B light-years).
+
+**Layout**
+- Top bar: "MISSION CONTROL" + STARDATE + pulsing ONLINE indicator.
+- Scrolling marquee ticker bar — full-width 36 px CRT-style readout cycling
+  through ISS velocity, altitude, lat/lon, exoplanet count, crew, NEO count,
+  moon and sun ranges.
+- Universe Age hero panel — real-time ticker advancing every 50 ms, formatted
+  with comma separators and a 2-decimal CRT counter.
+- ISS Live Telemetry panel — semicircular speedometer (`SpeedometerPainter`,
+  0–30,000 km/h) on the left; vertical altimeter bar (`AltimeterBarPainter`,
+  0–500 km) with lat/lon readout on the right; LIVE/CACHED badge.
+- Instrument cluster (2-col grid): Crew in Orbit, NEO Tracked + animated
+  radar sweep (`RadarSweepPainter`), Confirmed Exoplanets, Lunar Range,
+  Solar Range, Observable Universe.
+- Status legend: 🟢 LIVE / 🟡 CALC / ⚪ FIXED.
+- Transmission Log (terminal panel): fun comparisons rendered as
+  console lines (`> [HH:MM:SS] LABEL: …`).
+
+**State**
+- `SpaceStatsController` (GetX) with reactive `.obs` fields, two timers
+  (50 ms age ticker, 15 s ISS refresh) and Hive-backed offline cache for
+  crew, asteroid, and exoplanet counts.
+
+**Theming** — fully theme-aware via `Theme.of(context).brightness`; no
+hard-coded white backgrounds in dark mode.
+
+### 36b. Orbital Mechanics Calculator — Mission Control Cockpit
+Interactive astrodynamics playground sharing the Mission Control aesthetic
+(Space Mono, HUD corner brackets, cyan/deep-blue accents). Four tabs:
+
+- **🛰️ ORBIT** — circular orbital period & velocity for any altitude around
+  Earth, Moon, Mars, Sun, or Jupiter. Sliders feed Kepler's third law:
+  `T = 2π · √(r³/μ)`, `v = √(μ/r)`. Visual: dashed orbit with a satellite
+  dot rotating around a colored body (`OrbitVisualPainter`).
+- **🚀 ESCAPE** — surface escape velocity for Earth, Moon, Mars, Sun,
+  Jupiter, Pluto. Shows km/s, km/h, and Mach (vs Earth sea-level sound).
+  Visual: parabolic trajectory with animated dot + side gauge scaled to
+  Earth-escape (`EscapeTrajectoryPainter`).
+- **🌌 TRANSFER** — Hohmann transfer between any two heliocentric planets.
+  Outputs Δv₁, Δv₂, total Δv, and one-way transfer days/years using the
+  vis-viva equation. Visual: Sun-centred concentric orbits + dashed
+  transfer ellipse with Sun at one focus, animated transit dot
+  (`HohmannPainter`).
+- **⚡ DILATION** — special-relativity time dilation. Sliders for v/c
+  (0..0.999) and rest time (0.1..100 yr) drive `γ = 1/√(1−v²/c²)` and
+  `Δt' = Δt·γ`. Visual: two clock faces side-by-side, the traveler's hand
+  rotating at 1/γ the rate of the stationary one (`DualClockPainter`).
+
+Shared UX:
+- HUD top bar with FORMULAS eye toggle that reveals math + variable
+  definitions in a green-CRT terminal panel under each calculator.
+- Educational explanation paragraph under every tab.
+- All inputs are `.obs` fields on `OrbitalMechanicsController`; results are
+  `Obx`-reactive computed getters in km / km/s / s — no unit mixing.
+- Animation controllers are screen-scoped and disposed in `dispose`.
+
+Data lives in `lib/data/celestial_bodies.dart`: Sun, Mercury, Venus, Earth,
+Moon, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto with mass, radius,
+gravitational parameter μ, and semi-major axis sourced from NASA fact sheets.
+
+Sanity-checked against textbook values: ISS @ 408 km → 92.58 min / 7.668 km/s,
+Earth escape → 11.186 km/s, Earth→Mars Hohmann → 5.591 km/s & 259 d,
+γ(0.5c) = 1.155, γ(0.999c) = 22.37.
 
 ---
 

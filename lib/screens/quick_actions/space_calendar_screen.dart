@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constants/api_endpoints.dart';
 import '../../data/calendar_events_data.dart';
 import '../../theme/app_colors.dart';
 
@@ -1246,7 +1247,7 @@ class _SpaceCalendarScreenState extends State<SpaceCalendarScreen> {
   void _addToCalendar(CalendarEvent event) {
     final start = event.date.toIso8601String().replaceAll('-', '').split('T')[0];
     final uri = Uri.parse(
-        'https://calendar.google.com/calendar/render?action=TEMPLATE'
+        '${ApiEndpoints.googleCalRender}?action=TEMPLATE'
         '&text=${Uri.encodeComponent(event.name)}'
         '&dates=$start/$start'
         '&details=${Uri.encodeComponent(event.description)}');

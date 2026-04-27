@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/api_service.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/date_format_utils.dart';
 
 class AsteroidDetailScreen extends StatefulWidget {
   final Map<String, dynamic> asteroid;
@@ -84,11 +85,12 @@ class _AsteroidDetailScreenState extends State<AsteroidDetailScreen> {
   String _formatApproachDate() {
     if (_approachDateFull.isEmpty) return '—';
     try {
-      // API format is typically "2026-Apr-24 12:34"
+      // NASA NEO API format: "2026-Apr-24 12:34" — kept inline because
+      // this is the only NEO parse site in the app.
       final parsed = DateFormat('yyyy-MMM-dd HH:mm').parseLoose(
         _approachDateFull,
       );
-      return '${DateFormat('EEE, MMM d y · HH:mm').format(parsed)} UTC';
+      return DateFormatUtils.dayOfWeekTimestampUtc(parsed);
     } catch (_) {
       return _approachDateFull;
     }
