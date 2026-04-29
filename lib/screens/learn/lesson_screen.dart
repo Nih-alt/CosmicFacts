@@ -68,7 +68,8 @@ class _LessonScreenState extends State<LessonScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           // ── Top bar ──
           Container(
@@ -187,6 +188,7 @@ class _LessonScreenState extends State<LessonScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

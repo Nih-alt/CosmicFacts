@@ -29,8 +29,9 @@ class LegalScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         children: [
           _section(
             context,
@@ -88,6 +89,7 @@ class LegalScreen extends StatelessWidget {
                 'affiliation, or endorsement.',
           ),
         ],
+      ),
       ),
     );
   }

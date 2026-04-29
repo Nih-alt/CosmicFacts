@@ -70,7 +70,9 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,6 +173,7 @@ class _LaunchDetailScreenState extends State<LaunchDetailScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

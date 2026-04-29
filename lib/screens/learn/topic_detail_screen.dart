@@ -64,7 +64,9 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ── Hero area ──
@@ -87,6 +89,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

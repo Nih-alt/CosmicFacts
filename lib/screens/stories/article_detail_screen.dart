@@ -159,7 +159,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ── Sliver App Bar ──
@@ -495,6 +497,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -137,7 +137,9 @@ class _AsteroidDetailScreenState extends State<AsteroidDetailScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
@@ -201,6 +203,7 @@ class _AsteroidDetailScreenState extends State<AsteroidDetailScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

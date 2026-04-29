@@ -121,7 +121,8 @@ class _AddObservationScreenState extends State<AddObservationScreen> {
           ),
         ],
       ),
-      body: GestureDetector(
+      body: SafeArea(
+        child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -407,6 +408,7 @@ class _AddObservationScreenState extends State<AddObservationScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
