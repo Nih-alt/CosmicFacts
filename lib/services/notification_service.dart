@@ -1,48 +1,29 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
+
+import '../data/space_facts.dart';
+import 'api_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  static const _facts = [
-    'The Sun loses 4 million tons of mass every second due to nuclear fusion! \u2600\uFE0F',
-    'A day on Venus is longer than a year on Venus! \u{1FA90}',
-    'Neutron stars can spin 716 times per second! \u2B50',
-    "There are more stars in the universe than grains of sand on all Earth's beaches! \u{1F30C}",
-    'The footprints on the Moon will last for 100 million years! \u{1F463}',
-    "Saturn's density is so low, it would float in water! \u{1FA90}",
-    'A spoonful of neutron star weighs about 6 billion tons! \u2B50',
-    'Light from the Sun takes 8 minutes 20 seconds to reach Earth! \u2600\uFE0F',
-    'The Milky Way and Andromeda galaxies will collide in about 4.5 billion years! \u{1F30C}',
-    'Space is completely silent \u2014 there is no medium for sound to travel! \u{1F507}',
-    'One million Earths could fit inside the Sun! \u2600\uFE0F',
-    'The International Space Station travels at 27,600 km/h! \u{1F6F0}\uFE0F',
-    'Mars has the largest volcano in the solar system \u2014 Olympus Mons! \u{1F30B}',
-    'There are more trees on Earth than stars in the Milky Way! \u{1F30D}',
-    "Jupiter's Great Red Spot is a storm that has raged for over 400 years! \u{1F534}",
-    'Astronauts grow up to 2 inches taller in space! \u{1F468}\u200D\u{1F680}',
-    'The observable universe is 93 billion light-years in diameter! \u{1F52D}',
-    'A year on Mercury is just 88 Earth days! \u26A1',
-    'Pluto is smaller than Russia! \u{1F976}',
-    'The largest known star UY Scuti could fit 5 billion Suns inside it! \u2B50',
-    "Water ice has been found on the Moon's poles! \u{1F319}",
-    "India's Mars Orbiter Mission (Mangalyaan) cost less than the movie Gravity to make! \u{1F1EE}\u{1F1F3}",
-    'The Voyager 1 spacecraft is the farthest human-made object from Earth! \u{1F6F8}',
-    'A black hole the size of a coin would have more mass than Earth! \u{1F573}\uFE0F',
-    'There are diamonds raining on Neptune and Uranus! \u{1F48E}',
-    'The Hubble Space Telescope can see galaxies 13.4 billion light-years away! \u{1F52D}',
-    "Earth's core is as hot as the surface of the Sun! \u{1F30D}",
-    'The Moon is slowly drifting away from Earth at 3.8 cm per year! \u{1F319}',
-    "If you could drive straight up at 100 km/h, you'd reach space in 1 hour! \u{1F697}",
-    "Olympus Mons on Mars is so large, you can't see the top from the base due to Mars' curvature! \u{1F3D4}\uFE0F",
-  ];
-
   static Future<void> init() async {
     tzdata.initializeTimeZones();
+
+    // Resolve user's local timezone. Without this, tz.local defaults to UTC
+    // and "8 AM" scheduling fires at 8 AM UTC (1:30 PM IST).
+    try {
+      final timeZoneName = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+    } catch (e) {
+      debugPrint('Local timezone detection failed: $e');
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -50,10 +31,22 @@ class NotificationService {
 
     await _plugin.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: (_) {
-        // Handle notification tap — app opens automatically
-      },
+      onDidReceiveNotificationResponse: _handleTap,
     );
+  }
+
+  /// Persist the tap intent to Hive. The home screen reads
+  /// `pending_notification_route` on its next build and routes accordingly —
+  /// keeps this service free of UI/widget imports.
+  static void _handleTap(NotificationResponse response) {
+    final payload = response.payload;
+    if (payload == null || payload.isEmpty) return;
+    try {
+      final box = Hive.box('settings');
+      box.put('pending_notification_route', payload);
+    } catch (e) {
+      debugPrint('Failed to persist notification payload: $e');
+    }
   }
 
   /// Request Android 13+ POST_NOTIFICATIONS permission.
@@ -65,13 +58,18 @@ class NotificationService {
         ?.requestNotificationsPermission();
   }
 
-  /// Schedule daily fact notification at 8 AM.
+  /// Schedule daily fact notification at 8 AM local time.
+  ///
+  /// The body is fixed at scheduling time — `matchDateTimeComponents.time`
+  /// repeats the same payload daily until cancelled, so the home screen
+  /// reschedules this on each app open to rotate to the next day's fact.
   static Future<void> scheduleDailyFact() async {
-    final fact = _facts[DateTime.now().day % _facts.length];
+    final fact = kSpaceFacts[_dayOfYear() % kSpaceFacts.length];
+    final body = '${fact.emoji} ${fact.text}';
     await _plugin.zonedSchedule(
       0,
       '\u{1F30C} Daily Space Fact',
-      fact,
+      body,
       _nextInstanceOfTime(8, 0),
       NotificationDetails(
         android: AndroidNotificationDetails(
@@ -81,24 +79,37 @@ class NotificationService {
           importance: Importance.high,
           priority: Priority.defaultPriority,
           icon: '@mipmap/ic_launcher',
-          styleInformation: BigTextStyleInformation(fact),
+          styleInformation: BigTextStyleInformation(body),
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'fact',
     );
   }
 
-  /// Schedule APOD notification at 7 AM.
+  /// Schedule APOD notification at 7 AM local time, with the actual photo
+  /// title pulled from the live API (or cached fallback).
   static Future<void> scheduleApodReminder() async {
+    String body =
+        "Today's daily astronomy photo is ready. Tap to explore.";
+    try {
+      final apod = await ApiService.getApodWithFallback();
+      if (apod != null && apod.title.isNotEmpty) {
+        body = "${apod.title}\n\nTap to view today's photo.";
+      }
+    } catch (e) {
+      debugPrint('APOD title fetch failed (using generic body): $e');
+    }
+
     await _plugin.zonedSchedule(
       1,
       '\u{1F52D} New Astronomy Photo!',
-      "Today's daily astronomy photo from public space archives is ready. Tap to explore!",
+      body,
       _nextInstanceOfTime(7, 0),
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'apod_reminder',
           'APOD Reminders',
@@ -106,12 +117,14 @@ class NotificationService {
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
           icon: '@mipmap/ic_launcher',
+          styleInformation: BigTextStyleInformation(body),
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'apod',
     );
   }
 
@@ -206,5 +219,10 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
     return scheduled;
+  }
+
+  static int _dayOfYear() {
+    final now = DateTime.now();
+    return now.difference(DateTime(now.year, 1, 1)).inDays + 1;
   }
 }

@@ -8,6 +8,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../services/firebase_notification_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import '../home/home_screen.dart';
 
@@ -75,7 +77,7 @@ class OnboardingController extends GetxController {
   ];
 
   void nextPage() {
-    if (currentPage.value < 2) {
+    if (currentPage.value < 3) {
       pageController.nextPage(
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOutCubic,
@@ -106,6 +108,35 @@ class OnboardingController extends GetxController {
     await box.put('onboarding_complete', true);
     await box.put('interests', selectedInterests.toList());
     Get.offAll(() => const HomeScreen(), transition: Transition.cupertino);
+  }
+
+  /// Step 4 primary CTA — request OS permission, enable the daily reminders
+  /// users came to onboarding for, and finish. Failures fall through silently
+  /// (a denied permission shouldn't block the user from reaching home).
+  Future<void> grantNotificationsAndComplete() async {
+    try {
+      await NotificationService.requestPermission();
+      await FirebaseNotificationService.requestPermissionAndSubscribe();
+
+      final box = Hive.box('settings');
+      await box.put('notification_permission_asked', true);
+      await box.put('notifications_enabled', true);
+      await box.put('notif_daily_fact', true);
+      await box.put('notif_apod', true);
+    } catch (_) {
+      // Permission denied or platform error — continue regardless.
+    }
+    await _completeOnboarding();
+  }
+
+  /// Step 4 soft skip — mark prompt as asked so home screen doesn't re-prompt
+  /// (the user already saw the opt-in here and chose to defer).
+  Future<void> skipNotificationsAndComplete() async {
+    try {
+      final box = Hive.box('settings');
+      await box.put('notification_permission_asked', true);
+    } catch (_) {}
+    await _completeOnboarding();
   }
 
   @override
@@ -180,6 +211,7 @@ class OnboardingScreen extends StatelessWidget {
                       _StepDiscover(),
                       _StepUpdated(),
                       _StepInterests(),
+                      _StepStayInLoop(),
                     ],
                   ),
                 ),
@@ -189,17 +221,19 @@ class OnboardingScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 20),
                   child: Obx(() => _CosmicDots(
                         current: controller.currentPage.value,
-                        count: 3,
+                        count: 4,
                       )),
                 ),
 
-                // ── Continue button ──
+                // ── Continue button (steps 1-3 only; step 4 has its own CTAs) ──
                 Padding(
                   padding: EdgeInsets.fromLTRB(24, 20, 24, bottomPad + 24),
                   child: Obx(() {
-                    final isLast = controller.currentPage.value == 2;
+                    if (controller.currentPage.value == 3) {
+                      return const SizedBox.shrink();
+                    }
                     return _GradientButton(
-                      label: isLast ? 'Launch into Space! 🚀' : 'Continue',
+                      label: 'Continue',
                       onTap: controller.nextPage,
                     );
                   }),
@@ -1143,6 +1177,143 @@ class _GradientButtonState extends State<_GradientButton>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// STEP 4 — Stay in the loop (notification opt-in)
+// ═════════════════════════════════════════════
+
+class _StepStayInLoop extends StatelessWidget {
+  const _StepStayInLoop();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<OnboardingController>();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Bell + glow
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF6C63FF).withValues(alpha: 0.3),
+                  const Color(0xFF00B4D8).withValues(alpha: 0.3),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+                  blurRadius: 40,
+                  spreadRadius: 10,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.notifications_active_rounded,
+              size: 70,
+              color: Colors.white,
+            ),
+          )
+              .animate()
+              .fadeIn(duration: 800.ms)
+              .scale(
+                begin: const Offset(0.5, 0.5),
+                end: const Offset(1, 1),
+                duration: 800.ms,
+                curve: Curves.easeOutBack,
+              ),
+
+          const SizedBox(height: 48),
+
+          Text(
+            'Stay in the loop',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
+
+          const SizedBox(height: 16),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Get a daily space fact and APOD reminder. '
+              'Plus alerts for upcoming launches and ISS '
+              'flyovers — never miss a cosmic moment.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: Colors.white.withValues(alpha: 0.75),
+                height: 1.5,
+              ),
+            ),
+          ).animate().fadeIn(delay: 400.ms, duration: 600.ms),
+
+          const SizedBox(height: 40),
+
+          // Primary CTA
+          GestureDetector(
+            onTap: controller.grantNotificationsAndComplete,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 48,
+                vertical: 16,
+              ),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Text(
+                'Enable Notifications 🔔',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ).animate().fadeIn(delay: 600.ms, duration: 600.ms),
+
+          const SizedBox(height: 16),
+
+          // Soft skip
+          TextButton(
+            onPressed: controller.skipNotificationsAndComplete,
+            child: Text(
+              'Maybe later',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.5),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ).animate().fadeIn(delay: 800.ms, duration: 600.ms),
+        ],
       ),
     );
   }

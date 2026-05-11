@@ -10,7 +10,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../controllers/home_controller.dart';
+import '../../data/cosmic_tools.dart';
 import '../../models/space_article.dart';
+import '../../services/api_service.dart';
 import '../../services/firebase_notification_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
@@ -27,6 +29,7 @@ import '../quick_actions/asteroids_screen.dart';
 import '../quick_actions/moon_phase_screen.dart';
 import '../quick_actions/space_calendar_screen.dart';
 import 'apod_archive_screen.dart';
+import 'apod_detail_screen.dart';
 import 'earth_from_space_screen.dart';
 import 'search_screen.dart';
 import 'orbital_mechanics_screen.dart';
@@ -58,6 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _maybeRequestNotificationPermission();
+    _refreshDailyNotifications();
+    _consumePendingNotificationTap();
   }
 
   /// Ask for notification permission 3s after Home loads, and only once ever.
@@ -79,6 +84,68 @@ class _HomeScreenState extends State<HomeScreen> {
         await box.put('notification_permission_asked', true);
       } catch (e) {
         debugPrint('Deferred notification permission error: $e');
+      }
+    });
+  }
+
+  /// Reschedule the Daily Fact and Daily APOD notifications on every app
+  /// open. The body of these notifications is fixed at scheduling time
+  /// (`matchDateTimeComponents.time` repeats the same payload), so without
+  /// this hook the same fact and stale APOD title would fire every morning
+  /// until the user changed a setting.
+  void _refreshDailyNotifications() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      try {
+        final settings = Hive.box('settings');
+        final master =
+            settings.get('notifications_enabled', defaultValue: false) == true;
+        if (!master) return;
+
+        final factEnabled =
+            settings.get('notif_daily_fact', defaultValue: true) == true;
+        final apodEnabled =
+            settings.get('notif_apod', defaultValue: true) == true;
+
+        if (factEnabled) {
+          await NotificationService.cancelById(0);
+          await NotificationService.scheduleDailyFact();
+        }
+        if (apodEnabled) {
+          await NotificationService.cancelById(1);
+          await NotificationService.scheduleApodReminder();
+        }
+      } catch (e) {
+        debugPrint('Daily notification refresh error: $e');
+      }
+    });
+  }
+
+  /// If the app was opened by tapping a notification, the service stored the
+  /// payload in Hive. Consume it here and route accordingly.
+  void _consumePendingNotificationTap() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      try {
+        final settings = Hive.box('settings');
+        final pending =
+            settings.get('pending_notification_route', defaultValue: '')
+                as String;
+        if (pending.isEmpty) return;
+        await settings.delete('pending_notification_route');
+
+        if (pending == 'apod') {
+          final apod = await ApiService.getApodWithFallback();
+          if (!mounted || apod == null) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ApodDetailScreen(apod: apod),
+            ),
+          );
+        }
+        // 'fact' → home is already the destination; nothing else to do.
+      } catch (e) {
+        debugPrint('Pending tap consumption error: $e');
       }
     });
   }
@@ -597,6 +664,43 @@ class _HomeTabState extends State<_HomeTab> {
                     child: _QuoteOfDayCard(isDark: _isDark),
                   ).animate().fadeIn(duration: 500.ms, delay: 900.ms)
                       .slideY(begin: 0.15, end: 0, duration: 500.ms, delay: 900.ms),
+                ),
+
+                // ── Today's Featured Tool ──
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFF6C63FF), Color(0xFF00B4D8)],
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          "Today's Featured Tool 🛠",
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(duration: 600.ms, delay: 1000.ms),
+                ),
+                SliverToBoxAdapter(
+                  child: _DailyToolCard(tool: _todaysFeaturedTool())
+                      .animate()
+                      .fadeIn(duration: 600.ms, delay: 1100.ms),
                 ),
 
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -1131,6 +1235,14 @@ List<_TrendingFact> _getDailyFacts(List<_TrendingFact> allFacts) {
   return shuffled.take(5).toList();
 }
 
+/// Picks the day's featured tool from [CosmicTools.all] using day-of-year.
+/// With 19 tools, every tool gets the spotlight ~19 times per year.
+CosmicTool _todaysFeaturedTool() {
+  final now = DateTime.now();
+  final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays + 1;
+  return CosmicTools.all[dayOfYear % CosmicTools.all.length];
+}
+
 class _TrendingFactsRow extends StatelessWidget {
   const _TrendingFactsRow();
   @override
@@ -1548,6 +1660,183 @@ class _NotificationSheetState extends State<_NotificationSheet> {
             onChanged: onChanged,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════
+// DAILY FEATURED TOOL CARD
+// ═════════════════════════════════════════════
+
+class _DailyToolCard extends StatelessWidget {
+  final CosmicTool tool;
+
+  const _DailyToolCard({required this.tool});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.glass(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.glassBorder(context)),
+        boxShadow: [
+          BoxShadow(
+            color: tool.accentColor.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.of(context).push(
+              CupertinoPageRoute(builder: (_) => tool.screenBuilder()),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 1. Icon container with category accent
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: tool.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: tool.accentColor.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Icon(
+                    tool.icon,
+                    color: tool.accentColor,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // 2. Title + subtitle + category chip
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              tool.title,
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary(context),
+                                height: 1.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (tool.badge != null) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: tool.accentColor.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                tool.badge!,
+                                style: GoogleFonts.inter(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: tool.accentColor,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        tool.subtitle,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.textSecondary(context),
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          // Category chip
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.glassBorder(context),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                CosmicTools.categoryNames[tool.category] ?? '',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary(context),
+                                  letterSpacing: 0.4,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // "Tap to explore" affordance
+                          Flexible(
+                            child: Text(
+                              "Tap to explore today's tool",
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: tool.accentColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 3. Chevron
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textTertiary(context),
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
